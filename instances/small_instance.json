@@ -1,0 +1,80 @@
+{
+    "name": "small_instance",
+    "seed": 0,
+    "directed": true,
+    "nodes": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "edges": [
+        {
+            "tail": 0,
+            "head": 1,
+            "transit_time": 1.0,
+            "inspection_time": 4.0
+        },
+        {
+            "tail": 1,
+            "head": 3,
+            "transit_time": 1.0,
+            "inspection_time": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 2,
+            "transit_time": 1.0,
+            "inspection_time": 2.0
+        },
+        {
+            "tail": 2,
+            "head": 3,
+            "transit_time": 1.0,
+            "inspection_time": 6.0
+        },
+        {
+            "tail": 1,
+            "head": 2,
+            "transit_time": 0.5,
+            "inspection_time": 2.0
+        },
+        {
+            "tail": 2,
+            "head": 1,
+            "transit_time": 0.5,
+            "inspection_time": 2.0
+        }
+    ],
+    "intruders": [
+        {
+            "id": 0,
+            "source": 0,
+            "target": 3
+        }
+    ],
+    "journeyers": [
+        {
+            "id": 0,
+            "source": 0,
+            "target": 3
+        },
+        {
+            "id": 1,
+            "source": 0,
+            "target": 1
+        }
+    ],
+    "budget": 2,
+    "known_optimum": 4.0,
+    "known_optimal_checkpoints": [
+        [
+            1,
+            3
+        ],
+        [
+            2,
+            3
+        ]
+    ]
+}

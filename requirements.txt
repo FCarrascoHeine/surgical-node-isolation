@@ -1,0 +1,3 @@
+# Versions used for the computational experiments.
+gurobipy==13.0.2
+pytest==9.1.1
