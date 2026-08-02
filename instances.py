@@ -122,7 +122,10 @@ def validate_instance(instance):
                 raise ValueError(f"{group_name} source and target must differ")
 
             pair = (agent["source"], agent["target"])
-            if pair in pairs:
+            # Repeated journeyer pairs represent separate travelers and therefore
+            # contribute multiplicity to the objective. Some legacy instances
+            # intentionally contain them. Repeated intruders are merely redundant.
+            if group_name == "intruders" and pair in pairs:
                 raise ValueError(f"Repeated ordered pair in {group_name}: {pair}")
 
             ids.add(agent["id"])

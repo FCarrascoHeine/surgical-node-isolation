@@ -234,3 +234,12 @@ def test_instance_validator_rejects_inconsistent_edge():
     invalid["edges"][0]["inspection_time"] = -1
     with pytest.raises(ValueError):
         validate_instance(invalid)
+
+
+def test_instance_validator_allows_repeated_journeyer_pairs():
+    instance = generate_instance(seed=3)
+    repeated = copy.deepcopy(instance["journeyers"][0])
+    repeated["id"] = max(agent["id"] for agent in instance["journeyers"]) + 1
+    instance["journeyers"].append(repeated)
+
+    assert validate_instance(instance)

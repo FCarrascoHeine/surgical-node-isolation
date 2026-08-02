@@ -25,6 +25,15 @@ def _same_value(values, tolerance=1e-6):
     )
 
 
+def _print_solve_start(instance, repetition, formulation, solve_mode):
+    name = instance.get("name", "unnamed")
+    print(
+        f"Solving instance '{name}' | formulation {formulation} | "
+        f"{solve_mode} | repetition {repetition}",
+        flush=True,
+    )
+
+
 def _row_from_result(result, instance, repetition, solver_seed, threads):
     cuts_by_family = result.get("cuts_by_family", {})
     metadata = software_metadata()
@@ -99,6 +108,9 @@ def run_comparison(
         }
 
         if solve_integer:
+            _print_solve_start(
+                data["instance"], repetition, formulation, "integer"
+            )
             result = solve_instance(
                 data["instance"],
                 formulation=formulation,
@@ -147,6 +159,9 @@ def run_comparison(
                 )
 
         if solve_relaxation:
+            _print_solve_start(
+                data["instance"], repetition, formulation, "relaxation"
+            )
             extra_arguments = {}
             if formulation == 4:
                 extra_arguments = {
