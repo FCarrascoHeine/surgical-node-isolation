@@ -13,37 +13,43 @@
             "tail": 0,
             "head": 1,
             "transit_time": 1.0,
-            "inspection_time": 4.0
+            "inspection_time": 4.0,
+            "checkpoint_cost": 1.0
         },
         {
             "tail": 1,
             "head": 3,
             "transit_time": 1.0,
-            "inspection_time": 1.0
+            "inspection_time": 1.0,
+            "checkpoint_cost": 1.0
         },
         {
             "tail": 0,
             "head": 2,
             "transit_time": 1.0,
-            "inspection_time": 2.0
+            "inspection_time": 2.0,
+            "checkpoint_cost": 1.0
         },
         {
             "tail": 2,
             "head": 3,
             "transit_time": 1.0,
-            "inspection_time": 6.0
+            "inspection_time": 6.0,
+            "checkpoint_cost": 1.0
         },
         {
             "tail": 1,
             "head": 2,
             "transit_time": 0.5,
-            "inspection_time": 2.0
+            "inspection_time": 2.0,
+            "checkpoint_cost": 1.0
         },
         {
             "tail": 2,
             "head": 1,
             "transit_time": 0.5,
-            "inspection_time": 2.0
+            "inspection_time": 2.0,
+            "checkpoint_cost": 1.0
         }
     ],
     "intruders": [
