@@ -1,4 +1,5 @@
 import argparse
+import gc
 import glob
 from pathlib import Path
 
@@ -85,6 +86,8 @@ def run_comparison(
     solver_seed=0,
     threads=1,
     env=None,
+    row_callback=None,
+    retain_variables=True,
 ):
     data = prepare_instance(instance)
     selected_formulations = tuple(dict.fromkeys(int(f) for f in formulations))
@@ -97,6 +100,15 @@ def run_comparison(
     solve_relaxation = mode in ("relaxation", "both")
     results = {}
     rows = []
+
+    def complete_row(row, result):
+        rows.append(row)
+        if row_callback is not None:
+            row_callback(row)
+        if not retain_variables:
+            variables = result.get("variables")
+            if variables is not None:
+                variables.clear()
 
     for formulation in selected_formulations:
         common_arguments = {
@@ -130,7 +142,6 @@ def run_comparison(
             )
             row["validation_passed"] = validation["valid"]
             row["original_objective"] = validation["original_objective"]
-            rows.append(row)
 
             if formulation == 4 and result.get("variables"):
                 variables = result["variables"]
@@ -150,6 +161,8 @@ def run_comparison(
                         "The final branch-and-cut solution has violated cuts"
                     )
                     row["validation_passed"] = False
+
+            complete_row(row, result)
 
             if strict_validation and not validation["valid"]:
                 raise AssertionError(
@@ -176,15 +189,14 @@ def run_comparison(
                 **extra_arguments,
             )
             results[formulation, "relaxation"] = result
-            rows.append(
-                _row_from_result(
-                    result,
-                    data["instance"],
-                    repetition,
-                    solver_seed,
-                    threads,
-                )
+            row = _row_from_result(
+                result,
+                data["instance"],
+                repetition,
+                solver_seed,
+                threads,
             )
+            complete_row(row, result)
 
     oracle = None
     if len(data["edges"]) <= 18:
@@ -234,6 +246,8 @@ def run_comparison(
                 result, integer_optimum, tolerance=tolerance
             )
             row["validation_passed"] = validation["valid"]
+            if row_callback is not None:
+                row_callback(row)
             if strict_validation and not validation["valid"]:
                 raise AssertionError(
                     "Formulation {} returned an invalid relaxation bound".format(
@@ -279,17 +293,43 @@ def run_experiments(
     comparisons = []
     for instance in instances:
         for repetition in range(1, repetitions + 1):
+            recorded_row_ids = set()
+
+            def checkpoint_row(row, recorded_row_ids=recorded_row_ids):
+                row_id = id(row)
+                if row_id not in recorded_row_ids:
+                    rows.append(row)
+                    recorded_row_ids.add(row_id)
+                if csv_filename is not None:
+                    save_rows(rows, csv_filename)
+
             comparison = run_comparison(
                 instance,
                 repetition=repetition,
                 env=env,
+                row_callback=checkpoint_row,
+                retain_variables=False,
                 **comparison_arguments,
             )
-            rows.extend(comparison["rows"])
+
+            # Keep this fallback for custom or monkeypatched comparison runners
+            # that return rows without invoking the callback.
+            for row in comparison["rows"]:
+                if id(row) not in recorded_row_ids:
+                    checkpoint_row(row)
+
+            # Custom comparison runners may ignore retain_variables.
+            for result in comparison["results"].values():
+                variables = result.get("variables")
+                if variables is not None:
+                    variables.clear()
             comparisons.append(comparison)
 
-    if csv_filename is not None:
-        save_rows(rows, csv_filename)
+            # Models are explicitly disposed by the solvers. Collect here as
+            # well so unreachable Python-side model and callback cycles do not
+            # linger between repetitions or instances.
+            gc.collect()
+
     return {"rows": rows, "comparisons": comparisons}
 
 
@@ -338,7 +378,7 @@ def main():
         default="both",
     )
     parser.add_argument("--repetitions", type=int, default=1)
-    parser.add_argument("--csv", default="results/comparison.csv")
+    parser.add_argument("--csv", default="results/results.csv")
     parser.add_argument("--time-limit", type=float, default=None)
     parser.add_argument("--max-iterations", type=int, default=100)
     parser.add_argument("--max-cuts", type=int, default=None)

@@ -1,4 +1,5 @@
 import copy
+import csv
 import heapq
 import itertools
 import math
@@ -8,6 +9,7 @@ from pathlib import Path
 import pytest
 from gurobipy import GRB, GurobiError
 
+import run as run_module
 from formulations import BUILDERS, solve_instance
 from instances import generate_instance, load_instance, save_instance, validate_instance
 from run import run_experiments
@@ -218,6 +220,71 @@ def test_unified_runner_writes_reproducible_metadata(
     assert {"python_version", "gurobi_version", "solver_seed", "threads"}.issubset(
         experiment["rows"][0]
     )
+    assert all(
+        not result["variables"]
+        for comparison in experiment["comparisons"]
+        for result in comparison["results"].values()
+    )
+
+
+def test_runner_checkpoints_completed_instances_before_continuing(
+    monkeypatch, workspace_tmp_dir
+):
+    output = workspace_tmp_dir / "checkpoint.csv"
+    first_comparison = {
+        "rows": [{"instance": "first", "status": "OPTIMAL"}],
+        "results": {
+            (1, "integer"): {"variables": {"x": {(1, 2): 1.0}}}
+        },
+        "oracle": None,
+    }
+
+    def fake_run_comparison(instance, **_kwargs):
+        if instance == "second":
+            with output.open(newline="", encoding="utf-8") as file:
+                saved_rows = list(csv.DictReader(file))
+            assert saved_rows == [{"instance": "first", "status": "OPTIMAL"}]
+            raise RuntimeError("later instance failed")
+        return first_comparison
+
+    monkeypatch.setattr(run_module, "run_comparison", fake_run_comparison)
+
+    with pytest.raises(RuntimeError, match="later instance failed"):
+        run_module.run_experiments(
+            ["first", "second"],
+            csv_filename=output,
+        )
+
+    assert first_comparison["results"][(1, "integer")]["variables"] == {}
+
+
+def test_runner_checkpoints_each_row_before_comparison_finishes(
+    monkeypatch, workspace_tmp_dir
+):
+    output = workspace_tmp_dir / "row_checkpoint.csv"
+    completed_row = {
+        "instance": "interrupted",
+        "formulation": "1",
+        "mode": "integer",
+        "status": "OPTIMAL",
+    }
+
+    def interrupted_comparison(_instance, row_callback=None, **_kwargs):
+        row_callback(completed_row)
+        with output.open(newline="", encoding="utf-8") as file:
+            assert list(csv.DictReader(file)) == [completed_row]
+        raise RuntimeError("next formulation failed")
+
+    monkeypatch.setattr(run_module, "run_comparison", interrupted_comparison)
+
+    with pytest.raises(RuntimeError, match="next formulation failed"):
+        run_module.run_experiments(
+            ["interrupted"],
+            csv_filename=output,
+        )
+
+    with output.open(newline="", encoding="utf-8") as file:
+        assert list(csv.DictReader(file)) == [completed_row]
 
 
 def test_instance_generation_is_reproducible_and_round_trips(workspace_tmp_dir):

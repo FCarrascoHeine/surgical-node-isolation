@@ -58,7 +58,7 @@ are solved only once.
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `INSTANCE [INSTANCE ...]` | Required | One or more JSON files, directories, or quoted patterns such as `"instances/*.json"`. Directory searches are not recursive. |
-| `--csv PATH` | `results/comparison.csv` | Destination of the combined result table. Parent directories are created automatically. An existing file at this path is overwritten, not appended to. |
+| `--csv PATH` | `results/results.csv` | Destination of the combined result table. Parent directories are created automatically. The file is atomically checkpointed after every completed result row, so completed formulations survive a later failure in the same instance. An existing file at this path is overwritten, not appended to. |
 | `--formulations {1,2,3,4} [...]` | `1 2 3 4` | Formulations to solve. For example, `--formulations 2 4` runs only formulations 2 and 4. |
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |
 | `--repetitions N` | `1` | Solves every selected instance/formulation/mode combination `N` times. Repetition numbers are recorded in the CSV. |
@@ -116,13 +116,17 @@ python run.py instances/small_instance.json --formulations 4 --mode integer --ou
 ```
 
 Use descriptive `--csv` filenames for paper experiments. If `--csv` is omitted,
-the next run will overwrite the default `results/comparison.csv` file.
+the next run will overwrite the default `results/results.csv` file.
 
 Each CSV row records the instance, formulation, mode, repetition, solver settings,
 objective, bound, gap, runtimes, model size, node count, cut statistics, validation
 status, and Python/Gurobi versions. `runtime` is total wall time; `solver_runtime`
 contains time reported by Gurobi. They differ for formulation 4 because separation
 work is performed outside the master solves.
+
+During a batch, detailed per-variable solution mappings are used for validation and
+then released after each solve. The returned experiment object and CSV retain the
+compact solve summaries and result rows.
 
 ## Generate instances
 
