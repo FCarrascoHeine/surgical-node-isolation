@@ -74,7 +74,13 @@ def validate_instance(instance):
     edges = []
 
     for edge_data in instance["edges"]:
-        for field in ["tail", "head", "transit_time", "inspection_time"]:
+        for field in [
+            "tail",
+            "head",
+            "transit_time",
+            "inspection_time",
+            "checkpoint_cost",
+        ]:
             if field not in edge_data:
                 raise ValueError(f"Every edge must define {field}")
 
@@ -85,7 +91,7 @@ def validate_instance(instance):
             raise ValueError(f"Self loops are not supported: {edge}")
         if edge in edges:
             raise ValueError(f"Parallel directed edges are not supported: {edge}")
-        for field in ["transit_time", "inspection_time"]:
+        for field in ["transit_time", "inspection_time", "checkpoint_cost"]:
             value = edge_data[field]
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise ValueError(f"{field} must be numeric")  # noqa: TRY004
@@ -225,6 +231,10 @@ def prepare_instance(instance):
         edges[k]: float(instance["edges"][k]["inspection_time"])
         for k in range(len(edges))
     }
+    checkpoint_cost = {
+        edges[k]: float(instance["edges"][k]["checkpoint_cost"])
+        for k in range(len(edges))
+    }
     intruder_source = {
         agent["id"]: agent["source"]
         for agent in instance["intruders"]
@@ -258,6 +268,7 @@ def prepare_instance(instance):
         "journeyers": journeyers,
         "tau": tau,
         "inspection_time": inspection_time,
+        "checkpoint_cost": checkpoint_cost,
         "intruder_source": intruder_source,
         "intruder_target": intruder_target,
         "journeyer_source": journeyer_source,
@@ -359,6 +370,7 @@ def generate_instance(
                 "head": v_prime,
                 "transit_time": transit_time,
                 "inspection_time": inspection_time,
+                "checkpoint_cost": 1.0,
             }
         )
 

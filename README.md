@@ -130,6 +130,28 @@ compact solve summaries and result rows.
 
 ## Generate instances
 
+Generate and validate the complete 45-instance rectangular-grid collection
+without writing files:
+
+```bash
+python generate_grid_instances.py --dry-run
+```
+
+Write the collection to its default directory:
+
+```bash
+python generate_grid_instances.py
+```
+
+Each of the five grid sizes has one reproducible master graph, one ordered list
+of 10 intruders, and one ordered list of 100 journeyers. The nine instances per
+grid take nested prefixes of 1, 5, or 10 intruders and 10, 50, or 100 journeyers,
+so agent data and arc parameters remain fixed within a grid-size comparison.
+Use `--output PATH`, `--seed N`, or `--overwrite` when a nonstandard collection
+is required.
+
+The older general-purpose random generator remains available:
+
 ```bash
 python instances.py --nodes 20 --edges 60 --intruders 3 --journeyers 5 \
     --seed 1 --output instances/generated_seed_1.json
@@ -156,6 +178,7 @@ is available.
 - `formulations.py`: model builders for formulations 1--4 and common solve logic.
 - `branch_and_cut.py`: separation and solve procedure for formulation 4.
 - `instances.py`: instance validation, JSON I/O, preparation, and generation.
+- `generate_grid_instances.py`: deterministic rectangular-grid collection generator.
 - `validation.py`: independent allocation, result, relaxation, and cut checks.
 - `utils.py`: Gurobi environment, result normalization, metadata, and CSV output.
 - `instances/`: JSON experiment instances.
