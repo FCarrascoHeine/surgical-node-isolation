@@ -105,11 +105,18 @@ def validate_instance(instance):
     if not _underlying_graph_is_connected(nodes, edges):
         raise ValueError("The underlying undirected graph must be connected")
 
+    checkpoint_cost = {
+        (edge_data["tail"], edge_data["head"]): edge_data["checkpoint_cost"]
+        for edge_data in instance["edges"]
+    }
+    maximum_budget = sum(checkpoint_cost.values())
     budget = instance["budget"]
     if isinstance(budget, bool) or not isinstance(budget, int):
         raise ValueError("The budget must be an integer")  # noqa: TRY004
-    if budget < 0 or budget > len(edges):
-        raise ValueError("The budget must be between 0 and the number of edges")
+    if budget < 0 or budget > maximum_budget:
+        raise ValueError(
+            "The budget must be between 0 and the total checkpoint cost"
+        )
 
     for group_name in ["intruders", "journeyers"]:
         ids = set()
@@ -146,10 +153,10 @@ def validate_instance(instance):
     if "known_feasible_checkpoints" in instance:
         checkpoints = [tuple(edge) for edge in instance["known_feasible_checkpoints"]]
 
-        if len(checkpoints) > budget:
-            raise ValueError("The known feasible checkpoint set exceeds the budget")
         if any(edge not in edges for edge in checkpoints):
             raise ValueError("The known feasible checkpoint set contains an unknown edge")
+        if sum(checkpoint_cost[edge] for edge in checkpoints) > budget:
+            raise ValueError("The known feasible checkpoint set exceeds the budget")
 
         for intruder in instance["intruders"]:
             if _directed_path_exists(
@@ -164,10 +171,10 @@ def validate_instance(instance):
     if "known_optimal_checkpoints" in instance:
         checkpoints = [tuple(edge) for edge in instance["known_optimal_checkpoints"]]
 
-        if len(checkpoints) > budget:
-            raise ValueError("The known optimal checkpoint set exceeds the budget")
         if any(edge not in edges for edge in checkpoints):
             raise ValueError("The known optimal checkpoint set contains an unknown edge")
+        if sum(checkpoint_cost[edge] for edge in checkpoints) > budget:
+            raise ValueError("The known optimal checkpoint set exceeds the budget")
 
         for intruder in instance["intruders"]:
             if _directed_path_exists(

@@ -50,7 +50,8 @@ def _add_common_constraints(model, data, x, y, z, number_offset=0):
     edges = data["edges"]
 
     model.addConstr(
-        quicksum(x[edge] for edge in edges) <= data["budget"],
+        quicksum(data["checkpoint_cost"][edge] * x[edge] for edge in edges)
+        <= data["budget"],
         name=f"budget_{1 + number_offset}",
     )
 
@@ -307,7 +308,8 @@ def build_formulation_4(
         GRB.MINIMIZE,
     )
     model.addConstr(
-        quicksum(x[edge] for edge in edges) <= data["budget"],
+        quicksum(data["checkpoint_cost"][edge] * x[edge] for edge in edges)
+        <= data["budget"],
         name="budget_23",
     )
     for journeyer in journeyers:

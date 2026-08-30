@@ -99,7 +99,8 @@ def evaluate_allocation(instance, x_values, tolerance=1e-6):
         if float(x_values[e]) >= 0.5
     }
 
-    if len(selected_edges) > data["budget"]:
+    selected_cost = sum(data["checkpoint_cost"][e] for e in selected_edges)
+    if selected_cost > data["budget"] + tolerance:
         errors.append("The checkpoint allocation exceeds the budget")
 
     for i in I:
@@ -140,7 +141,7 @@ def enumerate_original_problem(instance, max_edges=18):
 
     feasible_allocations = []
 
-    for size in range(data["budget"] + 1):
+    for size in range(len(E) + 1):
         for selected_tuple in itertools.combinations(E, size):
             selected_edges = set(selected_tuple)
             x_values = {
