@@ -17,7 +17,6 @@ from instances import load_instance, save_instance, validate_instance
 from utils import load_gurobi_env
 from validation import evaluate_allocation
 
-
 SMALL_INSTANCE = (
     Path(__file__).resolve().parents[1] / "instances" / "small_instance.json"
 )
