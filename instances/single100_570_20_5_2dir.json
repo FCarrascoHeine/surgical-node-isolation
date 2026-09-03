@@ -1,0 +1,4280 @@
+{
+    "name": "single100_570_20_5_2dir",
+    "directed": true,
+    "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101
+    ],
+    "edges": [
+        {
+            "tail": 71,
+            "head": 5,
+            "transit_time": 40.52159917870962,
+            "inspection_time": 5.546638271050214,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 27,
+            "head": 41,
+            "transit_time": 52.88667128870941,
+            "inspection_time": 29.988796612136877,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 28,
+            "head": 63,
+            "transit_time": 42.42640687119285,
+            "inspection_time": 25.83899825696774,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 52,
+            "head": 38,
+            "transit_time": 95.85405573057407,
+            "inspection_time": 4.800837637582455,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 29,
+            "transit_time": 30.675723300355934,
+            "inspection_time": 17.757000430716626,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 88,
+            "transit_time": 35.90264614203248,
+            "inspection_time": 33.927935469516385,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 76,
+            "transit_time": 71.06335201775948,
+            "inspection_time": 70.942833915461,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 64,
+            "head": 25,
+            "transit_time": 21.0,
+            "inspection_time": 19.025739833256225,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 97,
+            "transit_time": 32.984845004941285,
+            "inspection_time": 17.929623928610255,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 94,
+            "head": 79,
+            "transit_time": 61.66036003787198,
+            "inspection_time": 26.354293353654306,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 49,
+            "head": 0,
+            "transit_time": 30.083217912982647,
+            "inspection_time": 21.522790713134086,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 73,
+            "transit_time": 39.66106403010388,
+            "inspection_time": 25.19259158886076,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 4,
+            "transit_time": 60.00833275470999,
+            "inspection_time": 27.518854401222338,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 23,
+            "transit_time": 83.48652585896721,
+            "inspection_time": 45.41745028254928,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 69,
+            "transit_time": 45.221676218380054,
+            "inspection_time": 6.016012704743149,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 94,
+            "head": 62,
+            "transit_time": 68.76772498781678,
+            "inspection_time": 43.33229014621748,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 36,
+            "transit_time": 62.48199740725323,
+            "inspection_time": 22.02207411224885,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 40,
+            "transit_time": 49.25444142409901,
+            "inspection_time": 46.417215679706274,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 24,
+            "transit_time": 110.67971810589327,
+            "inspection_time": 39.293833546822675,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 98,
+            "transit_time": 70.7248188403477,
+            "inspection_time": 23.754349753604767,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 74,
+            "transit_time": 114.94781424629178,
+            "inspection_time": 56.64120209879925,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 41,
+            "head": 27,
+            "transit_time": 52.88667128870941,
+            "inspection_time": 41.58240899659595,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 42,
+            "head": 82,
+            "transit_time": 5.0990195135927845,
+            "inspection_time": 0.5901009876042448,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 64,
+            "transit_time": 108.664621657649,
+            "inspection_time": 69.66068364072356,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 25,
+            "head": 64,
+            "transit_time": 21.0,
+            "inspection_time": 15.733028879645945,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 27,
+            "head": 26,
+            "transit_time": 85.44003745317531,
+            "inspection_time": 40.605875329398124,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 51,
+            "transit_time": 97.51410154434076,
+            "inspection_time": 83.7602956403526,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 90,
+            "head": 73,
+            "transit_time": 11.045361017187261,
+            "inspection_time": 10.944490522153965,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 67,
+            "head": 65,
+            "transit_time": 44.10215414239989,
+            "inspection_time": 28.547659165272993,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 52,
+            "transit_time": 112.72976536833562,
+            "inspection_time": 19.091785378519926,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 25,
+            "transit_time": 112.92918134831227,
+            "inspection_time": 58.39613285037776,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 78,
+            "head": 51,
+            "transit_time": 24.698178070456937,
+            "inspection_time": 18.404349251635725,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 62,
+            "transit_time": 34.52535300326414,
+            "inspection_time": 9.497009495093284,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 45,
+            "transit_time": 89.00561780022652,
+            "inspection_time": 4.535964498868283,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 37,
+            "head": 72,
+            "transit_time": 12.206555615733702,
+            "inspection_time": 6.761113504370166,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 68,
+            "head": 79,
+            "transit_time": 38.07886552931954,
+            "inspection_time": 11.458793983023764,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 81,
+            "transit_time": 121.07848694132248,
+            "inspection_time": 13.193950650961398,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 75,
+            "head": 37,
+            "transit_time": 124.45882853377658,
+            "inspection_time": 115.49813078191711,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 14,
+            "head": 9,
+            "transit_time": 30.4138126514911,
+            "inspection_time": 2.9872358978082882,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 11,
+            "head": 68,
+            "transit_time": 99.35793878699377,
+            "inspection_time": 81.78556158750882,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 24,
+            "head": 96,
+            "transit_time": 99.15644204992432,
+            "inspection_time": 6.403139030359408,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 7,
+            "transit_time": 39.81205847478876,
+            "inspection_time": 10.476040645997513,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 37,
+            "head": 4,
+            "transit_time": 112.36102527122117,
+            "inspection_time": 92.78755238389672,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 73,
+            "head": 90,
+            "transit_time": 11.045361017187261,
+            "inspection_time": 8.377470027043952,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 16,
+            "head": 39,
+            "transit_time": 33.37663853655727,
+            "inspection_time": 15.10302991199497,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 61,
+            "head": 6,
+            "transit_time": 58.137767414994535,
+            "inspection_time": 21.29617638375769,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 7,
+            "head": 97,
+            "transit_time": 9.848857801796104,
+            "inspection_time": 4.223972777637218,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 79,
+            "head": 68,
+            "transit_time": 38.07886552931954,
+            "inspection_time": 30.550608144967562,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 2,
+            "head": 60,
+            "transit_time": 21.587033144922902,
+            "inspection_time": 15.642306486014393,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 65,
+            "transit_time": 3.1622776601683795,
+            "inspection_time": 1.2641222428908587,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 63,
+            "head": 10,
+            "transit_time": 12.0,
+            "inspection_time": 1.0421685404683148,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 84,
+            "transit_time": 101.83319694480774,
+            "inspection_time": 41.97073258026262,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 93,
+            "head": 61,
+            "transit_time": 63.702433234531945,
+            "inspection_time": 39.57178358099619,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 41,
+            "head": 26,
+            "transit_time": 104.48444860360799,
+            "inspection_time": 0.032752600671384614,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 10,
+            "head": 63,
+            "transit_time": 12.0,
+            "inspection_time": 0.9367366465941034,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 30,
+            "transit_time": 45.39823785126467,
+            "inspection_time": 6.892635549755738,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 72,
+            "transit_time": 163.04907236779974,
+            "inspection_time": 100.50595160421057,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 95,
+            "head": 98,
+            "transit_time": 106.47065323364932,
+            "inspection_time": 70.60399615653361,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 90,
+            "head": 77,
+            "transit_time": 34.0,
+            "inspection_time": 2.8931832608760697,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 37,
+            "transit_time": 166.97305171793442,
+            "inspection_time": 161.07268924968113,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 74,
+            "transit_time": 50.32891812864648,
+            "inspection_time": 6.667179995930825,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 22,
+            "head": 54,
+            "transit_time": 34.0147027033899,
+            "inspection_time": 14.398939689064717,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 72,
+            "head": 37,
+            "transit_time": 12.206555615733702,
+            "inspection_time": 9.307237872111292,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 1,
+            "transit_time": 40.024992192379,
+            "inspection_time": 16.265062936254846,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 95,
+            "head": 86,
+            "transit_time": 119.03780911962384,
+            "inspection_time": 51.869354147668304,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 49,
+            "head": 57,
+            "transit_time": 81.00617260431454,
+            "inspection_time": 49.810230578049506,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 29,
+            "head": 48,
+            "transit_time": 30.675723300355934,
+            "inspection_time": 5.942342907299196,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 90,
+            "transit_time": 45.967379738244816,
+            "inspection_time": 20.541397782331295,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 11,
+            "head": 34,
+            "transit_time": 104.69479452198185,
+            "inspection_time": 94.12097608798898,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 64,
+            "transit_time": 129.0620006043607,
+            "inspection_time": 122.971050404641,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 88,
+            "head": 83,
+            "transit_time": 35.90264614203248,
+            "inspection_time": 26.143475927178763,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 90,
+            "head": 15,
+            "transit_time": 45.967379738244816,
+            "inspection_time": 3.986174969907296,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 25,
+            "transit_time": 130.11533345459327,
+            "inspection_time": 5.891648983066323,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 93,
+            "head": 22,
+            "transit_time": 86.34813257969161,
+            "inspection_time": 76.59058788386321,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 10,
+            "head": 28,
+            "transit_time": 45.69463863518345,
+            "inspection_time": 12.278703888333581,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 77,
+            "transit_time": 79.20227269466452,
+            "inspection_time": 48.11988102029066,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 47,
+            "head": 89,
+            "transit_time": 64.00781202322104,
+            "inspection_time": 9.093781908729468,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 61,
+            "transit_time": 58.137767414994535,
+            "inspection_time": 3.824412215637918,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 96,
+            "head": 24,
+            "transit_time": 99.15644204992432,
+            "inspection_time": 17.827457005402913,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 35,
+            "transit_time": 87.92041856133307,
+            "inspection_time": 4.850796389977667,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 96,
+            "head": 45,
+            "transit_time": 107.18675291284833,
+            "inspection_time": 103.07448409410705,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 38,
+            "transit_time": 130.59862173851607,
+            "inspection_time": 19.86119694247569,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 26,
+            "head": 27,
+            "transit_time": 85.44003745317531,
+            "inspection_time": 42.218316710634404,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 93,
+            "head": 26,
+            "transit_time": 87.20665112249179,
+            "inspection_time": 60.04569127497434,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 65,
+            "head": 19,
+            "transit_time": 3.1622776601683795,
+            "inspection_time": 0.45701272796769454,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 79,
+            "transit_time": 88.05112151472007,
+            "inspection_time": 36.456567298029846,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 82,
+            "head": 42,
+            "transit_time": 5.0990195135927845,
+            "inspection_time": 2.8168467802614487,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 23,
+            "transit_time": 79.25906888173743,
+            "inspection_time": 1.484447562611315,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 84,
+            "transit_time": 31.76476034853718,
+            "inspection_time": 28.39716047133191,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 64,
+            "head": 55,
+            "transit_time": 108.664621657649,
+            "inspection_time": 25.305040099019717,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 84,
+            "head": 13,
+            "transit_time": 31.76476034853718,
+            "inspection_time": 29.60761672194131,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 9,
+            "head": 14,
+            "transit_time": 30.4138126514911,
+            "inspection_time": 25.343978621182032,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 37,
+            "transit_time": 124.84390253432484,
+            "inspection_time": 4.6390637526676155,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 63,
+            "head": 28,
+            "transit_time": 42.42640687119285,
+            "inspection_time": 11.264182783630911,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 26,
+            "head": 93,
+            "transit_time": 87.20665112249179,
+            "inspection_time": 71.50887568737085,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 54,
+            "head": 22,
+            "transit_time": 34.0147027033899,
+            "inspection_time": 4.502645150975742,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 45,
+            "head": 17,
+            "transit_time": 89.00561780022652,
+            "inspection_time": 20.972027384738784,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 25,
+            "head": 8,
+            "transit_time": 106.30145812734649,
+            "inspection_time": 20.68170249886582,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 23,
+            "head": 20,
+            "transit_time": 18.027756377319946,
+            "inspection_time": 13.54089596687112,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 77,
+            "head": 87,
+            "transit_time": 32.38826948140329,
+            "inspection_time": 7.499461382760195,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 75,
+            "head": 24,
+            "transit_time": 125.67020331009256,
+            "inspection_time": 108.20786603488064,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 52,
+            "head": 85,
+            "transit_time": 112.72976536833562,
+            "inspection_time": 110.73542803290681,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 51,
+            "head": 78,
+            "transit_time": 24.698178070456937,
+            "inspection_time": 15.984344072380576,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 58,
+            "head": 99,
+            "transit_time": 100.07996802557443,
+            "inspection_time": 66.71206992271188,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 77,
+            "head": 90,
+            "transit_time": 34.0,
+            "inspection_time": 11.193517649436853,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 52,
+            "transit_time": 95.85405573057407,
+            "inspection_time": 49.9106065440675,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 95,
+            "transit_time": 133.30416347586447,
+            "inspection_time": 117.68633937382924,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 96,
+            "head": 32,
+            "transit_time": 181.6645259812713,
+            "inspection_time": 48.796716560166,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 49,
+            "transit_time": 30.083217912982647,
+            "inspection_time": 1.2072821030246088,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 83,
+            "transit_time": 160.31219541881399,
+            "inspection_time": 145.47458108864961,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 87,
+            "transit_time": 104.27847332982968,
+            "inspection_time": 33.76128021158494,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 95,
+            "head": 55,
+            "transit_time": 133.30416347586447,
+            "inspection_time": 69.06996941165669,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 42,
+            "transit_time": 79.00632886041473,
+            "inspection_time": 35.91392760324048,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 45,
+            "head": 96,
+            "transit_time": 107.18675291284833,
+            "inspection_time": 31.777917894832513,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 53,
+            "transit_time": 139.05394636614957,
+            "inspection_time": 35.758901116952416,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 31,
+            "transit_time": 50.60632371551998,
+            "inspection_time": 17.36300470457854,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 62,
+            "head": 34,
+            "transit_time": 34.52535300326414,
+            "inspection_time": 22.843126931398874,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 71,
+            "head": 2,
+            "transit_time": 63.245553203367585,
+            "inspection_time": 30.727648086326436,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 58,
+            "head": 29,
+            "transit_time": 125.89678312014172,
+            "inspection_time": 81.00201137906795,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 40,
+            "transit_time": 146.74126890551273,
+            "inspection_time": 82.59881844581119,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 26,
+            "head": 41,
+            "transit_time": 104.48444860360799,
+            "inspection_time": 87.00522242001344,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 99,
+            "head": 70,
+            "transit_time": 88.02272433866155,
+            "inspection_time": 5.910500616200031,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 42,
+            "transit_time": 132.00378782444085,
+            "inspection_time": 13.235043556571796,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 89,
+            "head": 47,
+            "transit_time": 64.00781202322104,
+            "inspection_time": 43.00762865772563,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 30,
+            "transit_time": 110.86027241532469,
+            "inspection_time": 25.209282182574874,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 20,
+            "transit_time": 84.48076704197234,
+            "inspection_time": 79.92612281007669,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 75,
+            "transit_time": 154.63828762631846,
+            "inspection_time": 125.0712228128628,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 14,
+            "head": 0,
+            "transit_time": 76.92203845452875,
+            "inspection_time": 75.16438243847124,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 84,
+            "head": 80,
+            "transit_time": 48.093658625644196,
+            "inspection_time": 36.19914259952253,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 20,
+            "head": 23,
+            "transit_time": 18.027756377319946,
+            "inspection_time": 7.6559576257628095,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 93,
+            "head": 6,
+            "transit_time": 87.46427842267951,
+            "inspection_time": 4.044709051786944,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 46,
+            "transit_time": 45.221676218380054,
+            "inspection_time": 28.60943186419986,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 93,
+            "transit_time": 87.46427842267951,
+            "inspection_time": 0.6451012041694334,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 81,
+            "head": 89,
+            "transit_time": 81.74350127074322,
+            "inspection_time": 57.666470622917714,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 67,
+            "transit_time": 47.16990566028302,
+            "inspection_time": 33.984887811883745,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 23,
+            "head": 29,
+            "transit_time": 54.00925846556311,
+            "inspection_time": 46.00701225045655,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 4,
+            "head": 92,
+            "transit_time": 60.00833275470999,
+            "inspection_time": 19.394566726062518,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 96,
+            "transit_time": 196.1045639448506,
+            "inspection_time": 85.28836889138631,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 36,
+            "transit_time": 71.5122367151245,
+            "inspection_time": 64.07741645526201,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 74,
+            "head": 66,
+            "transit_time": 49.57822102496216,
+            "inspection_time": 44.0939939863048,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 42,
+            "head": 44,
+            "transit_time": 79.00632886041473,
+            "inspection_time": 21.482819947091144,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 72,
+            "head": 92,
+            "transit_time": 126.58988901172162,
+            "inspection_time": 87.49614708499548,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 82,
+            "transit_time": 80.09993757800315,
+            "inspection_time": 14.981635318149184,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 66,
+            "transit_time": 135.94484175576505,
+            "inspection_time": 74.3963095995895,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 77,
+            "head": 73,
+            "transit_time": 43.657759905886145,
+            "inspection_time": 40.2640800839119,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 61,
+            "head": 93,
+            "transit_time": 63.702433234531945,
+            "inspection_time": 3.288317603249784,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 82,
+            "transit_time": 157.07959765672945,
+            "inspection_time": 73.48652780780563,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 59,
+            "head": 10,
+            "transit_time": 78.16009211867653,
+            "inspection_time": 65.79858359286906,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 78,
+            "head": 8,
+            "transit_time": 49.09175083453431,
+            "inspection_time": 31.962447426991215,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 61,
+            "head": 22,
+            "transit_time": 73.06161783043132,
+            "inspection_time": 64.72200654452108,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 51,
+            "head": 8,
+            "transit_time": 44.721359549995796,
+            "inspection_time": 31.611679805011068,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 63,
+            "head": 59,
+            "transit_time": 78.31347265956222,
+            "inspection_time": 5.902276271793473,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 13,
+            "transit_time": 91.3892772703669,
+            "inspection_time": 11.140886251944396,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 20,
+            "head": 48,
+            "transit_time": 84.48076704197234,
+            "inspection_time": 66.43029784598397,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 66,
+            "transit_time": 98.2700361249552,
+            "inspection_time": 73.61312759799402,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 82,
+            "head": 44,
+            "transit_time": 80.09993757800315,
+            "inspection_time": 0.9783330880155388,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 25,
+            "head": 55,
+            "transit_time": 112.92918134831227,
+            "inspection_time": 35.13930783942634,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 73,
+            "head": 15,
+            "transit_time": 39.66106403010388,
+            "inspection_time": 29.788023512221788,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 40,
+            "head": 55,
+            "transit_time": 49.25444142409901,
+            "inspection_time": 2.493694275747979,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 70,
+            "head": 99,
+            "transit_time": 88.02272433866155,
+            "inspection_time": 46.93396734721741,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 49,
+            "transit_time": 81.00617260431454,
+            "inspection_time": 4.013148002391978,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 82,
+            "transit_time": 132.1854757528224,
+            "inspection_time": 101.21287397715831,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 77,
+            "head": 15,
+            "transit_time": 79.20227269466452,
+            "inspection_time": 56.63929723200373,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 25,
+            "head": 33,
+            "transit_time": 130.11533345459327,
+            "inspection_time": 18.882190260955866,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 72,
+            "transit_time": 126.58988901172162,
+            "inspection_time": 64.22803657996599,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 79,
+            "head": 62,
+            "transit_time": 54.74486277268398,
+            "inspection_time": 32.244947716814586,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 88,
+            "head": 60,
+            "transit_time": 118.94956914591998,
+            "inspection_time": 113.99847073531795,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 68,
+            "head": 89,
+            "transit_time": 81.93900170248598,
+            "inspection_time": 69.64513456299932,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 49,
+            "head": 14,
+            "transit_time": 82.38931969618392,
+            "inspection_time": 70.57966706020535,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 26,
+            "head": 54,
+            "transit_time": 110.05453193758083,
+            "inspection_time": 9.967949010459277,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 73,
+            "head": 77,
+            "transit_time": 43.657759905886145,
+            "inspection_time": 16.494394777492218,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 62,
+            "head": 79,
+            "transit_time": 54.74486277268398,
+            "inspection_time": 52.84048967910455,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 28,
+            "head": 10,
+            "transit_time": 45.69463863518345,
+            "inspection_time": 10.956147757092655,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 63,
+            "head": 68,
+            "transit_time": 121.65936051122412,
+            "inspection_time": 13.474715339904487,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 71,
+            "head": 60,
+            "transit_time": 65.00769185258002,
+            "inspection_time": 51.743997977538164,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 67,
+            "head": 19,
+            "transit_time": 47.16990566028302,
+            "inspection_time": 37.69422778681821,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 76,
+            "head": 53,
+            "transit_time": 71.06335201775948,
+            "inspection_time": 6.909278802992854,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 9,
+            "head": 12,
+            "transit_time": 72.12489168102785,
+            "inspection_time": 23.12085789709711,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 87,
+            "transit_time": 94.30270409696638,
+            "inspection_time": 71.85256268293229,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 72,
+            "head": 81,
+            "transit_time": 135.63554106501732,
+            "inspection_time": 71.33039341625847,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 88,
+            "head": 2,
+            "transit_time": 128.16005617976296,
+            "inspection_time": 102.79271402330859,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 8,
+            "head": 51,
+            "transit_time": 44.721359549995796,
+            "inspection_time": 36.14783908971532,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 59,
+            "head": 63,
+            "transit_time": 78.31347265956222,
+            "inspection_time": 66.62905038170912,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 65,
+            "head": 67,
+            "transit_time": 44.10215414239989,
+            "inspection_time": 34.32714239462791,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 32,
+            "transit_time": 177.1016657177453,
+            "inspection_time": 117.94099887894974,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 70,
+            "head": 21,
+            "transit_time": 113.28283188550682,
+            "inspection_time": 53.33023304320182,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 75,
+            "head": 98,
+            "transit_time": 127.03542812932147,
+            "inspection_time": 50.99012499497962,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 2,
+            "head": 71,
+            "transit_time": 63.245553203367585,
+            "inspection_time": 7.630640798559704,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 26,
+            "head": 22,
+            "transit_time": 112.2007130102122,
+            "inspection_time": 5.727559459203352,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 94,
+            "transit_time": 98.00510190801293,
+            "inspection_time": 66.44106771688358,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 62,
+            "head": 94,
+            "transit_time": 68.76772498781678,
+            "inspection_time": 48.31408593729557,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 52,
+            "transit_time": 138.05795884337854,
+            "inspection_time": 54.33648381259384,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 21,
+            "head": 70,
+            "transit_time": 113.28283188550682,
+            "inspection_time": 86.28639636793243,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 52,
+            "head": 1,
+            "transit_time": 119.0,
+            "inspection_time": 84.49265152245093,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 0,
+            "transit_time": 93.92017887546851,
+            "inspection_time": 58.16776524922433,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 14,
+            "head": 12,
+            "transit_time": 78.92401408950256,
+            "inspection_time": 38.20977545934082,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 67,
+            "head": 13,
+            "transit_time": 75.21303078589507,
+            "inspection_time": 17.218481108720983,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 36,
+            "head": 87,
+            "transit_time": 61.85466837676846,
+            "inspection_time": 2.397961649625285,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 40,
+            "transit_time": 131.18688958886096,
+            "inspection_time": 29.316899946864527,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 76,
+            "transit_time": 126.4792473095883,
+            "inspection_time": 18.755797760290708,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 14,
+            "transit_time": 76.92203845452875,
+            "inspection_time": 36.53691788919725,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 55,
+            "head": 8,
+            "transit_time": 188.86238376129853,
+            "inspection_time": 93.46838628477819,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 31,
+            "transit_time": 108.78419002777932,
+            "inspection_time": 76.36337098372145,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 10,
+            "head": 59,
+            "transit_time": 78.16009211867653,
+            "inspection_time": 70.90848475567502,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 7,
+            "head": 43,
+            "transit_time": 39.81205847478876,
+            "inspection_time": 18.46831232564996,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 42,
+            "head": 18,
+            "transit_time": 132.00378782444085,
+            "inspection_time": 65.17306669548299,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 20,
+            "head": 6,
+            "transit_time": 88.72992730753249,
+            "inspection_time": 4.295497971769129,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 30,
+            "head": 19,
+            "transit_time": 45.39823785126467,
+            "inspection_time": 33.86639107187861,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 19,
+            "transit_time": 152.08221460775746,
+            "inspection_time": 7.388767766902893,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 94,
+            "head": 47,
+            "transit_time": 72.17340230306452,
+            "inspection_time": 60.456000843566414,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 54,
+            "transit_time": 48.373546489791295,
+            "inspection_time": 26.847072435185382,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 4,
+            "head": 37,
+            "transit_time": 112.36102527122117,
+            "inspection_time": 14.338399540305922,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 99,
+            "head": 58,
+            "transit_time": 100.07996802557443,
+            "inspection_time": 96.9664567951454,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 82,
+            "head": 18,
+            "transit_time": 132.1854757528224,
+            "inspection_time": 100.05746155645733,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 98,
+            "transit_time": 169.53170794869024,
+            "inspection_time": 3.380809457653357,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 12,
+            "transit_time": 90.82400563727631,
+            "inspection_time": 77.82891571842835,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 80,
+            "transit_time": 152.10851389715174,
+            "inspection_time": 117.54933419327585,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 81,
+            "head": 59,
+            "transit_time": 114.0,
+            "inspection_time": 57.12795241549212,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 9,
+            "transit_time": 99.92997548283498,
+            "inspection_time": 63.25021668834894,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 5,
+            "head": 71,
+            "transit_time": 40.52159917870962,
+            "inspection_time": 15.963684414111986,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 52,
+            "head": 18,
+            "transit_time": 133.80956617521784,
+            "inspection_time": 43.893301319186335,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 79,
+            "head": 94,
+            "transit_time": 61.66036003787198,
+            "inspection_time": 20.83439138291078,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 94,
+            "transit_time": 102.41581909060729,
+            "inspection_time": 20.108463182539886,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 60,
+            "head": 2,
+            "transit_time": 21.587033144922902,
+            "inspection_time": 13.547019877521164,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 51,
+            "head": 56,
+            "transit_time": 97.51410154434076,
+            "inspection_time": 13.210240440965366,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 7,
+            "transit_time": 107.20074626605917,
+            "inspection_time": 79.41952494472478,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 77,
+            "transit_time": 97.8008179924892,
+            "inspection_time": 0.0006811629186199707,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 52,
+            "transit_time": 133.80956617521784,
+            "inspection_time": 44.43789584636835,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 85,
+            "transit_time": 186.93581786270923,
+            "inspection_time": 132.8397214966456,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 16,
+            "transit_time": 33.37663853655727,
+            "inspection_time": 20.49850708306352,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 56,
+            "transit_time": 134.39121995130486,
+            "inspection_time": 38.57471566454157,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 26,
+            "head": 99,
+            "transit_time": 127.66362050325849,
+            "inspection_time": 111.2963857891035,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 78,
+            "transit_time": 114.28473213863697,
+            "inspection_time": 85.80883790198412,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 99,
+            "head": 26,
+            "transit_time": 127.66362050325849,
+            "inspection_time": 74.94467937904935,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 85,
+            "transit_time": 139.05394636614957,
+            "inspection_time": 33.52473066814835,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 99,
+            "head": 93,
+            "transit_time": 166.4001201922643,
+            "inspection_time": 14.738195141525074,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 5,
+            "transit_time": 165.7045563646335,
+            "inspection_time": 119.61565310554663,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 78,
+            "head": 67,
+            "transit_time": 89.89438247187641,
+            "inspection_time": 89.78422901679673,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 94,
+            "head": 34,
+            "transit_time": 98.00510190801293,
+            "inspection_time": 38.067951534272176,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 20,
+            "transit_time": 88.72992730753249,
+            "inspection_time": 72.46821072383987,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 59,
+            "head": 81,
+            "transit_time": 114.0,
+            "inspection_time": 71.94946820579639,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 78,
+            "head": 19,
+            "transit_time": 105.00476179678711,
+            "inspection_time": 15.42950716159574,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 80,
+            "transit_time": 67.77905281132217,
+            "inspection_time": 58.18476325013325,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 14,
+            "head": 49,
+            "transit_time": 82.38931969618392,
+            "inspection_time": 72.55981088446987,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 88,
+            "head": 64,
+            "transit_time": 145.34441853748632,
+            "inspection_time": 8.77693700707053,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 16,
+            "transit_time": 84.5931439302264,
+            "inspection_time": 72.4612291526368,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 97,
+            "transit_time": 116.8289347721702,
+            "inspection_time": 75.70148283689021,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 11,
+            "transit_time": 104.69479452198185,
+            "inspection_time": 55.6583842395656,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 36,
+            "head": 46,
+            "transit_time": 62.48199740725323,
+            "inspection_time": 30.86388466995833,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 31,
+            "head": 43,
+            "transit_time": 50.60632371551998,
+            "inspection_time": 42.01734772828669,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 65,
+            "head": 13,
+            "transit_time": 89.05054744357274,
+            "inspection_time": 22.144608764116228,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 74,
+            "head": 38,
+            "transit_time": 50.32891812864648,
+            "inspection_time": 36.29323747974383,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 60,
+            "head": 71,
+            "transit_time": 65.00769185258002,
+            "inspection_time": 28.42898286223476,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 95,
+            "head": 8,
+            "transit_time": 139.05754204644924,
+            "inspection_time": 91.4349248263659,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 67,
+            "transit_time": 75.21303078589507,
+            "inspection_time": 54.9122472849258,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 5,
+            "head": 2,
+            "transit_time": 103.74005976477939,
+            "inspection_time": 59.35888388123639,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 78,
+            "head": 56,
+            "transit_time": 114.28473213863697,
+            "inspection_time": 28.93242538485554,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 68,
+            "transit_time": 112.89375536317321,
+            "inspection_time": 69.356144389359,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 36,
+            "transit_time": 94.64142856064674,
+            "inspection_time": 80.20082831412894,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 28,
+            "head": 68,
+            "transit_time": 95.2732911156112,
+            "inspection_time": 69.33750428583079,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 57,
+            "transit_time": 93.92017887546851,
+            "inspection_time": 75.71378389600567,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 80,
+            "transit_time": 152.0526224699857,
+            "inspection_time": 80.10172738457307,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 29,
+            "transit_time": 128.73616430514,
+            "inspection_time": 69.06973635200085,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 80,
+            "head": 66,
+            "transit_time": 20.808652046684813,
+            "inspection_time": 2.231001107055321,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 35,
+            "head": 12,
+            "transit_time": 9.219544457292887,
+            "inspection_time": 7.124657486788814,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 79,
+            "head": 47,
+            "transit_time": 84.29116205154607,
+            "inspection_time": 16.496132133948638,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 39,
+            "transit_time": 98.84331034521254,
+            "inspection_time": 87.88600969646562,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 12,
+            "head": 35,
+            "transit_time": 9.219544457292887,
+            "inspection_time": 3.4896506428039498,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 8,
+            "head": 78,
+            "transit_time": 49.09175083453431,
+            "inspection_time": 35.17555262815337,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 87,
+            "transit_time": 105.26157893552613,
+            "inspection_time": 30.706849446025235,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 81,
+            "head": 92,
+            "transit_time": 121.07848694132248,
+            "inspection_time": 88.26610121788883,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 64,
+            "transit_time": 134.05968819895114,
+            "inspection_time": 15.160047525138385,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 78,
+            "transit_time": 105.00476179678711,
+            "inspection_time": 44.503260637799194,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 21,
+            "head": 99,
+            "transit_time": 201.08953229842672,
+            "inspection_time": 171.2666362514919,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 22,
+            "transit_time": 72.20110802473879,
+            "inspection_time": 18.299166087291425,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 98,
+            "head": 55,
+            "transit_time": 70.7248188403477,
+            "inspection_time": 42.95798768942081,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 87,
+            "head": 77,
+            "transit_time": 32.38826948140329,
+            "inspection_time": 14.3389326314711,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 97,
+            "head": 7,
+            "transit_time": 9.848857801796104,
+            "inspection_time": 0.525306301151013,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 80,
+            "head": 84,
+            "transit_time": 48.093658625644196,
+            "inspection_time": 4.435823049539428,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 77,
+            "head": 36,
+            "transit_time": 81.27115109311545,
+            "inspection_time": 36.605447558248684,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 58,
+            "transit_time": 135.72398461583714,
+            "inspection_time": 28.065082776977153,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 75,
+            "head": 4,
+            "transit_time": 128.00390619039717,
+            "inspection_time": 32.417805438334256,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 85,
+            "transit_time": 206.48002324680226,
+            "inspection_time": 72.62555077460902,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 66,
+            "head": 80,
+            "transit_time": 20.808652046684813,
+            "inspection_time": 17.555970113246982,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 66,
+            "head": 74,
+            "transit_time": 49.57822102496216,
+            "inspection_time": 40.88707925193046,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 18,
+            "transit_time": 186.93581786270923,
+            "inspection_time": 148.16425563487408,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 7,
+            "head": 9,
+            "transit_time": 102.82509421342633,
+            "inspection_time": 67.89642285101016,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 52,
+            "head": 53,
+            "transit_time": 138.05795884337854,
+            "inspection_time": 66.41757132988373,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 71,
+            "head": 33,
+            "transit_time": 182.94534703019914,
+            "inspection_time": 141.60740190829713,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 44,
+            "transit_time": 210.01190442448734,
+            "inspection_time": 32.63782801723544,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 47,
+            "transit_time": 78.10249675906654,
+            "inspection_time": 37.145501097846825,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 63,
+            "head": 89,
+            "transit_time": 128.00390619039717,
+            "inspection_time": 52.474809687131774,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 12,
+            "head": 9,
+            "transit_time": 72.12489168102785,
+            "inspection_time": 6.497042836167743,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 66,
+            "head": 84,
+            "transit_time": 65.62011886609167,
+            "inspection_time": 63.450913376803726,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 19,
+            "transit_time": 114.96521212958292,
+            "inspection_time": 82.9191265655822,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 54,
+            "head": 50,
+            "transit_time": 48.373546489791295,
+            "inspection_time": 6.201308008859143,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 24,
+            "head": 32,
+            "transit_time": 110.67971810589327,
+            "inspection_time": 95.20632764646128,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 82,
+            "head": 85,
+            "transit_time": 157.07959765672945,
+            "inspection_time": 47.183005944053384,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 29,
+            "head": 23,
+            "transit_time": 54.00925846556311,
+            "inspection_time": 47.15129390612842,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 10,
+            "head": 11,
+            "transit_time": 157.96518603793686,
+            "inspection_time": 139.54725435319313,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 39,
+            "transit_time": 136.36715146984628,
+            "inspection_time": 7.792127791233694,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 43,
+            "transit_time": 126.66885963013956,
+            "inspection_time": 81.81441984400915,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 80,
+            "head": 13,
+            "transit_time": 67.77905281132217,
+            "inspection_time": 2.3858656069430393,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 48,
+            "transit_time": 142.27438279606065,
+            "inspection_time": 103.56304381718385,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 55,
+            "transit_time": 177.1016657177453,
+            "inspection_time": 5.042930600875014,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 31,
+            "transit_time": 147.33974345029924,
+            "inspection_time": 82.02366369200635,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 9,
+            "transit_time": 131.24404748406687,
+            "inspection_time": 53.208845053528336,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 70,
+            "head": 58,
+            "transit_time": 134.41726079637243,
+            "inspection_time": 20.503447505104305,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 84,
+            "head": 66,
+            "transit_time": 65.62011886609167,
+            "inspection_time": 8.175537236504288,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 2,
+            "head": 5,
+            "transit_time": 103.74005976477939,
+            "inspection_time": 16.48618133306539,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 25,
+            "head": 51,
+            "transit_time": 138.63621460498698,
+            "inspection_time": 75.25115006495112,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 96,
+            "head": 17,
+            "transit_time": 196.1045639448506,
+            "inspection_time": 15.535069931349122,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 24,
+            "transit_time": 199.81241202688085,
+            "inspection_time": 75.88209889139131,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 36,
+            "head": 86,
+            "transit_time": 71.5122367151245,
+            "inspection_time": 6.8372727329116625,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 14,
+            "head": 35,
+            "transit_time": 87.72684879784524,
+            "inspection_time": 79.15161885977706,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 51,
+            "transit_time": 156.1089363233252,
+            "inspection_time": 26.051166920549228,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 78,
+            "head": 86,
+            "transit_time": 117.23907198540937,
+            "inspection_time": 71.70194705943896,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 13,
+            "transit_time": 163.41664541900252,
+            "inspection_time": 156.178822941216,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 78,
+            "transit_time": 117.23907198540937,
+            "inspection_time": 116.60160997237078,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 36,
+            "head": 77,
+            "transit_time": 81.27115109311545,
+            "inspection_time": 49.057369797077264,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 69,
+            "transit_time": 98.84331034521254,
+            "inspection_time": 56.16002156506541,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 56,
+            "transit_time": 126.66885963013956,
+            "inspection_time": 62.13862684219043,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 9,
+            "head": 0,
+            "transit_time": 96.0,
+            "inspection_time": 73.73048705173696,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 58,
+            "head": 93,
+            "transit_time": 129.0,
+            "inspection_time": 26.8698616697136,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 18,
+            "transit_time": 210.01190442448734,
+            "inspection_time": 33.18658889969172,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 16,
+            "transit_time": 128.3160161476345,
+            "inspection_time": 69.23146483452612,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 76,
+            "head": 15,
+            "transit_time": 126.4792473095883,
+            "inspection_time": 28.286612282539625,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 34,
+            "transit_time": 142.27438279606065,
+            "inspection_time": 45.433245530714,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 96,
+            "transit_time": 181.6645259812713,
+            "inspection_time": 69.9574639903437,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 36,
+            "head": 69,
+            "transit_time": 94.64142856064674,
+            "inspection_time": 65.24865001114554,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 53,
+            "transit_time": 130.59862173851607,
+            "inspection_time": 112.49491839101745,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 22,
+            "head": 50,
+            "transit_time": 72.20110802473879,
+            "inspection_time": 3.7537163700088843,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 54,
+            "head": 41,
+            "transit_time": 104.5609869884557,
+            "inspection_time": 74.75208761783088,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 22,
+            "head": 61,
+            "transit_time": 73.06161783043132,
+            "inspection_time": 11.020669104124273,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 47,
+            "head": 94,
+            "transit_time": 72.17340230306452,
+            "inspection_time": 37.553055288990954,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 28,
+            "head": 11,
+            "transit_time": 112.80514172678478,
+            "inspection_time": 70.80329276613416,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 41,
+            "transit_time": 119.4026800369238,
+            "inspection_time": 15.749402511656484,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 22,
+            "head": 93,
+            "transit_time": 86.34813257969161,
+            "inspection_time": 64.8402821847617,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 94,
+            "transit_time": 105.38026380684383,
+            "inspection_time": 71.2234929088854,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 97,
+            "transit_time": 113.01769772916099,
+            "inspection_time": 42.0416450598798,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 12,
+            "head": 14,
+            "transit_time": 78.92401408950256,
+            "inspection_time": 31.051584126745176,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 72,
+            "head": 17,
+            "transit_time": 163.04907236779974,
+            "inspection_time": 32.85613735478502,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 16,
+            "head": 69,
+            "transit_time": 84.5931439302264,
+            "inspection_time": 33.56282700396433,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 6,
+            "transit_time": 166.35203635663737,
+            "inspection_time": 82.33459247532268,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 8,
+            "head": 25,
+            "transit_time": 106.30145812734649,
+            "inspection_time": 44.58132042663259,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 16,
+            "head": 47,
+            "transit_time": 90.87353850269065,
+            "inspection_time": 30.787134647146775,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 9,
+            "transit_time": 96.0,
+            "inspection_time": 95.51053879908945,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 79,
+            "head": 34,
+            "transit_time": 88.05112151472007,
+            "inspection_time": 8.036292155306368,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 71,
+            "transit_time": 206.18438350175796,
+            "inspection_time": 51.66167327504443,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 2,
+            "head": 88,
+            "transit_time": 128.16005617976296,
+            "inspection_time": 68.95527475329882,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 72,
+            "head": 59,
+            "transit_time": 190.21303845951255,
+            "inspection_time": 109.37535400190077,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 55,
+            "transit_time": 160.31219541881399,
+            "inspection_time": 58.74829564327455,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 86,
+            "transit_time": 114.96521212958292,
+            "inspection_time": 7.006019184132952,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 89,
+            "transit_time": 154.6156525064652,
+            "inspection_time": 36.64009275207072,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 27,
+            "head": 99,
+            "transit_time": 170.6985647274165,
+            "inspection_time": 86.31036412379238,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 8,
+            "head": 86,
+            "transit_time": 123.22743201089601,
+            "inspection_time": 19.117251050557673,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 30,
+            "transit_time": 78.5175139698144,
+            "inspection_time": 23.005578438579242,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 63,
+            "head": 81,
+            "transit_time": 132.41223508422476,
+            "inspection_time": 39.44370129271111,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 31,
+            "transit_time": 153.11760186209813,
+            "inspection_time": 15.400165845173186,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 61,
+            "head": 50,
+            "transit_time": 140.71602609511115,
+            "inspection_time": 21.241847906938006,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 23,
+            "head": 6,
+            "transit_time": 79.25906888173743,
+            "inspection_time": 23.87984839400729,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 61,
+            "head": 76,
+            "transit_time": 155.46703830716015,
+            "inspection_time": 110.1339747535085,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 20,
+            "head": 39,
+            "transit_time": 158.00316452527144,
+            "inspection_time": 156.28459107770763,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 77,
+            "head": 46,
+            "transit_time": 97.8008179924892,
+            "inspection_time": 27.076715632234944,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 9,
+            "head": 43,
+            "transit_time": 99.92997548283498,
+            "inspection_time": 33.10405099450965,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 23,
+            "head": 48,
+            "transit_time": 83.48652585896721,
+            "inspection_time": 49.162026048535125,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 79,
+            "head": 89,
+            "transit_time": 94.0,
+            "inspection_time": 32.27468904785538,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 97,
+            "head": 43,
+            "transit_time": 32.984845004941285,
+            "inspection_time": 30.471027787942493,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 31,
+            "transit_time": 235.1850335374256,
+            "inspection_time": 224.87829185426608,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 94,
+            "head": 48,
+            "transit_time": 102.41581909060729,
+            "inspection_time": 54.138391092672045,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 40,
+            "head": 83,
+            "transit_time": 131.18688958886096,
+            "inspection_time": 81.2656309430113,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 71,
+            "head": 88,
+            "transit_time": 183.69812192834198,
+            "inspection_time": 31.591837093530543,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 9,
+            "head": 7,
+            "transit_time": 102.82509421342633,
+            "inspection_time": 33.97042585576504,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 47,
+            "transit_time": 159.8780785473731,
+            "inspection_time": 70.14319474933593,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 31,
+            "head": 56,
+            "transit_time": 108.78419002777932,
+            "inspection_time": 102.2529482298934,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 76,
+            "head": 61,
+            "transit_time": 155.46703830716015,
+            "inspection_time": 61.32758491793439,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 68,
+            "head": 28,
+            "transit_time": 95.2732911156112,
+            "inspection_time": 79.32470800332449,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 1,
+            "head": 18,
+            "transit_time": 40.024992192379,
+            "inspection_time": 1.6380287728284226,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 4,
+            "head": 75,
+            "transit_time": 128.00390619039717,
+            "inspection_time": 36.5219989783894,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 4,
+            "head": 95,
+            "transit_time": 163.77118183612157,
+            "inspection_time": 115.50071824704608,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 24,
+            "head": 75,
+            "transit_time": 125.67020331009256,
+            "inspection_time": 72.68740078956803,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 40,
+            "head": 32,
+            "transit_time": 146.74126890551273,
+            "inspection_time": 34.257718082596384,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 35,
+            "transit_time": 244.49539872971025,
+            "inspection_time": 234.05226604547485,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 92,
+            "head": 69,
+            "transit_time": 171.18703221914913,
+            "inspection_time": 134.07967336620325,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 53,
+            "head": 15,
+            "transit_time": 173.80736463107655,
+            "inspection_time": 17.901511383105603,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 95,
+            "head": 4,
+            "transit_time": 163.77118183612157,
+            "inspection_time": 48.77966332070852,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 2,
+            "head": 83,
+            "transit_time": 164.01219466856725,
+            "inspection_time": 154.69699614768916,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 11,
+            "head": 28,
+            "transit_time": 112.80514172678478,
+            "inspection_time": 75.88397601724861,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 4,
+            "head": 98,
+            "transit_time": 166.42415690037308,
+            "inspection_time": 88.22143131727167,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 67,
+            "head": 78,
+            "transit_time": 89.89438247187641,
+            "inspection_time": 18.496465732106355,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 8,
+            "head": 95,
+            "transit_time": 139.05754204644924,
+            "inspection_time": 53.02004152642934,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 61,
+            "head": 15,
+            "transit_time": 182.6608879864543,
+            "inspection_time": 164.21287572015456,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 87,
+            "head": 36,
+            "transit_time": 61.85466837676846,
+            "inspection_time": 5.88156443529086,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 76,
+            "transit_time": 191.12822920751398,
+            "inspection_time": 38.41092774311643,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 29,
+            "head": 58,
+            "transit_time": 125.89678312014172,
+            "inspection_time": 39.060014422626836,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 93,
+            "head": 58,
+            "transit_time": 129.0,
+            "inspection_time": 81.0092699324568,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 32,
+            "head": 83,
+            "transit_time": 242.24987100099764,
+            "inspection_time": 202.34058964237784,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 54,
+            "head": 26,
+            "transit_time": 110.05453193758083,
+            "inspection_time": 108.85218430083467,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 46,
+            "transit_time": 168.11900546934007,
+            "inspection_time": 133.08235345908008,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 58,
+            "head": 70,
+            "transit_time": 134.41726079637243,
+            "inspection_time": 124.73626572216669,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 84,
+            "head": 91,
+            "transit_time": 101.83319694480774,
+            "inspection_time": 11.388753901752306,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 21,
+            "head": 34,
+            "transit_time": 227.56098083810414,
+            "inspection_time": 155.81907860627445,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 89,
+            "head": 81,
+            "transit_time": 81.74350127074322,
+            "inspection_time": 31.252201198618668,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 35,
+            "head": 14,
+            "transit_time": 87.72684879784524,
+            "inspection_time": 36.147273065625235,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 58,
+            "transit_time": 163.1349134918703,
+            "inspection_time": 17.005948097121344,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 35,
+            "head": 3,
+            "transit_time": 87.92041856133307,
+            "inspection_time": 87.13160265257152,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 61,
+            "transit_time": 140.71602609511115,
+            "inspection_time": 82.63929066571471,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 20,
+            "head": 46,
+            "transit_time": 160.5615146914104,
+            "inspection_time": 84.87715226322143,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 29,
+            "head": 6,
+            "transit_time": 128.73616430514,
+            "inspection_time": 70.06073884457497,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 41,
+            "head": 54,
+            "transit_time": 104.5609869884557,
+            "inspection_time": 66.15845548507804,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 0,
+            "head": 43,
+            "transit_time": 158.60012610335465,
+            "inspection_time": 139.29637412206785,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 70,
+            "head": 34,
+            "transit_time": 223.0807028857494,
+            "inspection_time": 136.42683588145587,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 12,
+            "head": 3,
+            "transit_time": 90.82400563727631,
+            "inspection_time": 33.99067182581822,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 46,
+            "transit_time": 135.14806694880988,
+            "inspection_time": 59.65594089280809,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 22,
+            "head": 26,
+            "transit_time": 112.2007130102122,
+            "inspection_time": 2.8999179138826836,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 98,
+            "head": 95,
+            "transit_time": 106.47065323364932,
+            "inspection_time": 79.22493568072204,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 48,
+            "transit_time": 136.36715146984628,
+            "inspection_time": 76.7679927785525,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 67,
+            "transit_time": 130.6981254647518,
+            "inspection_time": 94.15812247151155,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 5,
+            "head": 57,
+            "transit_time": 165.7045563646335,
+            "inspection_time": 106.07952925693631,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 89,
+            "head": 68,
+            "transit_time": 81.93900170248598,
+            "inspection_time": 19.267408157637423,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 76,
+            "head": 50,
+            "transit_time": 166.90416411821485,
+            "inspection_time": 62.794471145880784,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 30,
+            "head": 13,
+            "transit_time": 78.5175139698144,
+            "inspection_time": 23.76872377639718,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 71,
+            "head": 57,
+            "transit_time": 206.18438350175796,
+            "inspection_time": 171.3308771800177,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 64,
+            "head": 33,
+            "transit_time": 129.0620006043607,
+            "inspection_time": 111.81342890916498,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 64,
+            "head": 83,
+            "transit_time": 134.05968819895114,
+            "inspection_time": 102.50063544545792,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 1,
+            "head": 52,
+            "transit_time": 119.0,
+            "inspection_time": 64.66015127730789,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 37,
+            "head": 75,
+            "transit_time": 124.45882853377658,
+            "inspection_time": 104.36089380097916,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 88,
+            "head": 33,
+            "transit_time": 175.84083712266613,
+            "inspection_time": 143.70272731927614,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 68,
+            "head": 11,
+            "transit_time": 99.35793878699377,
+            "inspection_time": 63.74128477442652,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 91,
+            "transit_time": 138.351002887583,
+            "inspection_time": 56.67454514782011,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 66,
+            "head": 38,
+            "transit_time": 98.2700361249552,
+            "inspection_time": 24.532250962289183,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 68,
+            "head": 34,
+            "transit_time": 112.89375536317321,
+            "inspection_time": 50.62826129939953,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 88,
+            "head": 71,
+            "transit_time": 183.69812192834198,
+            "inspection_time": 82.49280663176278,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 51,
+            "head": 25,
+            "transit_time": 138.63621460498698,
+            "inspection_time": 21.977881854962213,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 86,
+            "transit_time": 148.67750334196495,
+            "inspection_time": 35.719491022501124,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 31,
+            "head": 33,
+            "transit_time": 147.33974345029924,
+            "inspection_time": 10.337463782269332,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 64,
+            "head": 88,
+            "transit_time": 145.34441853748632,
+            "inspection_time": 79.38828013570495,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 65,
+            "transit_time": 89.05054744357274,
+            "inspection_time": 1.0940314925448638,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 95,
+            "transit_time": 119.03780911962384,
+            "inspection_time": 101.87061043761396,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 37,
+            "head": 92,
+            "transit_time": 124.84390253432484,
+            "inspection_time": 49.0813225254778,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 94,
+            "head": 39,
+            "transit_time": 105.38026380684383,
+            "inspection_time": 84.83446422611007,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 19,
+            "transit_time": 91.3892772703669,
+            "inspection_time": 39.86263540833919,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 91,
+            "transit_time": 155.72411502397438,
+            "inspection_time": 134.78579740276925,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 70,
+            "head": 48,
+            "transit_time": 245.70917768776974,
+            "inspection_time": 136.42190755143096,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 81,
+            "head": 63,
+            "transit_time": 132.41223508422476,
+            "inspection_time": 120.39534313230804,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 97,
+            "head": 91,
+            "transit_time": 113.01769772916099,
+            "inspection_time": 83.98182009182197,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 41,
+            "head": 50,
+            "transit_time": 119.4026800369238,
+            "inspection_time": 66.70359499676516,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 24,
+            "head": 17,
+            "transit_time": 199.81241202688085,
+            "inspection_time": 178.58423311488107,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 76,
+            "transit_time": 166.90416411821485,
+            "inspection_time": 147.19402491959525,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 76,
+            "head": 85,
+            "transit_time": 191.12822920751398,
+            "inspection_time": 165.23232201859483,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 6,
+            "head": 15,
+            "transit_time": 166.35203635663737,
+            "inspection_time": 118.19030982667755,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 11,
+            "head": 10,
+            "transit_time": 157.96518603793686,
+            "inspection_time": 114.61694713335481,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 9,
+            "head": 3,
+            "transit_time": 131.24404748406687,
+            "inspection_time": 84.08897513168985,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 16,
+            "head": 92,
+            "transit_time": 128.3160161476345,
+            "inspection_time": 13.911980822031651,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 2,
+            "transit_time": 164.01219466856725,
+            "inspection_time": 39.38932671265548,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 53,
+            "transit_time": 173.80736463107655,
+            "inspection_time": 108.20165444481334,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 4,
+            "head": 69,
+            "transit_time": 196.36700333813724,
+            "inspection_time": 27.230748264869572,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 75,
+            "transit_time": 227.1079038695043,
+            "inspection_time": 225.04547837452284,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 60,
+            "head": 88,
+            "transit_time": 118.94956914591998,
+            "inspection_time": 39.187925342467544,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 7,
+            "head": 3,
+            "transit_time": 107.20074626605917,
+            "inspection_time": 105.55398546656006,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 44,
+            "transit_time": 206.48002324680226,
+            "inspection_time": 110.11578390486794,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 89,
+            "head": 79,
+            "transit_time": 94.0,
+            "inspection_time": 5.054244201520757,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 47,
+            "head": 39,
+            "transit_time": 78.10249675906654,
+            "inspection_time": 46.247721891452386,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 59,
+            "transit_time": 235.10423220350586,
+            "inspection_time": 146.16274392786838,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 99,
+            "head": 27,
+            "transit_time": 170.6985647274165,
+            "inspection_time": 107.23248911677425,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 99,
+            "head": 21,
+            "transit_time": 201.08953229842672,
+            "inspection_time": 97.35042996035578,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 33,
+            "transit_time": 134.39121995130486,
+            "inspection_time": 64.75687763795082,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 8,
+            "transit_time": 123.22743201089601,
+            "inspection_time": 17.857970605331886,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 98,
+            "head": 75,
+            "transit_time": 127.03542812932147,
+            "inspection_time": 78.85031991889787,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 87,
+            "head": 19,
+            "transit_time": 94.30270409696638,
+            "inspection_time": 75.68312556675362,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 98,
+            "head": 4,
+            "transit_time": 166.42415690037308,
+            "inspection_time": 96.08384138514214,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 31,
+            "head": 0,
+            "transit_time": 153.11760186209813,
+            "inspection_time": 96.82404378613255,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 91,
+            "transit_time": 115.48592987892508,
+            "inspection_time": 7.808534632649509,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 58,
+            "head": 48,
+            "transit_time": 135.72398461583714,
+            "inspection_time": 95.90818338202317,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 85,
+            "head": 50,
+            "transit_time": 213.04694318389082,
+            "inspection_time": 22.01192639742964,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 84,
+            "transit_time": 148.67750334196495,
+            "inspection_time": 141.23701930832613,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 97,
+            "head": 3,
+            "transit_time": 116.8289347721702,
+            "inspection_time": 49.20408815508898,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 66,
+            "head": 53,
+            "transit_time": 135.94484175576505,
+            "inspection_time": 65.1613183949215,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 57,
+            "head": 33,
+            "transit_time": 297.5987231155403,
+            "inspection_time": 50.76933452698283,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 80,
+            "head": 53,
+            "transit_time": 152.0526224699857,
+            "inspection_time": 37.694715175688685,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 68,
+            "head": 63,
+            "transit_time": 121.65936051122412,
+            "inspection_time": 43.65255166013937,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 73,
+            "head": 46,
+            "transit_time": 128.47178678604885,
+            "inspection_time": 84.13426325741868,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 81,
+            "head": 72,
+            "transit_time": 135.63554106501732,
+            "inspection_time": 45.864960401418195,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 51,
+            "head": 33,
+            "transit_time": 156.1089363233252,
+            "inspection_time": 124.03666406714568,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 88,
+            "transit_time": 175.84083712266613,
+            "inspection_time": 156.08441468567187,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 93,
+            "head": 99,
+            "transit_time": 166.4001201922643,
+            "inspection_time": 165.6470213535079,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 8,
+            "head": 55,
+            "transit_time": 188.86238376129853,
+            "inspection_time": 97.29047338283306,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 3,
+            "transit_time": 344.58380693236296,
+            "inspection_time": 244.89035046610695,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 75,
+            "head": 32,
+            "transit_time": 154.63828762631846,
+            "inspection_time": 122.76659425149248,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 73,
+            "transit_time": 128.47178678604885,
+            "inspection_time": 77.41250611262365,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 74,
+            "head": 53,
+            "transit_time": 114.94781424629178,
+            "inspection_time": 110.5786907391578,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 47,
+            "head": 79,
+            "transit_time": 84.29116205154607,
+            "inspection_time": 38.494236348975825,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 37,
+            "head": 17,
+            "transit_time": 166.97305171793442,
+            "inspection_time": 42.94834618421275,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 80,
+            "head": 15,
+            "transit_time": 152.10851389715174,
+            "inspection_time": 147.304278392718,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 98,
+            "head": 32,
+            "transit_time": 169.53170794869024,
+            "inspection_time": 15.32898327644896,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 35,
+            "head": 49,
+            "transit_time": 164.40194646049662,
+            "inspection_time": 6.832262909495324,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 1,
+            "head": 38,
+            "transit_time": 179.98055450520204,
+            "inspection_time": 68.50920522446529,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 50,
+            "transit_time": 362.59205727649356,
+            "inspection_time": 245.51884646630592,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 49,
+            "head": 35,
+            "transit_time": 164.40194646049662,
+            "inspection_time": 139.50997471433274,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 95,
+            "head": 69,
+            "transit_time": 201.10942295178512,
+            "inspection_time": 31.302949009301237,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 85,
+            "transit_time": 213.04694318389082,
+            "inspection_time": 118.32382696363491,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 92,
+            "transit_time": 171.18703221914913,
+            "inspection_time": 46.65442470904316,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 1,
+            "transit_time": 179.98055450520204,
+            "inspection_time": 16.555387543033778,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 59,
+            "head": 72,
+            "transit_time": 190.21303845951255,
+            "inspection_time": 46.99789080696175,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 61,
+            "transit_time": 182.6608879864543,
+            "inspection_time": 57.24652261260465,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 13,
+            "head": 15,
+            "transit_time": 163.41664541900252,
+            "inspection_time": 61.74319774052833,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 89,
+            "head": 63,
+            "transit_time": 128.00390619039717,
+            "inspection_time": 59.573232713699824,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 70,
+            "transit_time": 223.0807028857494,
+            "inspection_time": 207.73179591249016,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 19,
+            "head": 15,
+            "transit_time": 152.08221460775746,
+            "inspection_time": 62.21873785032567,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 32,
+            "transit_time": 242.24987100099764,
+            "inspection_time": 174.50700123266733,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 39,
+            "transit_time": 135.14806694880988,
+            "inspection_time": 126.88530996791032,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 87,
+            "head": 15,
+            "transit_time": 104.27847332982968,
+            "inspection_time": 80.77550567233338,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 67,
+            "head": 56,
+            "transit_time": 130.6981254647518,
+            "inspection_time": 74.77558661981037,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 18,
+            "head": 35,
+            "transit_time": 416.307578600246,
+            "inspection_time": 169.02573657716817,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 47,
+            "head": 16,
+            "transit_time": 90.87353850269065,
+            "inspection_time": 12.253950820588328,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 13,
+            "transit_time": 115.48592987892508,
+            "inspection_time": 20.304775772923893,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 56,
+            "head": 91,
+            "transit_time": 138.67948658687772,
+            "inspection_time": 21.957719502512827,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 43,
+            "transit_time": 138.351002887583,
+            "inspection_time": 60.80441768966299,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 21,
+            "head": 11,
+            "transit_time": 257.89338882569285,
+            "inspection_time": 173.83370063966905,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 56,
+            "transit_time": 138.67948658687772,
+            "inspection_time": 119.43879973911515,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 39,
+            "head": 20,
+            "transit_time": 158.00316452527144,
+            "inspection_time": 7.507820552153585,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 38,
+            "head": 91,
+            "transit_time": 188.06647760831805,
+            "inspection_time": 54.9776161524322,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 20,
+            "transit_time": 160.5615146914104,
+            "inspection_time": 11.890817657895703,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 20,
+            "head": 15,
+            "transit_time": 191.7185437040455,
+            "inspection_time": 64.93171081193964,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 15,
+            "head": 20,
+            "transit_time": 191.7185437040455,
+            "inspection_time": 170.21070161181296,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 87,
+            "head": 86,
+            "transit_time": 105.26157893552613,
+            "inspection_time": 46.80769268179032,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 67,
+            "head": 91,
+            "transit_time": 145.08618128546908,
+            "inspection_time": 43.691612117255055,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 1,
+            "head": 3,
+            "transit_time": 304.9458968407347,
+            "inspection_time": 279.31957122026364,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 71,
+            "transit_time": 182.94534703019914,
+            "inspection_time": 36.10659481174804,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 11,
+            "head": 21,
+            "transit_time": 257.89338882569285,
+            "inspection_time": 164.14695176896626,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 43,
+            "head": 0,
+            "transit_time": 158.60012610335465,
+            "inspection_time": 114.43594103700359,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 17,
+            "head": 10,
+            "transit_time": 313.22994748267604,
+            "inspection_time": 257.7620289130874,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 41,
+            "transit_time": 423.0957338475537,
+            "inspection_time": 29.561148864099117,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 1,
+            "head": 91,
+            "transit_time": 327.0382240656281,
+            "inspection_time": 175.27319603754822,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 27,
+            "head": 21,
+            "transit_time": 363.1597444651596,
+            "inspection_time": 203.45164570564572,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 46,
+            "head": 15,
+            "transit_time": 168.11900546934007,
+            "inspection_time": 113.8012644841838,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 34,
+            "head": 21,
+            "transit_time": 227.56098083810414,
+            "inspection_time": 105.46162392269687,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 67,
+            "transit_time": 145.08618128546908,
+            "inspection_time": 31.68269075139896,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 86,
+            "head": 69,
+            "transit_time": 148.67750334196495,
+            "inspection_time": 46.63493420227747,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 84,
+            "head": 38,
+            "transit_time": 148.67750334196495,
+            "inspection_time": 10.14620426788866,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 58,
+            "head": 6,
+            "transit_time": 163.1349134918703,
+            "inspection_time": 125.58039269713859,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 35,
+            "head": 57,
+            "transit_time": 244.49539872971025,
+            "inspection_time": 190.95274854038408,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 30,
+            "head": 15,
+            "transit_time": 110.86027241532469,
+            "inspection_time": 26.01595613936071,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 47,
+            "head": 92,
+            "transit_time": 159.8780785473731,
+            "inspection_time": 80.12913748397273,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 3,
+            "transit_time": 155.72411502397438,
+            "inspection_time": 153.66798383606064,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 89,
+            "head": 92,
+            "transit_time": 154.6156525064652,
+            "inspection_time": 6.54086504937401,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 48,
+            "head": 70,
+            "transit_time": 245.70917768776974,
+            "inspection_time": 174.55334513129347,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 31,
+            "head": 57,
+            "transit_time": 235.1850335374256,
+            "inspection_time": 32.39928507153719,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 10,
+            "head": 17,
+            "transit_time": 313.22994748267604,
+            "inspection_time": 175.10658594235147,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 44,
+            "head": 27,
+            "transit_time": 474.55768880084537,
+            "inspection_time": 304.50920610899004,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 96,
+            "head": 83,
+            "transit_time": 421.4747916542578,
+            "inspection_time": 240.530484870481,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 4,
+            "transit_time": 196.36700333813724,
+            "inspection_time": 130.43286018538322,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 59,
+            "head": 17,
+            "transit_time": 235.10423220350586,
+            "inspection_time": 179.0823611082533,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 1,
+            "transit_time": 304.9458968407347,
+            "inspection_time": 79.68448443843309,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 69,
+            "head": 95,
+            "transit_time": 201.10942295178512,
+            "inspection_time": 31.05075372831826,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 50,
+            "head": 44,
+            "transit_time": 362.59205727649356,
+            "inspection_time": 175.25078438166105,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 38,
+            "transit_time": 188.06647760831805,
+            "inspection_time": 23.46913184266302,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 27,
+            "head": 44,
+            "transit_time": 474.55768880084537,
+            "inspection_time": 416.234659222916,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 21,
+            "head": 27,
+            "transit_time": 363.1597444651596,
+            "inspection_time": 198.66157009711523,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 83,
+            "head": 96,
+            "transit_time": 421.4747916542578,
+            "inspection_time": 67.23519459360129,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 75,
+            "head": 17,
+            "transit_time": 227.1079038695043,
+            "inspection_time": 161.8578419910766,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 10,
+            "head": 21,
+            "transit_time": 415.5406117336788,
+            "inspection_time": 254.85273220203803,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 3,
+            "head": 18,
+            "transit_time": 344.58380693236296,
+            "inspection_time": 205.62949626245214,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 41,
+            "head": 44,
+            "transit_time": 423.0957338475537,
+            "inspection_time": 376.1859726106767,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 21,
+            "head": 10,
+            "transit_time": 415.5406117336788,
+            "inspection_time": 12.198312236922504,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 33,
+            "head": 57,
+            "transit_time": 297.5987231155403,
+            "inspection_time": 23.312793450611306,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 35,
+            "head": 18,
+            "transit_time": 416.307578600246,
+            "inspection_time": 58.18562046810478,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 96,
+            "head": 2,
+            "transit_time": 579.4971958517142,
+            "inspection_time": 251.31205045107026,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 2,
+            "head": 96,
+            "transit_time": 579.4971958517142,
+            "inspection_time": 32.58329371750103,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 91,
+            "head": 1,
+            "transit_time": 327.0382240656281,
+            "inspection_time": 61.53463184706353,
+            "checkpoint_cost": 1.0
+        },
+        {
+            "tail": 100,
+            "head": 12,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 94,
+            "head": 101,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 100,
+            "head": 52,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 62,
+            "head": 101,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 100,
+            "head": 30,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 40,
+            "head": 101,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 100,
+            "head": 49,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 23,
+            "head": 101,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 100,
+            "head": 57,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        },
+        {
+            "tail": 28,
+            "head": 101,
+            "transit_time": 0.0,
+            "inspection_time": 0.0,
+            "checkpoint_cost": 20.0
+        }
+    ],
+    "intruders": [
+        {
+            "id": 0,
+            "source": 100,
+            "target": 101
+        }
+    ],
+    "journeyers": [
+        {
+            "id": 0,
+            "source": 77,
+            "target": 22
+        },
+        {
+            "id": 1,
+            "source": 1,
+            "target": 14
+        },
+        {
+            "id": 2,
+            "source": 12,
+            "target": 58
+        },
+        {
+            "id": 3,
+            "source": 7,
+            "target": 1
+        },
+        {
+            "id": 4,
+            "source": 52,
+            "target": 17
+        },
+        {
+            "id": 5,
+            "source": 17,
+            "target": 82
+        },
+        {
+            "id": 6,
+            "source": 37,
+            "target": 29
+        },
+        {
+            "id": 7,
+            "source": 44,
+            "target": 80
+        },
+        {
+            "id": 8,
+            "source": 64,
+            "target": 56
+        },
+        {
+            "id": 9,
+            "source": 51,
+            "target": 73
+        },
+        {
+            "id": 10,
+            "source": 12,
+            "target": 50
+        },
+        {
+            "id": 11,
+            "source": 33,
+            "target": 58
+        },
+        {
+            "id": 12,
+            "source": 38,
+            "target": 25
+        },
+        {
+            "id": 13,
+            "source": 51,
+            "target": 68
+        },
+        {
+            "id": 14,
+            "source": 68,
+            "target": 69
+        },
+        {
+            "id": 15,
+            "source": 40,
+            "target": 71
+        },
+        {
+            "id": 16,
+            "source": 73,
+            "target": 99
+        },
+        {
+            "id": 17,
+            "source": 38,
+            "target": 68
+        },
+        {
+            "id": 18,
+            "source": 43,
+            "target": 97
+        },
+        {
+            "id": 19,
+            "source": 77,
+            "target": 80
+        }
+    ],
+    "budget": 19
+}
