@@ -5,15 +5,22 @@ from pathlib import Path
 
 from branch_and_cut import separate_solution
 from formulations import solve_instance
+from heuristics import (
+    HEURISTIC_NAMES,
+    solve_single_intruder_heuristic,
+    solve_standard_heuristic,
+)
 from instances import prepare_instance
 from utils import load_gurobi_env, save_rows, software_metadata
 from validation import (
     enumerate_original_problem,
+    evaluate_allocation,
     validate_integer_result,
     validate_relaxation_bound,
 )
 
 DEFAULT_FORMULATIONS = (1, 2, 3, 4)
+DEFAULT_HEURISTICS = ()
 
 
 def _same_value(values, tolerance=1e-6):
@@ -26,10 +33,10 @@ def _same_value(values, tolerance=1e-6):
     )
 
 
-def _print_solve_start(instance, repetition, formulation, solve_mode):
+def _print_solve_start(instance, repetition, method, solve_mode):
     name = instance.get("name", "unnamed")
     print(
-        f"Solving instance '{name}' | formulation {formulation} | "
+        f"Solving instance '{name}' | method {method} | "
         f"{solve_mode} | repetition {repetition}",
         flush=True,
     )
@@ -38,25 +45,38 @@ def _print_solve_start(instance, repetition, formulation, solve_mode):
 def _row_from_result(result, instance, repetition, solver_seed, threads):
     cuts_by_family = result.get("cuts_by_family", {})
     metadata = software_metadata()
+    formulation = result.get("formulation")
+    method = result.get("method")
+    if method is None and formulation is not None:
+        method = f"f{formulation}"
+    heuristic = method in HEURISTIC_NAMES
 
     return {
         "instance": instance.get("name", "unnamed"),
         "instance_seed": instance.get("seed"),
         "repetition": repetition,
-        "formulation": result["formulation"],
-        "mode": "relaxation" if result["relax"] else "integer",
+        "method": method,
+        "method_type": "heuristic" if heuristic else "formulation",
+        "formulation": formulation,
+        "mode": (
+            "heuristic"
+            if heuristic
+            else ("relaxation" if result.get("relax") else "integer")
+        ),
         "solver_seed": solver_seed,
         "threads": threads,
         "status": result["status_name"],
-        "objective_value": result["objective_value"],
-        "dual_bound": result["dual_bound"],
-        "gap": result["gap"],
+        "objective_value": result.get("objective_value"),
+        "dual_bound": result.get("dual_bound"),
+        "gap": result.get("gap"),
+        "reference_objective": None,
+        "reference_gap": None,
         "runtime": result["runtime"],
         "solver_runtime": result.get("solver_runtime", result["runtime"]),
-        "num_variables": result["num_variables"],
-        "num_constraints": result["num_constraints"],
-        "nodes_explored": result["nodes_explored"],
-        "simplex_iterations": result["simplex_iterations"],
+        "num_variables": result.get("num_variables", 0),
+        "num_constraints": result.get("num_constraints", 0),
+        "nodes_explored": result.get("nodes_explored", 0.0),
+        "simplex_iterations": result.get("simplex_iterations", 0.0),
         "cuts": result.get("cuts", 0),
         "intruder_cuts": cuts_by_family.get("intruder", 0),
         "feasibility_cuts": cuts_by_family.get("feasibility", 0),
@@ -66,9 +86,44 @@ def _row_from_result(result, instance, repetition, solver_seed, threads):
         "lazy_additions": result.get("lazy_additions", 0),
         "separation_time": result.get("separation_time", 0.0),
         "separation_complete": result.get("separation_complete", True),
+        "checkpoint_cost": result.get("checkpoint_cost"),
+        "heuristic_iterations": result.get("heuristic_iterations"),
+        "convergence_reason": result.get("convergence_reason"),
+        "auxiliary_solves": result.get("auxiliary_solves"),
+        "minimum_cut_solves": result.get("minimum_cut_solves"),
+        "best_iteration": result.get("best_iteration"),
+        "terminal_objective": result.get("terminal_objective"),
+        "subproblems_optimal": result.get("subproblems_optimal"),
         "validation_passed": None,
         "original_objective": None,
         **metadata,
+    }
+
+
+def _not_applicable_heuristic_result(method):
+    return {
+        "method": method,
+        "formulation": None,
+        "relax": False,
+        "status_name": "NOT_APPLICABLE",
+        "objective_value": None,
+        "dual_bound": None,
+        "gap": None,
+        "runtime": 0.0,
+        "solver_runtime": 0.0,
+        "num_variables": 0,
+        "num_constraints": 0,
+        "nodes_explored": 0.0,
+        "simplex_iterations": 0.0,
+        "variables": {},
+        "checkpoint_cost": None,
+        "heuristic_iterations": 0,
+        "convergence_reason": "requires_exactly_one_intruder",
+        "auxiliary_solves": 0,
+        "minimum_cut_solves": 0,
+        "best_iteration": None,
+        "terminal_objective": None,
+        "subproblems_optimal": True,
     }
 
 
@@ -76,11 +131,15 @@ def run_comparison(
     instance,
     mode="both",
     formulations=DEFAULT_FORMULATIONS,
+    heuristics=DEFAULT_HEURISTICS,
     repetition=1,
     time_limit=None,
     output_flag=0,
     max_iterations=100,
     max_cuts=None,
+    heuristic_max_iterations=100,
+    binary_search_tolerance=1e-4,
+    heuristic_return_best=True,
     tolerance=1e-6,
     strict_validation=True,
     solver_seed=0,
@@ -91,8 +150,13 @@ def run_comparison(
 ):
     data = prepare_instance(instance)
     selected_formulations = tuple(dict.fromkeys(int(f) for f in formulations))
-    if not selected_formulations or any(f not in DEFAULT_FORMULATIONS for f in selected_formulations):
+    selected_heuristics = tuple(dict.fromkeys(str(h).lower() for h in heuristics))
+    if any(f not in DEFAULT_FORMULATIONS for f in selected_formulations):
         raise ValueError("formulations must contain values from 1, 2, 3, and 4")
+    if any(h not in HEURISTIC_NAMES for h in selected_heuristics):
+        raise ValueError("heuristics must contain ah and/or ash")
+    if not selected_formulations and not selected_heuristics:
+        raise ValueError("At least one formulation or heuristic must be selected")
     if mode not in ("integer", "relaxation", "both"):
         raise ValueError("mode must be integer, relaxation, or both")
 
@@ -121,7 +185,7 @@ def run_comparison(
 
         if solve_integer:
             _print_solve_start(
-                data["instance"], repetition, formulation, "integer"
+                data["instance"], repetition, f"f{formulation}", "integer"
             )
             result = solve_instance(
                 data["instance"],
@@ -173,7 +237,7 @@ def run_comparison(
 
         if solve_relaxation:
             _print_solve_start(
-                data["instance"], repetition, formulation, "relaxation"
+                data["instance"], repetition, f"f{formulation}", "relaxation"
             )
             extra_arguments = {}
             if formulation == 4:
@@ -198,11 +262,63 @@ def run_comparison(
             )
             complete_row(row, result)
 
+    for heuristic in selected_heuristics:
+        _print_solve_start(data["instance"], repetition, heuristic, "heuristic")
+        if heuristic == "ash" and len(data["intruders"]) != 1:
+            result = _not_applicable_heuristic_result(heuristic)
+        elif heuristic == "ah":
+            result = solve_standard_heuristic(
+                data,
+                max_iterations=heuristic_max_iterations,
+                time_limit=time_limit,
+                tolerance=tolerance,
+                output_flag=output_flag,
+                solver_seed=solver_seed,
+                threads=threads,
+                env=env,
+                return_best=heuristic_return_best,
+            )
+        else:
+            result = solve_single_intruder_heuristic(
+                data,
+                max_iterations=heuristic_max_iterations,
+                binary_search_tolerance=binary_search_tolerance,
+                time_limit=time_limit,
+                tolerance=tolerance,
+                return_best=heuristic_return_best,
+            )
+
+        results[heuristic, "heuristic"] = result
+        row = _row_from_result(
+            result,
+            data["instance"],
+            repetition,
+            solver_seed,
+            threads,
+        )
+        validation = None
+        if result.get("variables", {}).get("x"):
+            validation = evaluate_allocation(
+                data["instance"],
+                result["variables"]["x"],
+                tolerance=tolerance,
+            )
+            row["validation_passed"] = validation["valid"]
+            row["original_objective"] = validation["objective_value"]
+
+        complete_row(row, result)
+        if strict_validation and validation is not None and not validation["valid"]:
+            raise AssertionError(
+                "Heuristic {} failed validation: {}".format(
+                    heuristic, validation["errors"]
+                )
+            )
+
     oracle = None
     if len(data["edges"]) <= 18:
         oracle = enumerate_original_problem(data["instance"])
 
-    if solve_integer:
+    if solve_integer and selected_formulations:
         optimal_results = [
             results[formulation, "integer"]
             for formulation in selected_formulations
@@ -228,7 +344,7 @@ def run_comparison(
     integer_optimum = None
     if oracle is not None:
         integer_optimum = oracle["objective_value"]
-    elif solve_integer:
+    elif solve_integer and selected_formulations:
         optimal_values = [
             results[formulation, "integer"]["objective_value"]
             for formulation in selected_formulations
@@ -254,6 +370,26 @@ def run_comparison(
                         row["formulation"]
                     )
                 )
+
+    if integer_optimum is not None:
+        for row in rows:
+            if row["mode"] not in ("integer", "heuristic"):
+                continue
+            if row["objective_value"] is None:
+                continue
+            row["reference_objective"] = integer_optimum
+            if abs(integer_optimum) <= tolerance:
+                row["reference_gap"] = (
+                    0.0
+                    if abs(row["objective_value"] - integer_optimum) <= tolerance
+                    else None
+                )
+            else:
+                row["reference_gap"] = (
+                    row["objective_value"] - integer_optimum
+                ) / abs(integer_optimum)
+            if row_callback is not None:
+                row_callback(row)
 
     return {"rows": rows, "results": results, "oracle": oracle}
 
@@ -335,21 +471,25 @@ def run_experiments(
 
 def print_results(rows):
     header = (
-        "{:<18} {:>3} {:>4} {:<10} {:<12} {:>11} "
+        "{:<18} {:>3} {:>6} {:<10} {:<14} {:>11} "
         "{:>11} {:>9} {:>6}"
     ).format(
-        "Instance", "Rep", "Form", "Mode", "Status", "Objective",
+        "Instance", "Rep", "Method", "Mode", "Status", "Objective",
         "Dual bound", "Time", "Cuts"
     )
     print(header)
     print("-" * len(header))
     for row in rows:
-        objective = "-" if row["objective_value"] is None else "{:.6f}".format(row["objective_value"])
+        objective = (
+            "-"
+            if row["objective_value"] is None
+            else "{:.6f}".format(row["objective_value"])
+        )
         dual_bound = "-" if row["dual_bound"] is None else "{:.6f}".format(row["dual_bound"])
         print(
-            "{:<18.18} {:>3} {:>4} {:<10} {:<12} {:>11} "
+            "{:<18.18} {:>3} {:>6} {:<10} {:<14} {:>11} "
             "{:>11} {:>9.4f} {:>6}".format(
-                row["instance"], row["repetition"], row["formulation"],
+                row["instance"], row["repetition"], row["method"],
                 row["mode"], row["status"], objective, dual_bound,
                 row["runtime"], row["cuts"]
             )
@@ -358,7 +498,9 @@ def print_results(rows):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Compare SNI formulations on one or more JSON instances"
+        description=(
+            "Compare SNI formulations and heuristics on one or more JSON instances"
+        )
     )
     parser.add_argument(
         "instances",
@@ -367,10 +509,22 @@ def main():
     )
     parser.add_argument(
         "--formulations",
-        nargs="+",
+        nargs="*",
         type=int,
         choices=DEFAULT_FORMULATIONS,
         default=list(DEFAULT_FORMULATIONS),
+    )
+    parser.add_argument(
+        "--heuristics",
+        nargs="+",
+        choices=HEURISTIC_NAMES,
+        default=list(DEFAULT_HEURISTICS),
+        help="Run the general heuristic (ah), single-intruder heuristic (ash), or both",
+    )
+    parser.add_argument(
+        "--all-methods",
+        action="store_true",
+        help="Run all four formulations and both heuristics",
     )
     parser.add_argument(
         "--mode",
@@ -380,8 +534,20 @@ def main():
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--csv", default="results/results.csv")
     parser.add_argument("--time-limit", type=float, default=None)
-    parser.add_argument("--max-iterations", type=int, default=100)
+    parser.add_argument(
+        "--max-iterations",
+        type=int,
+        default=100,
+        help="Maximum cut rounds for the formulation 4 relaxation",
+    )
     parser.add_argument("--max-cuts", type=int, default=None)
+    parser.add_argument("--heuristic-max-iterations", type=int, default=100)
+    parser.add_argument("--binary-search-tolerance", type=float, default=1e-4)
+    parser.add_argument(
+        "--return-terminal-heuristic",
+        action="store_true",
+        help="Return the converged candidate instead of the best candidate seen",
+    )
     parser.add_argument("--solver-seed", type=int, default=0)
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--output", action="store_true")
@@ -389,17 +555,25 @@ def main():
     args = parser.parse_args()
 
     instance_paths = resolve_instances(args.instances)
+    formulations = (
+        list(DEFAULT_FORMULATIONS) if args.all_methods else args.formulations
+    )
+    heuristics = list(HEURISTIC_NAMES) if args.all_methods else args.heuristics
     with load_gurobi_env() as env:
         experiment = run_experiments(
             instance_paths,
             repetitions=args.repetitions,
             csv_filename=args.csv,
             mode=args.mode,
-            formulations=args.formulations,
+            formulations=formulations,
+            heuristics=heuristics,
             time_limit=args.time_limit,
             output_flag=int(args.output),
             max_iterations=args.max_iterations,
             max_cuts=args.max_cuts,
+            heuristic_max_iterations=args.heuristic_max_iterations,
+            binary_search_tolerance=args.binary_search_tolerance,
+            heuristic_return_best=not args.return_terminal_heuristic,
             strict_validation=not args.allow_validation_failures,
             solver_seed=args.solver_seed,
             threads=args.threads,

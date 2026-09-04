@@ -1,11 +1,9 @@
-import heapq
-import itertools
-import math
 import time
 
 from gurobipy import GRB, Model, quicksum
 
 from formulations import build_formulation_4
+from graph_algorithms import directed_min_cut, shortest_path
 from instances import prepare_instance
 from utils import collect_model_result, variable_values
 
@@ -15,126 +13,6 @@ def _prepared_data(instance):
         return instance
 
     return prepare_instance(instance)
-
-
-def shortest_path(nodes, edges, lengths, source, target):
-    outgoing = {v: [] for v in nodes}
-
-    for edge in edges:
-        outgoing[edge[0]].append(edge)
-
-    distance = {v: math.inf for v in nodes}
-    previous = {}
-    counter = itertools.count()
-    distance[source] = 0.0
-    pending = [(0.0, next(counter), source)]
-
-    while pending:
-        current_distance, _, v = heapq.heappop(pending)
-
-        if current_distance > distance[v] + 1e-12:
-            continue
-        if v == target:
-            break
-
-        for edge in outgoing[v]:
-            v_prime = edge[1]
-            new_distance = current_distance + lengths[edge]
-
-            if new_distance < distance[v_prime] - 1e-12:
-                distance[v_prime] = new_distance
-                previous[v_prime] = (v, edge)
-                heapq.heappush(
-                    pending,
-                    (new_distance, next(counter), v_prime),
-                )
-
-    if not math.isfinite(distance[target]):
-        return math.inf, []
-
-    path = []
-    v = target
-    while v != source:
-        v, edge = previous[v]
-        path.append(edge)
-    path.reverse()
-
-    return distance[target], path
-
-
-def directed_min_cut(nodes, edges, capacities, source, target, tolerance=1e-9):
-    adjacent = {v: set() for v in nodes}
-    residual = {v: {} for v in nodes}
-
-    for v, v_prime in edges:
-        capacity = max(0.0, float(capacities[v, v_prime]))
-        adjacent[v].add(v_prime)
-        adjacent[v_prime].add(v)
-        residual[v][v_prime] = residual[v].get(v_prime, 0.0) + capacity
-        residual[v_prime].setdefault(v, 0.0)
-
-    flow_value = 0.0
-
-    while True:
-        previous = {source: None}
-        pending = [source]
-        position = 0
-
-        while position < len(pending) and target not in previous:
-            v = pending[position]
-            position += 1
-
-            for v_prime in sorted(adjacent[v], key=str):
-                if v_prime in previous:
-                    continue
-                if residual[v].get(v_prime, 0.0) <= tolerance:
-                    continue
-
-                previous[v_prime] = v
-                pending.append(v_prime)
-
-        if target not in previous:
-            break
-
-        increment = math.inf
-        v = target
-        while v != source:
-            v_previous = previous[v]
-            increment = min(increment, residual[v_previous][v])
-            v = v_previous
-
-        v = target
-        while v != source:
-            v_previous = previous[v]
-            residual[v_previous][v] -= increment
-            residual[v][v_previous] = residual[v].get(v_previous, 0.0) + increment
-            v = v_previous
-
-        flow_value += increment
-
-    reachable = {source}
-    pending = [source]
-
-    while pending:
-        v = pending.pop()
-
-        for v_prime in sorted(adjacent[v], key=str):
-            if v_prime in reachable:
-                continue
-            if residual[v].get(v_prime, 0.0) <= tolerance:
-                continue
-
-            reachable.add(v_prime)
-            pending.append(v_prime)
-
-    cut_edges = [
-        edge
-        for edge in edges
-        if edge[0] in reachable and edge[1] not in reachable
-    ]
-    cut_value = sum(capacities[e] for e in cut_edges)
-
-    return float(cut_value), reachable, cut_edges
 
 
 def solve_journeyer_dual(

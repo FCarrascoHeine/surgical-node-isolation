@@ -1,8 +1,8 @@
 # Surgical Node Isolation formulations
 
-This repository compares four Gurobi formulations for the safety-check allocation
-problem. It is organized as a small computational-research project: one runner,
-one formulation module, a separate branch-and-cut implementation, reproducible
+This repository compares four Gurobi formulations and the paper's general and
+single-intruder heuristics for the safety-check allocation problem. It is organized
+as a small computational-research project with one experiment runner, reproducible
 JSON instances, and a compact correctness suite.
 
 ## Setup
@@ -38,6 +38,12 @@ Run selected formulations or modes:
 python run.py "instances/*.json" --formulations 2 3 4 --mode integer
 ```
 
+Compare every exact formulation and both heuristics in one experiment:
+
+```bash
+python run.py instances/small_instance.json --all-methods
+```
+
 Use `python run.py --help` for time limits, branch-and-cut limits, solver output,
 seed, thread count, and validation options. The default seed is 0 and the default
 thread count is 1 so repeated runs are comparable.
@@ -60,6 +66,8 @@ are solved only once.
 | `INSTANCE [INSTANCE ...]` | Required | One or more JSON files, directories, or quoted patterns such as `"instances/*.json"`. Directory searches are not recursive. |
 | `--csv PATH` | `results/results.csv` | Destination of the combined result table. Parent directories are created automatically. The file is atomically checkpointed after every completed result row, so completed formulations survive a later failure in the same instance. An existing file at this path is overwritten, not appended to. |
 | `--formulations {1,2,3,4} [...]` | `1 2 3 4` | Formulations to solve. For example, `--formulations 2 4` runs only formulations 2 and 4. |
+| `--heuristics {ah,ash} [...]` | None | Heuristics to run. `ah` is the general heuristic and `ash` is the single-intruder minimum-cut heuristic. |
+| `--all-methods` | Disabled | Runs formulations 1--4 and both heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |
 | `--repetitions N` | `1` | Solves every selected instance/formulation/mode combination `N` times. Repetition numbers are recorded in the CSV. |
 | `--time-limit SECONDS` | No limit | Sets the Gurobi time limit for each solve. Formulation 4 also reports the wall time spent in its separation procedure. |
@@ -67,10 +75,13 @@ are solved only once.
 | `--threads N` | `1` | Sets the number of Gurobi threads. Using one thread favors repeatability; larger values may reduce runtime. Gurobi interprets `0` as its automatic setting. |
 | `--max-iterations N` | `100` | Maximum number of cut-addition rounds for the formulation 4 relaxation. It has no effect on formulations 1--3 or on the formulation 4 integer callback. |
 | `--max-cuts N` | No limit | Maximum total number of cuts added while solving the formulation 4 relaxation. It has no effect on the other solves. |
+| `--heuristic-max-iterations N` | `100` | Maximum number of outer iterations for either heuristic. |
+| `--binary-search-tolerance VALUE` | `1e-4` | Precision used by the single-intruder heuristic's capacity-weight binary search. |
+| `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best true-objective candidate encountered. Iteration history is retained either way. |
 | `--output` | Disabled | Displays Gurobi's solver log while the experiment runs. |
 | `--allow-validation-failures` | Disabled | Records failed validation instead of stopping with an error. The default behavior is deliberately strict so invalid results do not silently enter an experiment. |
 
-The number of result rows is:
+Without heuristics, the number of result rows is:
 
 ```text
 instances * formulations * modes * repetitions
@@ -79,6 +90,8 @@ instances * formulations * modes * repetitions
 Here, `both` counts as two modes. For example, three instances with all four
 formulations, both modes, and five repetitions produce `3 * 4 * 2 * 5 = 120`
 rows in one CSV file.
+
+Each selected heuristic contributes one additional row per instance and repetition.
 
 ### Experiment examples
 
@@ -101,6 +114,12 @@ solve:
 python run.py instances --formulations 2 4 --mode integer --time-limit 3600 --csv results/integer_f2_f4.csv
 ```
 
+Compare formulation 2 and both heuristics without running relaxations:
+
+```bash
+python run.py instances --formulations 2 --heuristics ah ash --mode integer --csv results/f2_heuristics.csv
+```
+
 Study only the formulation 4 relaxation and stop after at most 50 cut rounds or
 500 generated cuts:
 
@@ -118,11 +137,12 @@ python run.py instances/small_instance.json --formulations 4 --mode integer --ou
 Use descriptive `--csv` filenames for paper experiments. If `--csv` is omitted,
 the next run will overwrite the default `results/results.csv` file.
 
-Each CSV row records the instance, formulation, mode, repetition, solver settings,
-objective, bound, gap, runtimes, model size, node count, cut statistics, validation
-status, and Python/Gurobi versions. `runtime` is total wall time; `solver_runtime`
-contains time reported by Gurobi. They differ for formulation 4 because separation
-work is performed outside the master solves.
+Each CSV row records the instance, method, mode, repetition, solver settings,
+objective, bound, solver gap, runtimes, model size, cut or heuristic statistics,
+validation status, and Python/Gurobi versions. `reference_gap` compares a feasible
+integer or heuristic objective to a proven small-instance oracle or common optimal
+formulation result; it is distinct from Gurobi's `gap`. `runtime` is total wall
+time, while `solver_runtime` contains time reported by Gurobi.
 
 During a batch, detailed per-variable solution mappings are used for validation and
 then released after each solve. The returned experiment object and CSV retain the
@@ -169,14 +189,17 @@ python -m pytest -q
 The regression tests compare all formulations against a small independently
 enumerated instance and check the known LP relaxation values. The branch-and-cut
 tests verify min-cut behavior, generated cut validity, convergence, and limit
-reporting. Solver-dependent tests skip with a clear message when no Gurobi license
-is available.
+reporting. Heuristic tests independently verify the scalarized minimum cuts,
+weighted budgets, auxiliary objectives, convergence, and unified-runner output.
+Solver-dependent tests skip with a clear message when no Gurobi license is available.
 
 ## Structure
 
 - `run.py`: single- and multi-instance experiment runner.
 - `formulations.py`: model builders for formulations 1--4 and common solve logic.
 - `branch_and_cut.py`: separation and solve procedure for formulation 4.
+- `heuristics.py`: implementations of the general and single-intruder heuristics.
+- `graph_algorithms.py`: shared directed shortest-path and minimum-cut routines.
 - `instances.py`: instance validation, JSON I/O, preparation, and generation.
 - `generate_grid_instances.py`: deterministic rectangular-grid collection generator.
 - `validation.py`: independent allocation, result, relaxation, and cut checks.
