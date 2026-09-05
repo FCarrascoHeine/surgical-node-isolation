@@ -135,7 +135,7 @@ def _heuristic_result(
     subproblems_optimal=True,
 ):
     runtime = float(time.perf_counter() - start)
-    return_best = return_best or status_name == "TIME_LIMIT"
+    return_best = return_best or status_name in ("TIME_LIMIT", "MEM_LIMIT")
     chosen = best if return_best else terminal
     edges = () if data is None else data["edges"]
     selected = set() if chosen is None else set(chosen["selected_edges"])

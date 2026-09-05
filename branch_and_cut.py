@@ -8,6 +8,7 @@ from graph_algorithms import directed_min_cut, shortest_path
 from instances import prepare_instance
 from time_budget import BudgetExpired, TimeBudget
 from utils import (
+    MemoryLimitReached,
     STATUS_NAMES,
     collect_model_result,
     empty_model_result,
@@ -71,6 +72,8 @@ def solve_journeyer_dual(
 
         if dual.Status == GRB.TIME_LIMIT:
             raise BudgetExpired()
+        if dual.Status == GRB.MEM_LIMIT:
+            raise MemoryLimitReached("Journeyer dual reached the memory limit")
         if dual.Status != GRB.OPTIMAL:
             raise RuntimeError(
                 f"Journeyer dual {journeyer} ended with status {dual.Status}"
@@ -306,6 +309,9 @@ def _model_constraint(mod, variables, cut, cut_number):
 def _branch_and_cut_callback(mod, where):
     if where == GRB.Callback.MESSAGE:
         return
+    if mod._memory_limit:
+        mod.terminate()
+        return
     if mod._budget.expired():
         mod._budget_expired = True
         mod.terminate()
@@ -369,6 +375,9 @@ def _branch_and_cut_callback(mod, where):
     except BudgetExpired:
         mod._budget_expired = True
         mod.terminate()
+    except MemoryLimitReached:
+        mod._memory_limit = True
+        mod.terminate()
     except Exception as error: # noqa: BLE001
         mod._callback_error = error
         mod.terminate()
@@ -389,6 +398,7 @@ def _solve_integer(
     mod = None
     optimized = False
     timed_out = False
+    memory_limited = False
     try:
         try:
             budget.check()
@@ -409,6 +419,7 @@ def _solve_integer(
             mod._threads = threads
             mod._budget = budget
             mod._budget_expired = False
+            mod._memory_limit = False
             mod._best_solution = None
             mod._cut_keys = set()
             mod._cut_count = 0
@@ -423,8 +434,11 @@ def _solve_integer(
             optimized = True
             mod.optimize(_branch_and_cut_callback)
             if mod._callback_error is not None:
-                raise RuntimeError("Error in branch-and-cut callback") from mod._callback_error
+                error = mod._callback_error
+                mod._callback_error = None
+                raise error
             timed_out = mod._budget_expired or mod.Status == GRB.TIME_LIMIT
+            memory_limited = mod._memory_limit or mod.Status == GRB.MEM_LIMIT
         except BudgetExpired:
             timed_out = True
 
@@ -447,7 +461,8 @@ def _solve_integer(
             result["separation_time"] = mod._separation_time
             result["remaining_violated_cuts"] = 0 if snapshot else None
             result["separation_complete"] = (
-                mod.Status == GRB.OPTIMAL and snapshot is not None and not timed_out
+                mod.Status == GRB.OPTIMAL and snapshot is not None
+                and not timed_out and not memory_limited
             )
             if snapshot is None and result["status"] == GRB.OPTIMAL:
                 _set_status(result, GRB.INTERRUPTED)
@@ -456,7 +471,10 @@ def _solve_integer(
 
         if timed_out:
             _set_status(result, GRB.TIME_LIMIT)
-        result["limit_reached"] = timed_out
+        if memory_limited:
+            _set_status(result, GRB.MEM_LIMIT)
+            result["convergence_reason"] = "memory_limit"
+        result["limit_reached"] = timed_out or memory_limited
         result["runtime"] = runtime
         return result
     finally:
@@ -547,7 +565,9 @@ def _solve_relaxation(
                 if mod.Status != GRB.OPTIMAL or mod.SolCount == 0:
                     stop_status = mod.Status if mod.Status != GRB.OPTIMAL else GRB.INTERRUPTED
                     limit_reached = True
-                    convergence_reason = "time_limit" if stop_status == GRB.TIME_LIMIT else "master_stopped"
+                    convergence_reason = {
+                        GRB.TIME_LIMIT: "time_limit", GRB.MEM_LIMIT: "memory_limit",
+                    }.get(stop_status, "master_stopped")
                     break
 
                 objective_history.append(float(mod.ObjVal))
@@ -611,6 +631,10 @@ def _solve_relaxation(
             limit_reached = True
             stop_status = GRB.TIME_LIMIT
             convergence_reason = "time_limit"
+        except MemoryLimitReached:
+            limit_reached = True
+            stop_status = GRB.MEM_LIMIT
+            convergence_reason = "separation_memory_limit"
 
         runtime = budget.elapsed()
         result = dict(last_result) if last_result is not None else empty_model_result(4, True, mod)

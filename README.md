@@ -71,6 +71,7 @@ are solved only once.
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |
 | `--repetitions N` | `1` | Solves every selected instance/formulation/mode combination `N` times. Repetition numbers are recorded in the CSV. |
 | `--time-limit SECONDS` | No limit | Shared elapsed-time budget for each instance/method/mode/repetition, including method preparation, model construction, optimization and separation. Checked between operations; an operation may finish after the deadline. Zero skips the search; negative values and NaN are rejected. |
+| `--memory-limit-gb GB\|auto\|none` | `auto` | Gurobi soft memory allowance in decimal GB. Auto uses the smaller of 50% of total physical RAM and 60% of available physical RAM, measured once at batch startup. A positive number overrides it; `none` disables it. The effective allowance and its source are recorded in every CSV row. |
 | `--solver-seed N` | `0` | Sets Gurobi's random seed. Keep this fixed when comparing formulations; vary it deliberately when studying solver variability. |
 | `--threads N` | `1` | Sets the number of Gurobi threads. Using one thread favors repeatability; larger values may reduce runtime. Gurobi interprets `0` as its automatic setting. |
 | `--max-iterations N` | `100` | Maximum number of cut-addition rounds for the formulation 4 relaxation. It has no effect on formulations 1--3 or on the formulation 4 integer callback. |
@@ -79,7 +80,7 @@ are solved only once.
 | `--binary-search-tolerance VALUE` | `1e-4` | Precision used by the single-intruder heuristic's capacity-weight binary search. |
 | `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best evaluated true-objective candidate. Timeouts always return the best available candidate. Iteration history is retained either way. |
 | `--output` | Disabled | Displays Gurobi's solver log while the experiment runs. |
-| `--allow-validation-failures` | Disabled | Records failed validation instead of stopping with an error. The default behavior is deliberately strict so invalid results do not silently enter an experiment. |
+| `--allow-validation-failures` | Disabled | Keeps numerical results with a failed-validation flag. By default the supervised CLI records `VALIDATION_FAILED` and continues; direct Python comparison calls retain their strict exception behavior. |
 
 Without heuristics, the number of result rows is:
 
@@ -185,6 +186,77 @@ evaluated allocation cost; the latter may be smaller. They must agree at optimal
 During a batch, detailed per-variable solution mappings are used for validation and
 then released after each solve. The returned experiment object and CSV retain the
 compact solve summaries and result rows.
+
+### Memory limits and recovery
+
+The command-line runner uses one persistent worker subprocess. It reuses a single
+Gurobi environment for sequential methods, modes, instances, and repetitions. The
+parent owns the schedule and atomically checkpoints the CSV after each result.
+Model construction, optimization, graph algorithms, and individual solution
+validation run in the worker. Only compact rows and an oracle objective are sent
+back; variable mappings, heuristic histories, and enumeration allocations are not
+retained by the supervisor. Cross-method objective comparisons and reference gaps
+are still computed for each instance/repetition.
+
+Every instance is attempted, with no model-size cutoff. For example:
+
+```bash
+python run.py instances --formulations 2 --mode integer --time-limit 300
+python run.py instances --all-methods --memory-limit-gb 8 --csv results/memory8.csv
+```
+
+`SoftMemLimit` is inherited by every Gurobi model in the worker, including AH's
+auxiliary models and formulation 4's separation duals. It counts Gurobi allocations
+across models in that environment and can overshoot between safe checkpoints.
+The allowance does **not** cap total process memory: Python dictionaries, graph
+algorithms (including ASH), other programs, and container/OS resource restrictions
+are outside that measurement. Automatic detection currently supports Windows and
+Linux, with a `sysconf` fallback on other platforms; specify an explicit allowance
+if detection fails. The automatic formula is a conservative heuristic, not a
+guarantee against system-wide memory exhaustion.
+
+- `MEM_LIMIT`: Gurobi or a separation subproblem stopped gracefully. Available
+  justified solutions/bounds are retained. AH returns its best validated candidate
+  even with `--return-terminal-heuristic`. An interrupted F4 callback never accepts
+  an unchecked incumbent, and an unfinished F4 relaxation retains its
+  `restricted_master` scope without claiming full relaxation feasibility.
+- `OUT_OF_MEMORY`: a Python or Gurobi OOM exception was reported. The affected
+  solve gets an empty solution row and the worker is replaced.
+- `ERROR` / `VALIDATION_FAILED`: the solve or validation raised an exception.
+  The failure is recorded and subsequent scheduled solves continue.
+- `PROCESS_FAILED`: the worker exited without reporting a result. Its exit code
+  and last reported phase are saved. OOM is not assumed without evidence.
+
+Failure rows include `error_type`, `error_message`, `error_code`, `error_phase`, and
+`worker_exit_code`. Unavailable counts, objective, bound, and gap are empty rather
+than invented zeros. A worker crash loses any incumbent it had not reported.
+For exception/crash rows, `runtime` is the parent's observed duration of the failed
+attempt, including startup/validation if applicable; license retry waiting is
+excluded. Successful-result runtime keeps the existing method-time definition.
+These failure statuses do not establish infeasibility.
+
+After an exception or crash, the old worker exits before a replacement is used,
+releasing its Python/native allocations. Successful tasks explicitly dispose their
+models and run garbage collection while reusing the environment. A graceful
+`MEM_LIMIT` does not require a restart. WLS session-limit errors during environment
+startup retry the **same** pending solve twice, waiting 310 seconds between attempts
+(with progress messages). Persistent license failures are recorded as
+`LICENSE_ERROR`; they do not stop later methods, including graph-only ASH. Other
+license errors are recorded without repeated retries. Actual WLS token expiry or
+usage by other applications may require longer than one retry interval. Ctrl+C and
+CSV writing failures stop the runner and close its worker; they are not silently
+converted into instance failures.
+
+Python callers can opt into the same behavior with
+`experiment_supervisor.run_supervised_experiments(...)` under an
+`if __name__ == "__main__":` guard (required for spawned processes). It accepts
+`memory_limit_gb="auto"` or a positive GB value, and returns `{"rows": ...}`.
+The existing `run_comparison`, `run_experiments`, and direct solver APIs remain
+in-process with their existing return structures and exception behavior. Pass an
+environment with `SoftMemLimit` configured to apply a memory allowance there.
+
+See Gurobi's [memory-limit parameters](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#parameter:SoftMemLimit)
+and [WLS session guidance](https://support.gurobi.com/hc/en-us/articles/34567582787345-How-do-I-resolve-the-error-Too-many-sessions).
 
 ## Generate instances
 

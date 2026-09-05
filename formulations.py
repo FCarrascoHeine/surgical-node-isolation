@@ -5,6 +5,7 @@ from time_budget import BudgetExpired, TimeBudget
 from utils import (
     collect_model_result,
     configure_model,
+    dispose_on_error,
     empty_model_result,
     variable_values,
 )
@@ -99,15 +100,16 @@ def _build_common_model(
     data = prepare_instance(instance)
     binary_type = GRB.CONTINUOUS if relax else GRB.BINARY
     model = Model(f"SNI_formulation_{formulation}", env=env)
-    configure_model(
-        model,
-        output_flag=output_flag,
-        time_limit=time_limit,
-        solver_seed=solver_seed,
-        threads=threads,
-    )
-    x, y, z = _add_common_variables(model, data, binary_type)
-    return model, data, binary_type, x, y, z
+    with dispose_on_error(model):
+        configure_model(
+            model,
+            output_flag=output_flag,
+            time_limit=time_limit,
+            solver_seed=solver_seed,
+            threads=threads,
+        )
+        x, y, z = _add_common_variables(model, data, binary_type)
+        return model, data, binary_type, x, y, z
 
 
 def build_formulation_1(
@@ -122,24 +124,25 @@ def build_formulation_1(
     model, data, _, x, y, z = _build_common_model(
         instance, 1, relax, time_limit, output_flag, solver_seed, threads, env
     )
-    edges = data["edges"]
-    journeyers = data["journeyers"]
-    tau = data["tau"]
-    inspection_time = data["inspection_time"]
+    with dispose_on_error(model):
+        edges = data["edges"]
+        journeyers = data["journeyers"]
+        tau = data["tau"]
+        inspection_time = data["inspection_time"]
 
-    model.setObjective(
-        quicksum(
-            tau[edge] * z[journeyer, edge]
-            + inspection_time[edge] * x[edge] * z[journeyer, edge]
-            for journeyer in journeyers
-            for edge in edges
-        ),
-        GRB.MINIMIZE,
-    )
-    _add_common_constraints(model, data, x, y, z)
-    model.Params.NonConvex = 2
-    model.update()
-    return model, {"x": x, "y": y, "z": z}
+        model.setObjective(
+            quicksum(
+                tau[edge] * z[journeyer, edge]
+                + inspection_time[edge] * x[edge] * z[journeyer, edge]
+                for journeyer in journeyers
+                for edge in edges
+            ),
+            GRB.MINIMIZE,
+        )
+        _add_common_constraints(model, data, x, y, z)
+        model.Params.NonConvex = 2
+        model.update()
+        return model, {"x": x, "y": y, "z": z}
 
 
 def build_formulation_2(
@@ -154,42 +157,43 @@ def build_formulation_2(
     model, data, binary_type, x, y, z = _build_common_model(
         instance, 2, relax, time_limit, output_flag, solver_seed, threads, env
     )
-    edges = data["edges"]
-    journeyers = data["journeyers"]
-    tau = data["tau"]
-    inspection_time = data["inspection_time"]
-    alpha = {
-        (journeyer, edge): model.addVar(
-            vtype=binary_type,
-            lb=0,
-            ub=1,
-            name="alpha[{},{},{}]".format(journeyer, *edge),
-        )
-        for journeyer in journeyers
-        for edge in edges
-    }
-    model.update()
-
-    model.setObjective(
-        quicksum(
-            tau[edge] * z[journeyer, edge]
-            + inspection_time[edge] * alpha[journeyer, edge]
+    with dispose_on_error(model):
+        edges = data["edges"]
+        journeyers = data["journeyers"]
+        tau = data["tau"]
+        inspection_time = data["inspection_time"]
+        alpha = {
+            (journeyer, edge): model.addVar(
+                vtype=binary_type,
+                lb=0,
+                ub=1,
+                name="alpha[{},{},{}]".format(journeyer, *edge),
+            )
             for journeyer in journeyers
             for edge in edges
-        ),
-        GRB.MINIMIZE,
-    )
-    _add_common_constraints(model, data, x, y, z)
-    for journeyer in journeyers:
-        for edge in edges:
-            model.addConstr(
-                alpha[journeyer, edge]
-                >= x[edge] + z[journeyer, edge] - 1,
-                name="product_7[{},{},{}]".format(journeyer, *edge),
-            )
+        }
+        model.update()
 
-    model.update()
-    return model, {"x": x, "y": y, "z": z, "alpha": alpha}
+        model.setObjective(
+            quicksum(
+                tau[edge] * z[journeyer, edge]
+                + inspection_time[edge] * alpha[journeyer, edge]
+                for journeyer in journeyers
+                for edge in edges
+            ),
+            GRB.MINIMIZE,
+        )
+        _add_common_constraints(model, data, x, y, z)
+        for journeyer in journeyers:
+            for edge in edges:
+                model.addConstr(
+                    alpha[journeyer, edge]
+                    >= x[edge] + z[journeyer, edge] - 1,
+                    name="product_7[{},{},{}]".format(journeyer, *edge),
+                )
+
+        model.update()
+        return model, {"x": x, "y": y, "z": z, "alpha": alpha}
 
 
 def build_formulation_3(
@@ -204,48 +208,49 @@ def build_formulation_3(
     model, data, _, x, y, z = _build_common_model(
         instance, 3, relax, time_limit, output_flag, solver_seed, threads, env
     )
-    edges = data["edges"]
-    journeyers = data["journeyers"]
-    tau = data["tau"]
-    inspection_time = data["inspection_time"]
-    beta = {
-        edge: model.addVar(
-            vtype=GRB.CONTINUOUS,
-            lb=0,
-            ub=len(journeyers),
-            name="beta[{},{}]".format(*edge),
-        )
-        for edge in edges
-    }
-    model.update()
-
-    model.setObjective(
-        quicksum(
-            tau[edge]
-            * quicksum(z[journeyer, edge] for journeyer in journeyers)
-            + inspection_time[edge] * beta[edge]
+    with dispose_on_error(model):
+        edges = data["edges"]
+        journeyers = data["journeyers"]
+        tau = data["tau"]
+        inspection_time = data["inspection_time"]
+        beta = {
+            edge: model.addVar(
+                vtype=GRB.CONTINUOUS,
+                lb=0,
+                ub=len(journeyers),
+                name="beta[{},{}]".format(*edge),
+            )
             for edge in edges
-        ),
-        GRB.MINIMIZE,
-    )
-    _add_common_constraints(model, data, x, y, z, number_offset=10)
-    for edge in edges:
-        flow = quicksum(z[journeyer, edge] for journeyer in journeyers)
-        model.addConstr(
-            beta[edge] <= flow,
-            name="aggregate_upper_flow_17[{},{}]".format(*edge),
-        )
-        model.addConstr(
-            beta[edge] >= flow - len(journeyers) * (1 - x[edge]),
-            name="aggregate_lower_18[{},{}]".format(*edge),
-        )
-        model.addConstr(
-            beta[edge] <= len(journeyers) * x[edge],
-            name="aggregate_upper_x_19[{},{}]".format(*edge),
-        )
+        }
+        model.update()
 
-    model.update()
-    return model, {"x": x, "y": y, "z": z, "beta": beta}
+        model.setObjective(
+            quicksum(
+                tau[edge]
+                * quicksum(z[journeyer, edge] for journeyer in journeyers)
+                + inspection_time[edge] * beta[edge]
+                for edge in edges
+            ),
+            GRB.MINIMIZE,
+        )
+        _add_common_constraints(model, data, x, y, z, number_offset=10)
+        for edge in edges:
+            flow = quicksum(z[journeyer, edge] for journeyer in journeyers)
+            model.addConstr(
+                beta[edge] <= flow,
+                name="aggregate_upper_flow_17[{},{}]".format(*edge),
+            )
+            model.addConstr(
+                beta[edge] >= flow - len(journeyers) * (1 - x[edge]),
+                name="aggregate_lower_18[{},{}]".format(*edge),
+            )
+            model.addConstr(
+                beta[edge] <= len(journeyers) * x[edge],
+                name="aggregate_upper_x_19[{},{}]".format(*edge),
+            )
+
+        model.update()
+        return model, {"x": x, "y": y, "z": z, "beta": beta}
 
 
 def build_formulation_4(
@@ -262,74 +267,75 @@ def build_formulation_4(
     journeyers = data["journeyers"]
     binary_type = GRB.CONTINUOUS if relax else GRB.BINARY
     model = Model("SNI_formulation_4", env=env)
-    configure_model(
-        model,
-        output_flag=output_flag,
-        time_limit=time_limit,
-        solver_seed=solver_seed,
-        threads=threads,
-    )
+    with dispose_on_error(model):
+        configure_model(
+            model,
+            output_flag=output_flag,
+            time_limit=time_limit,
+            solver_seed=solver_seed,
+            threads=threads,
+        )
 
-    x = {
-        edge: model.addVar(
-            vtype=binary_type,
-            lb=0,
-            ub=1,
-            name="x[{},{}]".format(*edge),
-        )
-        for edge in edges
-    }
-    alpha = {
-        (journeyer, edge): model.addVar(
-            vtype=binary_type,
-            lb=0,
-            ub=1,
-            name="alpha[{},{},{}]".format(journeyer, *edge),
-        )
-        for journeyer in journeyers
-        for edge in edges
-    }
-    phi = {
-        journeyer: model.addVar(
-            vtype=GRB.CONTINUOUS,
-            lb=0,
-            ub=GRB.INFINITY,
-            name=f"phi[{journeyer}]",
-        )
-        for journeyer in journeyers
-    }
-    model.update()
-
-    model.setObjective(
-        quicksum(
-            quicksum(
-                data["inspection_time"][edge] * alpha[journeyer, edge]
-                for edge in edges
+        x = {
+            edge: model.addVar(
+                vtype=binary_type,
+                lb=0,
+                ub=1,
+                name="x[{},{}]".format(*edge),
             )
-            + phi[journeyer]
+            for edge in edges
+        }
+        alpha = {
+            (journeyer, edge): model.addVar(
+                vtype=binary_type,
+                lb=0,
+                ub=1,
+                name="alpha[{},{},{}]".format(journeyer, *edge),
+            )
             for journeyer in journeyers
-        ),
-        GRB.MINIMIZE,
-    )
-    model.addConstr(
-        quicksum(data["checkpoint_cost"][edge] * x[edge] for edge in edges)
-        <= data["budget"],
-        name="budget_23",
-    )
-    for journeyer in journeyers:
-        for edge in edges:
-            model.addConstr(
-                alpha[journeyer, edge] <= x[edge],
-                name="alpha_link_27[{},{},{}]".format(journeyer, *edge),
+            for edge in edges
+        }
+        phi = {
+            journeyer: model.addVar(
+                vtype=GRB.CONTINUOUS,
+                lb=0,
+                ub=GRB.INFINITY,
+                name=f"phi[{journeyer}]",
             )
+            for journeyer in journeyers
+        }
+        model.update()
 
-    model.Params.FeasibilityTol = 1e-8
-    if not relax:
-        model.Params.LazyConstraints = 1
-    model.update()
-    model._data = data
-    model._solve_env = env
-    return model, {"x": x, "alpha": alpha, "phi": phi}
+        model.setObjective(
+            quicksum(
+                quicksum(
+                    data["inspection_time"][edge] * alpha[journeyer, edge]
+                    for edge in edges
+                )
+                + phi[journeyer]
+                for journeyer in journeyers
+            ),
+            GRB.MINIMIZE,
+        )
+        model.addConstr(
+            quicksum(data["checkpoint_cost"][edge] * x[edge] for edge in edges)
+            <= data["budget"],
+            name="budget_23",
+        )
+        for journeyer in journeyers:
+            for edge in edges:
+                model.addConstr(
+                    alpha[journeyer, edge] <= x[edge],
+                    name="alpha_link_27[{},{},{}]".format(journeyer, *edge),
+                )
+
+        model.Params.FeasibilityTol = 1e-8
+        if not relax:
+            model.Params.LazyConstraints = 1
+        model.update()
+        model._data = data
+        model._solve_env = env
+        return model, {"x": x, "alpha": alpha, "phi": phi}
 
 
 BUILDERS = {

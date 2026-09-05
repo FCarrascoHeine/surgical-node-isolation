@@ -3,6 +3,8 @@ import gc
 import glob
 from pathlib import Path
 
+from gurobipy import GRB
+
 from branch_and_cut import separate_solution
 from formulations import solve_instance
 from heuristics import (
@@ -12,7 +14,7 @@ from heuristics import (
 )
 from instances import prepare_instance
 from time_budget import TimeBudget
-from utils import load_gurobi_env, save_rows, software_metadata
+from utils import MemoryLimitReached, save_rows, software_metadata
 from validation import (
     enumerate_original_problem,
     evaluate_allocation,
@@ -67,6 +69,13 @@ def _row_from_result(result, instance, repetition, solver_seed, threads):
         "solver_seed": solver_seed,
         "threads": threads,
         "status": result["status_name"],
+        "memory_limit_gb": None,
+        "memory_limit_source": None,
+        "error_type": None,
+        "error_message": None,
+        "error_code": None,
+        "error_phase": None,
+        "worker_exit_code": None,
         "has_solution": result.get("has_solution", result.get("objective_value") is not None),
         "solution_type": result.get(
             "solution_type",
@@ -156,9 +165,12 @@ def run_comparison(
     env=None,
     row_callback=None,
     retain_variables=True,
+    phase_callback=None,
 ):
     # Reject invalid budgets even if a selected method is not applicable.
     TimeBudget(time_limit)
+    phase = phase_callback or (lambda _name: None)
+    phase("preparation")
     data = prepare_instance(instance)
     selected_formulations = tuple(dict.fromkeys(int(f) for f in formulations))
     selected_heuristics = tuple(dict.fromkeys(str(h).lower() for h in heuristics))
@@ -198,6 +210,7 @@ def run_comparison(
             _print_solve_start(
                 data["instance"], repetition, f"f{formulation}", "integer"
             )
+            phase("build_solve")
             result = solve_instance(
                 data["instance"],
                 formulation=formulation,
@@ -205,6 +218,7 @@ def run_comparison(
                 **common_arguments,
             )
             results[formulation, "integer"] = result
+            phase("validation")
             row = _row_from_result(
                 result,
                 data["instance"],
@@ -222,16 +236,27 @@ def run_comparison(
 
             if formulation == 4 and validation is not None and result.get("variables"):
                 variables = result["variables"]
-                remaining_cuts = separate_solution(
-                    data,
-                    variables["x"],
-                    variables["alpha"],
-                    variables["phi"],
-                    tolerance=tolerance,
-                    solver_seed=solver_seed,
-                    threads=threads,
-                    env=env,
-                )
+                try:
+                    remaining_cuts = separate_solution(
+                        data,
+                        variables["x"],
+                        variables["alpha"],
+                        variables["phi"],
+                        tolerance=tolerance,
+                        solver_seed=solver_seed,
+                        threads=threads,
+                        env=env,
+                    )
+                except MemoryLimitReached:
+                    # The returned integer snapshot already passed full lazy
+                    # separation. An interrupted redundant check proves nothing new.
+                    remaining_cuts = []
+                    result.update(status=GRB.MEM_LIMIT, status_name="MEM_LIMIT",
+                                  separation_complete=False,
+                                  convergence_reason="validation_memory_limit")
+                    row.update(status="MEM_LIMIT", separation_complete=False,
+                               convergence_reason="validation_memory_limit",
+                               validation_passed=None)
                 if remaining_cuts:
                     validation["valid"] = False
                     validation["errors"].append(
@@ -258,6 +283,7 @@ def run_comparison(
                     "max_iterations": max_iterations,
                     "max_cuts": max_cuts,
                 }
+            phase("build_solve")
             result = solve_instance(
                 data["instance"],
                 formulation=formulation,
@@ -266,6 +292,7 @@ def run_comparison(
                 **extra_arguments,
             )
             results[formulation, "relaxation"] = result
+            phase("validation")
             row = _row_from_result(
                 result,
                 data["instance"],
@@ -276,6 +303,7 @@ def run_comparison(
             complete_row(row, result)
 
     for heuristic in selected_heuristics:
+        phase("build_solve")
         _print_solve_start(data["instance"], repetition, heuristic, "heuristic")
         if heuristic == "ash" and len(data["intruders"]) != 1:
             result = _not_applicable_heuristic_result(heuristic)
@@ -301,6 +329,7 @@ def run_comparison(
                 return_best=heuristic_return_best,
             )
 
+        phase("validation")
         results[heuristic, "heuristic"] = result
         row = _row_from_result(
             result,
@@ -327,10 +356,22 @@ def run_comparison(
                 )
             )
 
+    phase("comparison")
     oracle = None
     if len(data["edges"]) <= 18:
         oracle = enumerate_original_problem(data["instance"])
 
+    return finalize_comparison(
+        rows, results, oracle, selected_formulations, solve_integer,
+        solve_relaxation, strict_validation, tolerance, row_callback,
+    )
+
+
+def finalize_comparison(
+    rows, results, oracle, selected_formulations, solve_integer, solve_relaxation,
+    strict_validation=True, tolerance=1e-6, row_callback=None,
+):
+    """Compare compact, already validated summaries; no model/instance required."""
     if solve_integer and selected_formulations:
         optimal_results = [
             results[formulation, "integer"]
@@ -502,12 +543,13 @@ def print_results(rows):
             else "{:.6f}".format(row["objective_value"])
         )
         dual_bound = "-" if row["dual_bound"] is None else "{:.6f}".format(row["dual_bound"])
+        cuts = "-" if row["cuts"] is None else row["cuts"]
         print(
             "{:<18.18} {:>3} {:>6} {:<10} {:<15} {:<17} {:>11} "
             "{:>11} {:>9.4f} {:>6}".format(
                 row["instance"], row["repetition"], row["method"],
                 row["mode"], row["status"], row.get("solution_type", "none"), objective, dual_bound,
-                row["runtime"], row["cuts"]
+                row["runtime"], cuts
             )
         )
 
@@ -560,6 +602,11 @@ def main():
         default=100,
         help="Maximum cut rounds for the formulation 4 relaxation",
     )
+    parser.add_argument(
+        "--memory-limit-gb", default="auto", metavar="GB|auto|none",
+        help=("Gurobi soft memory limit in decimal GB; auto reserves headroom "
+              "for Python and the OS, none disables the soft limit"),
+    )
     parser.add_argument("--max-cuts", type=int, default=None)
     parser.add_argument("--heuristic-max-iterations", type=int, default=100)
     parser.add_argument("--binary-search-tolerance", type=float, default=1e-4)
@@ -579,26 +626,32 @@ def main():
         list(DEFAULT_FORMULATIONS) if args.all_methods else args.formulations
     )
     heuristics = list(HEURISTIC_NAMES) if args.all_methods else args.heuristics
-    with load_gurobi_env() as env:
-        experiment = run_experiments(
-            instance_paths,
-            repetitions=args.repetitions,
-            csv_filename=args.csv,
-            mode=args.mode,
-            formulations=formulations,
-            heuristics=heuristics,
-            time_limit=args.time_limit,
-            output_flag=int(args.output),
-            max_iterations=args.max_iterations,
-            max_cuts=args.max_cuts,
-            heuristic_max_iterations=args.heuristic_max_iterations,
-            binary_search_tolerance=args.binary_search_tolerance,
-            heuristic_return_best=not args.return_terminal_heuristic,
-            strict_validation=not args.allow_validation_failures,
-            solver_seed=args.solver_seed,
-            threads=args.threads,
-            env=env,
-        )
+    from experiment_supervisor import run_supervised_experiments
+    from memory_limits import resolve_memory_limit
+
+    try:
+        memory_policy = resolve_memory_limit(args.memory_limit_gb)
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+    experiment = run_supervised_experiments(
+        instance_paths,
+        repetitions=args.repetitions,
+        csv_filename=args.csv,
+        mode=args.mode,
+        formulations=formulations,
+        heuristics=heuristics,
+        time_limit=args.time_limit,
+        output_flag=int(args.output),
+        max_iterations=args.max_iterations,
+        max_cuts=args.max_cuts,
+        heuristic_max_iterations=args.heuristic_max_iterations,
+        binary_search_tolerance=args.binary_search_tolerance,
+        heuristic_return_best=not args.return_terminal_heuristic,
+        strict_validation=not args.allow_validation_failures,
+        solver_seed=args.solver_seed,
+        threads=args.threads,
+        memory_policy=memory_policy,
+    )
     print_results(experiment["rows"])
     print(f"Results saved in {args.csv}")
 

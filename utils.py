@@ -3,6 +3,7 @@ import math
 import platform
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import tomllib
@@ -27,6 +28,20 @@ STATUS_NAMES = {
     GRB.WORK_LIMIT: "WORK_LIMIT",
     GRB.MEM_LIMIT: "MEM_LIMIT",
 }
+
+
+class MemoryLimitReached(Exception):
+    """A subproblem stopped gracefully before completing its required work."""
+
+
+@contextmanager
+def dispose_on_error(model):
+    """Transfer a built model to its caller only if construction succeeds."""
+    try:
+        yield
+    except BaseException:
+        model.dispose()
+        raise
 
 
 def load_gurobi_env(secrets_file=None):
