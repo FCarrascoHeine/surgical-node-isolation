@@ -11,7 +11,6 @@ import memory_limits
 from run import _row_from_result, print_results
 from utils import empty_model_result
 
-
 POLICY = {"memory_limit_gb": 2.5, "memory_limit_source": "explicit"}
 
 

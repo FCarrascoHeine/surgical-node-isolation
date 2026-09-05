@@ -24,6 +24,7 @@ from validation import (
 
 DEFAULT_FORMULATIONS = (1, 2, 3, 4)
 DEFAULT_HEURISTICS = ()
+MAX_FIXED_RESULT_WIDTH = 14
 
 
 def _same_value(values, tolerance=1e-6):
@@ -526,32 +527,58 @@ def run_experiments(
     return {"rows": rows, "comparisons": comparisons}
 
 
+def _format_result_value(value):
+    if value is None:
+        return "-"
+    fixed = f"{value:.6f}"
+    return fixed if len(fixed) <= MAX_FIXED_RESULT_WIDTH else f"{value:.6e}"
+
+
 def print_results(rows):
-    header = (
-        "{:<18} {:>3} {:>6} {:<10} {:<15} {:<17} {:>11} "
-        "{:>11} {:>9} {:>6}"
-    ).format(
-        "Instance", "Rep", "Method", "Mode", "Status", "Solution", "Objective",
-        "Dual bound", "Time", "Cuts"
+    columns = (
+        ("Instance", 18, "<"),
+        ("Rep", 3, ">"),
+        ("Method", 6, ">"),
+        ("Mode", 10, "<"),
+        ("Status", 15, "<"),
+        ("Solution", 17, "<"),
+        ("Objective", 11, ">"),
+        ("Dual bound", 11, ">"),
+        ("Time", 9, ">"),
+        ("Cuts", 6, ">"),
     )
+    rendered_rows = [
+        (
+            str(row["instance"])[:18],
+            str(row["repetition"]),
+            str(row["method"]),
+            str(row["mode"]),
+            str(row["status"]),
+            str(row.get("solution_type", "none")),
+            _format_result_value(row["objective_value"]),
+            _format_result_value(row["dual_bound"]),
+            f"{row['runtime']:.4f}",
+            "-" if row["cuts"] is None else str(row["cuts"]),
+        )
+        for row in rows
+    ]
+    widths = [
+        max(minimum, len(header), *(len(row[index]) for row in rendered_rows))
+        for index, (header, minimum, _alignment) in enumerate(columns)
+    ]
+
+    def render(values):
+        return " ".join(
+            f"{value:{alignment}{widths[index]}}"
+            for index, (value, (_header, _minimum, alignment))
+            in enumerate(zip(values, columns))
+        )
+
+    header = render(tuple(column[0] for column in columns))
     print(header)
     print("-" * len(header))
-    for row in rows:
-        objective = (
-            "-"
-            if row["objective_value"] is None
-            else "{:.6f}".format(row["objective_value"])
-        )
-        dual_bound = "-" if row["dual_bound"] is None else "{:.6f}".format(row["dual_bound"])
-        cuts = "-" if row["cuts"] is None else row["cuts"]
-        print(
-            "{:<18.18} {:>3} {:>6} {:<10} {:<15} {:<17} {:>11} "
-            "{:>11} {:>9.4f} {:>6}".format(
-                row["instance"], row["repetition"], row["method"],
-                row["mode"], row["status"], row.get("solution_type", "none"), objective, dual_bound,
-                row["runtime"], cuts
-            )
-        )
+    for row in rendered_rows:
+        print(render(row))
 
 
 def main():

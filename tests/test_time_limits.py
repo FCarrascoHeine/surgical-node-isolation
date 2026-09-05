@@ -17,7 +17,6 @@ from time_budget import BudgetExpired, TimeBudget
 from utils import collect_model_result, empty_model_result, load_gurobi_env
 from validation import validate_integer_result
 
-
 SMALL_INSTANCE = Path(__file__).resolve().parents[1] / "instances/small_instance.json"
 
 
@@ -260,6 +259,46 @@ def test_console_shows_solution_scope(capsys, scope, objective):
     assert scope in output
     assert "TIME_LIMIT" in output
     assert ("3.000000" in output) == (objective is not None)
+
+
+def test_console_columns_expand_consistently_and_compact_large_values(capsys):
+    rows = [
+        {
+            "instance": "test",
+            "repetition": 1,
+            "method": "f3",
+            "mode": "integer",
+            "status": "TIME_LIMIT",
+            "solution_type": "integer",
+            "objective_value": 273915.334291,
+            "dual_bound": 269221.244892,
+            "runtime": 60.0704,
+            "cuts": 0,
+        },
+        {
+            "instance": "test",
+            "repetition": 1,
+            "method": "f4",
+            "mode": "integer",
+            "status": "VALIDATION_FAILED",
+            "solution_type": "none",
+            "objective_value": 123456789012345.0,
+            "dual_bound": None,
+            "runtime": 0.0,
+            "cuts": None,
+        },
+    ]
+
+    run.print_results(rows)
+
+    lines = capsys.readouterr().out.splitlines()
+    assert len({len(line) for line in lines}) == 1
+    assert "273915.334291" in lines[2]
+    assert "269221.244892" in lines[2]
+    assert "1.234568e+14" in lines[3]
+    objective_end = lines[0].index("Objective") + len("Objective")
+    for line, value in ((lines[2], "273915.334291"), (lines[3], "1.234568e+14")):
+        assert line.index(value) + len(value) == objective_end
 
 
 @pytest.fixture(scope="module")

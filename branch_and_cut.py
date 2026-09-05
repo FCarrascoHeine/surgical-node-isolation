@@ -8,8 +8,8 @@ from graph_algorithms import directed_min_cut, shortest_path
 from instances import prepare_instance
 from time_budget import BudgetExpired, TimeBudget
 from utils import (
-    MemoryLimitReached,
     STATUS_NAMES,
+    MemoryLimitReached,
     collect_model_result,
     empty_model_result,
     variable_values,

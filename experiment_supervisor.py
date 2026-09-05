@@ -15,8 +15,11 @@ from gurobipy import GRB, GurobiError
 
 from memory_limits import resolve_memory_limit
 from run import (
-    DEFAULT_FORMULATIONS, HEURISTIC_NAMES, _row_from_result,
-    finalize_comparison, run_comparison,
+    DEFAULT_FORMULATIONS,
+    HEURISTIC_NAMES,
+    _row_from_result,
+    finalize_comparison,
+    run_comparison,
 )
 from time_budget import TimeBudget
 from utils import MemoryLimitReached, empty_model_result, load_gurobi_env, save_rows
@@ -88,7 +91,7 @@ def _worker(connection, memory_policy):
                 gc.collect()
                 connection.send({"kind": "result", "row": row, "oracle": oracle})
                 del row, oracle, task
-            except Exception as error:
+            except Exception as error:  # noqa: BLE001
                 info = _exception_info(error)
                 connection.send({"kind": "error", "phase": phase_name, **info})
                 # Every exceptional task retires the process. Even partial

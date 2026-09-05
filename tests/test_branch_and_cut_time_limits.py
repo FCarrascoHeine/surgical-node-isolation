@@ -7,7 +7,6 @@ import branch_and_cut as branch
 import time_budget
 from time_budget import BudgetExpired, TimeBudget
 
-
 EDGE = (0, 1)
 
 

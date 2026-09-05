@@ -4,6 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 from gurobipy import GRB, GurobiError
+from test_branch_and_cut_time_limits import EDGE, Dual, Master, dual_data
+from test_time_limits import FakeModel
 
 import branch_and_cut as branch
 import formulations
@@ -13,8 +15,6 @@ from instances import load_instance
 from time_budget import TimeBudget
 from utils import MemoryLimitReached
 from validation import evaluate_allocation
-from test_branch_and_cut_time_limits import Dual, EDGE, Master, dual_data
-from test_time_limits import FakeModel
 
 
 @pytest.mark.parametrize("formulation", [1, 2, 3])
