@@ -7,7 +7,12 @@ from formulations import build_formulation_4
 from graph_algorithms import directed_min_cut, shortest_path
 from instances import prepare_instance
 from time_budget import BudgetExpired, TimeBudget
-from utils import STATUS_NAMES, collect_model_result, empty_model_result, variable_values
+from utils import (
+    STATUS_NAMES,
+    collect_model_result,
+    empty_model_result,
+    variable_values,
+)
 
 
 def _prepared_data(instance):

@@ -9,7 +9,6 @@ from time_budget import BudgetExpired, TimeBudget
 from utils import STATUS_NAMES, configure_model
 from validation import evaluate_allocation
 
-
 HEURISTIC_NAMES = ("ah", "ash")
 
 
@@ -359,7 +358,7 @@ def solve_standard_heuristic(
 
             if subproblem["selected"] is None:
                 status_name = subproblem["status_name"]
-                convergence_reason = "auxiliary_{}".format(status_name.lower())
+                convergence_reason = f"auxiliary_{status_name.lower()}"
                 subproblems_optimal = False
                 break
 
@@ -382,7 +381,7 @@ def solve_standard_heuristic(
 
             if subproblem["status_name"] != "OPTIMAL":
                 status_name = subproblem["status_name"]
-                convergence_reason = "auxiliary_{}".format(status_name.lower())
+                convergence_reason = f"auxiliary_{status_name.lower()}"
                 subproblems_optimal = False
                 break
 

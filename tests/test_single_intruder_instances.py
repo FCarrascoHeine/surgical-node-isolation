@@ -12,6 +12,51 @@ from utils import load_gurobi_env
 
 INSTANCES_DIR = Path(__file__).resolve().parents[1] / "instances"
 SINGLE_INSTANCE = INSTANCES_DIR / "single50_272_10_3_1dir.json"
+# Identify the original collection by filename, independent of its folder layout.
+LEGACY_SINGLE_INSTANCE_FILENAMES = (
+    "single1000_5908_1000_50_1dir.json",
+    "single1000_5908_100_50_1dir.json",
+    "single1000_5909_1000_50_1dir.json",
+    "single1000_5909_100_50_1dir.json",
+    "single1000_5911_1000_50_1dir.json",
+    "single1000_5911_100_50_1dir.json",
+    "single100_564_200_5_1dir.json",
+    "single100_564_20_5_1dir.json",
+    "single100_570_200_5_1dir.json",
+    "single100_570_200_5_2dir.json",
+    "single100_570_20_5_1dir.json",
+    "single100_570_20_5_2dir.json",
+    "single2000_11743_2000_80_1dir.json",
+    "single2000_11743_200_80_1dir.json",
+    "single2000_11754_2000_80_1dir.json",
+    "single2000_11754_200_80_1dir.json",
+    "single2000_11770_2000_80_1dir.json",
+    "single2000_11770_200_80_1dir.json",
+    "single200_1164_500_10_1dir.json",
+    "single200_1164_50_10_1dir.json",
+    "single200_1170_500_10_1dir.json",
+    "single200_1170_50_10_1dir.json",
+    "single200_1176_500_10_1dir.json",
+    "single200_1176_50_10_1dir.json",
+    "single5000_28941_4000_160_1dir.json",
+    "single5000_28941_400_160_1dir.json",
+    "single5000_29077_4000_160_1dir.json",
+    "single5000_29077_400_160_1dir.json",
+    "single5000_29188_4000_160_1dir.json",
+    "single5000_29188_400_160_1dir.json",
+    "single500_2953_800_20_1dir.json",
+    "single500_2953_80_20_1dir.json",
+    "single500_2955_800_20_1dir.json",
+    "single500_2955_80_20_1dir.json",
+    "single500_2968_800_20_1dir.json",
+    "single500_2968_80_20_1dir.json",
+    "single50_272_100_3_1dir.json",
+    "single50_272_10_3_1dir.json",
+    "single50_276_100_3_1dir.json",
+    "single50_276_10_3_1dir.json",
+    "single50_278_100_3_1dir.json",
+    "single50_278_10_3_1dir.json",
+)
 SINGLE_INSTANCE_PATTERN = re.compile(
     r"^single(?P<nodes>\d+)_(?P<edges>\d+)_(?P<journeyers>\d+)_"
     r"(?P<cluster_pairs>\d+)_(?P<index>\d+)dir\.json$"
@@ -29,10 +74,21 @@ def solver_env():
 
 
 def test_single_intruder_collection_preserves_legacy_construction():
-    paths = sorted(INSTANCES_DIR.glob("single*.json"))
+    assert len(LEGACY_SINGLE_INSTANCE_FILENAMES) == 42
+    assert len(set(LEGACY_SINGLE_INSTANCE_FILENAMES)) == 42
 
-    assert len(paths) == 42
-    assert all(path.stem.endswith("dir") for path in paths)
+    paths_by_name = {name: [] for name in LEGACY_SINGLE_INSTANCE_FILENAMES}
+    for path in sorted(INSTANCES_DIR.rglob("single*.json")):
+        if path.name in paths_by_name and path.is_file():
+            paths_by_name[path.name].append(path)
+
+    paths = []
+    for name, matches in paths_by_name.items():
+        assert len(matches) == 1, (
+            f"Expected exactly one legacy instance {name}; "
+            f"found {len(matches)}: {matches}"
+        )
+        paths.append(matches[0])
 
     for path in paths:
         match = SINGLE_INSTANCE_PATTERN.fullmatch(path.name)

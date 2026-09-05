@@ -23,7 +23,6 @@ from gurobipy import GRB, Model, quicksum
 from instances import load_instance, save_instance
 from utils import load_gurobi_env
 
-
 DEFAULT_COST_MIN = 10
 DEFAULT_COST_MAX = 50
 DEFAULT_TIME_LIMIT = 10 * 60
@@ -52,9 +51,9 @@ def assign_checkpoint_costs(
 ):
     """Return a copy of *instance* with independently drawn integer edge costs."""
     if isinstance(cost_min, bool) or not isinstance(cost_min, int):
-        raise ValueError("cost_min must be an integer")
+        raise ValueError("cost_min must be an integer")  # noqa: TRY004
     if isinstance(cost_max, bool) or not isinstance(cost_max, int):
-        raise ValueError("cost_max must be an integer")
+        raise ValueError("cost_max must be an integer")  # noqa: TRY004
     if cost_min < 0 or cost_min > cost_max:
         raise ValueError(
             "cost_min and cost_max must satisfy 0 <= cost_min <= cost_max"
@@ -148,7 +147,7 @@ def _resolve_budget_model(instance, budget_model, cut_threshold):
     if budget_model not in BUDGET_MODELS:
         raise ValueError(f"budget_model must be one of {', '.join(BUDGET_MODELS)}")
     if isinstance(cut_threshold, bool) or not isinstance(cut_threshold, int):
-        raise ValueError("cut_threshold must be an integer")
+        raise ValueError("cut_threshold must be an integer")  # noqa: TRY004
     if cut_threshold < 0:
         raise ValueError("cut_threshold must be nonnegative")
     if budget_model != "auto":

@@ -3,7 +3,10 @@ from gurobipy import GRB, Model, quicksum
 from instances import prepare_instance
 from time_budget import BudgetExpired, TimeBudget
 from utils import (
-    collect_model_result, configure_model, empty_model_result, variable_values,
+    collect_model_result,
+    configure_model,
+    empty_model_result,
+    variable_values,
 )
 
 
