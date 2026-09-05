@@ -70,14 +70,14 @@ are solved only once.
 | `--all-methods` | Disabled | Runs formulations 1--4 and both heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |
 | `--repetitions N` | `1` | Solves every selected instance/formulation/mode combination `N` times. Repetition numbers are recorded in the CSV. |
-| `--time-limit SECONDS` | No limit | Sets the Gurobi time limit for each solve. Formulation 4 also reports the wall time spent in its separation procedure. |
+| `--time-limit SECONDS` | No limit | Shared elapsed-time budget for each instance/method/mode/repetition, including method preparation, model construction, optimization and separation. Checked between operations; an operation may finish after the deadline. Zero skips the search; negative values and NaN are rejected. |
 | `--solver-seed N` | `0` | Sets Gurobi's random seed. Keep this fixed when comparing formulations; vary it deliberately when studying solver variability. |
 | `--threads N` | `1` | Sets the number of Gurobi threads. Using one thread favors repeatability; larger values may reduce runtime. Gurobi interprets `0` as its automatic setting. |
 | `--max-iterations N` | `100` | Maximum number of cut-addition rounds for the formulation 4 relaxation. It has no effect on formulations 1--3 or on the formulation 4 integer callback. |
 | `--max-cuts N` | No limit | Maximum total number of cuts added while solving the formulation 4 relaxation. It has no effect on the other solves. |
 | `--heuristic-max-iterations N` | `100` | Maximum number of outer iterations for either heuristic. |
 | `--binary-search-tolerance VALUE` | `1e-4` | Precision used by the single-intruder heuristic's capacity-weight binary search. |
-| `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best true-objective candidate encountered. Iteration history is retained either way. |
+| `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best evaluated true-objective candidate. Timeouts always return the best available candidate. Iteration history is retained either way. |
 | `--output` | Disabled | Displays Gurobi's solver log while the experiment runs. |
 | `--allow-validation-failures` | Disabled | Records failed validation instead of stopping with an error. The default behavior is deliberately strict so invalid results do not silently enter an experiment. |
 
@@ -141,8 +141,46 @@ Each CSV row records the instance, method, mode, repetition, solver settings,
 objective, bound, solver gap, runtimes, model size, cut or heuristic statistics,
 validation status, and Python/Gurobi versions. `reference_gap` compares a feasible
 integer or heuristic objective to a proven small-instance oracle or common optimal
-formulation result; it is distinct from Gurobi's `gap`. `runtime` is total wall
-time, while `solver_runtime` contains time reported by Gurobi.
+formulation result; it is distinct from Gurobi's `gap`. `runtime` measures the
+method's elapsed time from before its own input preparation and model construction
+until its algorithm stops. Independent runner validation, shared batch setup,
+result formatting and CSV writing are excluded. `solver_runtime` is a separate
+diagnostic: Gurobi time for the compact solve, AH's auxiliary solves, or formulation
+4's master solves. For integer formulation 4 this already includes callback time;
+do not add `separation_time` to it. ASH uses no Gurobi solves.
+
+The existing Python `time_limit` argument to the solve functions has the same
+meaning as `--time-limit`. A single budget is shared across all iterations and
+auxiliary solves, with each Gurobi allowance refreshed immediately before
+optimization. Checks happen at safe boundaries, including after model building
+and between separation operations. There is no forced interruption of Python
+graph algorithms or model construction. Consequently an uninterrupted operation
+can overrun; if that operation also completes the method, its normal completion
+status is retained. Omitting the limit (or using positive infinity) imposes no
+method deadline. Iteration and cut limits still apply independently.
+
+`TIME_LIMIT` means the budget stopped unfinished work. `has_solution=False` and
+`solution_type=none` mean that no candidate was returned; objective and gap are
+empty, and unavailable bounds stay empty. This is not an infeasibility result
+or a validation failure. If a solution is available, the method retains its best
+completed candidate, even when terminal heuristic output was requested. ASH can
+also return its feasible minimum-cost fallback or the current feasible
+binary-search cut. Integer formulation 4 returns only candidates whose lazy-cut
+separation completed successfully, never an unchecked master incumbent.
+
+`solution_type=integer` identifies a feasible integer candidate, and `relaxation`
+a candidate of the full continuous relaxation. An unfinished formulation 4
+relaxation may instead return `restricted_master`: a snapshot from a master with
+only some cuts present, not a feasible integer solution or a certified feasible
+point of the full relaxation. Its `separation_complete` is false and `gap` is
+empty; `dual_bound` retains the strongest established lower bound even if a later
+master solve is interrupted. The console's `Solution` column shows this scope.
+An interrupted LP's primal objective alone is never treated as a lower bound.
+
+A feasible nonoptimal integer incumbent can use journeyer routes that are longer
+than the shortest routes for its allocation. In that case `objective_value`
+retains the model objective and `original_objective` reports the independently
+evaluated allocation cost; the latter may be smaller. They must agree at optimality.
 
 During a batch, detailed per-variable solution mappings are used for validation and
 then released after each solve. The returned experiment object and CSV retain the

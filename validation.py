@@ -324,10 +324,16 @@ def validate_integer_result(instance, result, tolerance=1e-6):
     ):
         errors.append("The returned variables do not reproduce the model objective")
 
-    if allocation["objective_value"] is not None and abs(
-        allocation["objective_value"] - result["objective_value"]
-    ) > tolerance * max(1.0, abs(result["objective_value"])):
-        errors.append("The model objective differs from the original SNI objective")
+    if allocation["objective_value"] is not None:
+        difference = allocation["objective_value"] - result["objective_value"]
+        objective_tolerance = tolerance * max(1.0, abs(result["objective_value"]))
+        # A feasible interrupted incumbent may use suboptimal journeyer paths
+        # or have objective slack. Its allocation can have a cheaper true cost.
+        if difference > objective_tolerance or (
+            result.get("status_name") == "OPTIMAL"
+            and abs(difference) > objective_tolerance
+        ):
+            errors.append("The model objective differs from the original SNI objective")
 
     if result.get("dual_bound") is not None and (
         result["dual_bound"] > result["objective_value"] + tolerance

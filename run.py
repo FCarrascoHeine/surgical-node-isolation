@@ -11,6 +11,7 @@ from heuristics import (
     solve_standard_heuristic,
 )
 from instances import prepare_instance
+from time_budget import TimeBudget
 from utils import load_gurobi_env, save_rows, software_metadata
 from validation import (
     enumerate_original_problem,
@@ -66,6 +67,12 @@ def _row_from_result(result, instance, repetition, solver_seed, threads):
         "solver_seed": solver_seed,
         "threads": threads,
         "status": result["status_name"],
+        "has_solution": result.get("has_solution", result.get("objective_value") is not None),
+        "solution_type": result.get(
+            "solution_type",
+            ("relaxation" if result.get("relax") else "integer")
+            if result.get("objective_value") is not None else "none",
+        ),
         "objective_value": result.get("objective_value"),
         "dual_bound": result.get("dual_bound"),
         "gap": result.get("gap"),
@@ -106,6 +113,8 @@ def _not_applicable_heuristic_result(method):
         "formulation": None,
         "relax": False,
         "status_name": "NOT_APPLICABLE",
+        "has_solution": False,
+        "solution_type": "none",
         "objective_value": None,
         "dual_bound": None,
         "gap": None,
@@ -148,6 +157,8 @@ def run_comparison(
     row_callback=None,
     retain_variables=True,
 ):
+    # Reject invalid budgets even if a selected method is not applicable.
+    TimeBudget(time_limit)
     data = prepare_instance(instance)
     selected_formulations = tuple(dict.fromkeys(int(f) for f in formulations))
     selected_heuristics = tuple(dict.fromkeys(str(h).lower() for h in heuristics))
@@ -201,13 +212,15 @@ def run_comparison(
                 solver_seed,
                 threads,
             )
-            validation = validate_integer_result(
-                data["instance"], result, tolerance=tolerance
-            )
-            row["validation_passed"] = validation["valid"]
-            row["original_objective"] = validation["original_objective"]
+            validation = None
+            if row["has_solution"]:
+                validation = validate_integer_result(
+                    data["instance"], result, tolerance=tolerance
+                )
+                row["validation_passed"] = validation["valid"]
+                row["original_objective"] = validation["original_objective"]
 
-            if formulation == 4 and result.get("variables"):
+            if formulation == 4 and validation is not None and result.get("variables"):
                 variables = result["variables"]
                 remaining_cuts = separate_solution(
                     data,
@@ -228,7 +241,7 @@ def run_comparison(
 
             complete_row(row, result)
 
-            if strict_validation and not validation["valid"]:
+            if strict_validation and validation is not None and not validation["valid"]:
                 raise AssertionError(
                     "Formulation {} failed validation: {}".format(
                         formulation, validation["errors"]
@@ -268,7 +281,7 @@ def run_comparison(
             result = _not_applicable_heuristic_result(heuristic)
         elif heuristic == "ah":
             result = solve_standard_heuristic(
-                data,
+                data["instance"],
                 max_iterations=heuristic_max_iterations,
                 time_limit=time_limit,
                 tolerance=tolerance,
@@ -280,7 +293,7 @@ def run_comparison(
             )
         else:
             result = solve_single_intruder_heuristic(
-                data,
+                data["instance"],
                 max_iterations=heuristic_max_iterations,
                 binary_search_tolerance=binary_search_tolerance,
                 time_limit=time_limit,
@@ -358,6 +371,9 @@ def run_comparison(
             if row["mode"] != "relaxation":
                 continue
             result = results[row["formulation"], "relaxation"]
+            if result.get("dual_bound") is None and result["status_name"] != "OPTIMAL":
+                # An interrupted solve without a bound is not a validation failure.
+                continue
             validation = validate_relaxation_bound(
                 result, integer_optimum, tolerance=tolerance
             )
@@ -471,10 +487,10 @@ def run_experiments(
 
 def print_results(rows):
     header = (
-        "{:<18} {:>3} {:>6} {:<10} {:<14} {:>11} "
+        "{:<18} {:>3} {:>6} {:<10} {:<15} {:<17} {:>11} "
         "{:>11} {:>9} {:>6}"
     ).format(
-        "Instance", "Rep", "Method", "Mode", "Status", "Objective",
+        "Instance", "Rep", "Method", "Mode", "Status", "Solution", "Objective",
         "Dual bound", "Time", "Cuts"
     )
     print(header)
@@ -487,10 +503,10 @@ def print_results(rows):
         )
         dual_bound = "-" if row["dual_bound"] is None else "{:.6f}".format(row["dual_bound"])
         print(
-            "{:<18.18} {:>3} {:>6} {:<10} {:<14} {:>11} "
+            "{:<18.18} {:>3} {:>6} {:<10} {:<15} {:<17} {:>11} "
             "{:>11} {:>9.4f} {:>6}".format(
                 row["instance"], row["repetition"], row["method"],
-                row["mode"], row["status"], objective, dual_bound,
+                row["mode"], row["status"], row.get("solution_type", "none"), objective, dual_bound,
                 row["runtime"], row["cuts"]
             )
         )
@@ -533,7 +549,11 @@ def main():
     )
     parser.add_argument("--repetitions", type=int, default=1)
     parser.add_argument("--csv", default="results/results.csv")
-    parser.add_argument("--time-limit", type=float, default=None)
+    parser.add_argument(
+        "--time-limit", type=float, default=None,
+        help=("Elapsed seconds per method invocation, including preparation and "
+              "model construction; checked between operations, so overruns are possible"),
+    )
     parser.add_argument(
         "--max-iterations",
         type=int,
@@ -546,7 +566,7 @@ def main():
     parser.add_argument(
         "--return-terminal-heuristic",
         action="store_true",
-        help="Return the converged candidate instead of the best candidate seen",
+        help="Return the terminal heuristic candidate; timeouts always return the best available",
     )
     parser.add_argument("--solver-seed", type=int, default=0)
     parser.add_argument("--threads", type=int, default=1)

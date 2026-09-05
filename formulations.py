@@ -1,9 +1,10 @@
-import time
-
 from gurobipy import GRB, Model, quicksum
 
 from instances import prepare_instance
-from utils import collect_model_result, configure_model, variable_values
+from time_budget import BudgetExpired, TimeBudget
+from utils import (
+    collect_model_result, configure_model, empty_model_result, variable_values,
+)
 
 
 def _add_common_variables(model, data, binary_type):
@@ -345,19 +346,28 @@ def build_model(instance, formulation, **kwargs):
 
 
 def _solve_compact(instance, formulation, **kwargs):
-    model, variables = build_model(instance, formulation, **kwargs)
+    budget = TimeBudget(kwargs.get("time_limit"))
     relax = bool(kwargs.get("relax", False))
+    model = None
     try:
-        start = time.perf_counter()
+        budget.check()
+        kwargs["time_limit"] = budget.remaining()
+        model, variables = build_model(instance, formulation, **kwargs)
+        budget.apply_to(model)
         model.optimize()
-        wall_time = time.perf_counter() - start
+        wall_time = budget.elapsed()
         result = collect_model_result(model, formulation=formulation, relax=relax)
         result["runtime"] = wall_time
         if model.SolCount > 0:
             result["variables"] = variable_values(variables)
         return result
+    except BudgetExpired:
+        result = empty_model_result(formulation, relax, model)
+        result["runtime"] = budget.elapsed()
+        return result
     finally:
-        model.dispose()
+        if model is not None:
+            model.dispose()
 
 
 def solve_instance(instance, formulation, **kwargs):

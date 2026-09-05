@@ -83,7 +83,40 @@ def _finite_value(value):
     return value if math.isfinite(value) else None
 
 
+def empty_model_result(formulation, relax, model=None, status=GRB.TIME_LIMIT):
+    """A result with no incumbent, including when optimize() was never called."""
+    linear = int(model.NumConstrs) if model is not None else 0
+    quadratic = int(model.NumQConstrs) if model is not None else 0
+    return {
+        "formulation": formulation,
+        "relax": relax,
+        "objective_value": None,
+        "has_solution": False,
+        "solution_type": "none",
+        "runtime": 0.0,
+        "solver_runtime": 0.0,
+        "status": int(status),
+        "status_name": STATUS_NAMES.get(status, f"STATUS_{status}"),
+        "dual_bound": None,
+        "gap": None,
+        "num_variables": int(model.NumVars) if model is not None else 0,
+        "num_constraints": linear + quadratic,
+        "num_linear_constraints": linear,
+        "num_quadratic_constraints": quadratic,
+        "nodes_explored": 0.0,
+        "simplex_iterations": 0.0,
+        "cuts": 0,
+        "cut_iterations": 0,
+        "master_solves": 0,
+        "separation_time": 0.0,
+        "separation_complete": False,
+        "variables": {},
+    }
+
+
 def collect_model_result(model, formulation, relax):
+    if model.Status == GRB.LOADED:
+        return empty_model_result(formulation, relax, model, status=GRB.LOADED)
     objective_value = None
     dual_bound = None
 
@@ -93,7 +126,8 @@ def collect_model_result(model, formulation, relax):
     try:
         dual_bound = _finite_value(model.ObjBound)
     except AttributeError:
-        dual_bound = objective_value
+        # A feasible interrupted LP objective is not a lower bound.
+        dual_bound = objective_value if model.Status == GRB.OPTIMAL else None
 
     if objective_value is None or dual_bound is None:
         gap = None
@@ -106,6 +140,11 @@ def collect_model_result(model, formulation, relax):
         "formulation": formulation,
         "relax": relax,
         "objective_value": objective_value,
+        "has_solution": objective_value is not None,
+        "solution_type": (
+            ("relaxation" if relax else "integer")
+            if objective_value is not None else "none"
+        ),
         "runtime": float(model.Runtime),
         "solver_runtime": float(model.Runtime),
         "status": int(model.Status),

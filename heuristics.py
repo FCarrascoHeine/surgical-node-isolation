@@ -5,6 +5,7 @@ from gurobipy import GRB, Model, quicksum
 
 from graph_algorithms import directed_min_cut, shortest_path
 from instances import prepare_instance
+from time_budget import BudgetExpired, TimeBudget
 from utils import STATUS_NAMES, configure_model
 from validation import evaluate_allocation
 
@@ -39,7 +40,9 @@ def _allocation_cost(data, selected):
     return float(sum(data["checkpoint_cost"][edge] for edge in selected))
 
 
-def _journeyer_paths(data, inspected):
+def _journeyer_paths(data, inspected, *, _budget=None):
+    if _budget is not None:
+        _budget.check()
     lengths = {
         edge: data["tau"][edge]
         + (data["inspection_time"][edge] if edge in inspected else 0.0)
@@ -49,6 +52,8 @@ def _journeyer_paths(data, inspected):
     total_distance = 0.0
 
     for journeyer in data["journeyers"]:
+        if _budget is not None:
+            _budget.check()
         distance, path = shortest_path(
             data["nodes"],
             data["edges"],
@@ -130,21 +135,26 @@ def _heuristic_result(
     simplex_iterations=0.0,
     subproblems_optimal=True,
 ):
+    runtime = float(time.perf_counter() - start)
+    return_best = return_best or status_name == "TIME_LIMIT"
     chosen = best if return_best else terminal
+    edges = () if data is None else data["edges"]
     selected = set() if chosen is None else set(chosen["selected_edges"])
     objective = None if chosen is None else float(chosen["objective_value"])
     checkpoint_cost = None if chosen is None else float(chosen["checkpoint_cost"])
 
-    return {
+    result = {
         "method": method,
         "formulation": None,
         "relax": False,
         "status": None,
         "status_name": status_name,
+        "has_solution": chosen is not None,
+        "solution_type": "integer" if chosen is not None else "none",
         "objective_value": objective,
         "dual_bound": None,
         "gap": None,
-        "runtime": float(time.perf_counter() - start),
+        "runtime": runtime,
         "solver_runtime": float(solver_runtime),
         "num_variables": int(num_variables),
         "num_constraints": int(num_constraints),
@@ -157,8 +167,8 @@ def _heuristic_result(
         "master_solves": int(auxiliary_solves),
         "separation_time": 0.0,
         "separation_complete": status_name == "CONVERGED",
-        "variables": {"x": _x_values(data["edges"], selected)} if chosen else {},
-        "selected_edges": _ordered_edges(data["edges"], selected),
+        "variables": {"x": _x_values(edges, selected)} if chosen else {},
+        "selected_edges": _ordered_edges(edges, selected),
         "checkpoint_cost": checkpoint_cost,
         "heuristic_iterations": len(history),
         "convergence_reason": convergence_reason,
@@ -175,6 +185,7 @@ def _heuristic_result(
         "subproblems_optimal": bool(subproblems_optimal),
         "iteration_history": history,
     }
+    return result
 
 
 def _solve_standard_subproblem(
@@ -186,31 +197,35 @@ def _solve_standard_subproblem(
     solver_seed,
     threads,
     env,
+    _budget=None,
 ):
+    budget = _budget if _budget is not None else TimeBudget(time_limit)
+    budget.check()
     model = Model("SNI_standard_heuristic_subproblem", env=env)
     try:
         configure_model(
             model,
             output_flag=output_flag,
-            time_limit=time_limit,
             solver_seed=solver_seed,
             threads=threads,
         )
-        selected = {
-            edge: model.addVar(
+        budget.check()
+        selected = {}
+        for edge in data["edges"]:
+            budget.check()
+            selected[edge] = model.addVar(
                 vtype=GRB.BINARY,
                 name="x[{},{}]".format(*edge),
             )
-            for edge in data["edges"]
-        }
-        source_side = {
-            (intruder, node): model.addVar(
-                vtype=GRB.BINARY,
-                name=f"y[{intruder},{node}]",
-            )
-            for intruder in data["intruders"]
-            for node in data["nodes"]
-        }
+        source_side = {}
+        for intruder in data["intruders"]:
+            for node in data["nodes"]:
+                budget.check()
+                source_side[intruder, node] = model.addVar(
+                    vtype=GRB.BINARY,
+                    name=f"y[{intruder},{node}]",
+                )
+        budget.check()
         model.setObjective(
             quicksum(
                 (
@@ -223,6 +238,7 @@ def _solve_standard_subproblem(
             ),
             GRB.MINIMIZE,
         )
+        budget.check()
         model.addConstr(
             quicksum(
                 data["checkpoint_cost"][edge] * selected[edge]
@@ -232,6 +248,7 @@ def _solve_standard_subproblem(
             name="budget",
         )
         for intruder in data["intruders"]:
+            budget.check()
             source = data["intruder_source"][intruder]
             target = data["intruder_target"][intruder]
             model.addConstr(
@@ -241,6 +258,7 @@ def _solve_standard_subproblem(
                 name=f"terminals[{intruder}]",
             )
             for tail, head in data["edges"]:
+                budget.check()
                 model.addConstr(
                     selected[tail, head]
                     >= source_side[intruder, tail]
@@ -249,6 +267,9 @@ def _solve_standard_subproblem(
                 )
 
         model.Params.FeasibilityTol = 1e-8
+        budget.check()
+        model.update()
+        budget.apply_to(model)
         model.optimize()
         result = {
             "status": int(model.Status),
@@ -284,11 +305,12 @@ def solve_standard_heuristic(
     threads=1,
     env=None,
     return_best=True,
+    _budget=None,
 ):
-    """Run the paper's general security-check allocation heuristic (A_H)."""
+    """Run A_H with one elapsed-time budget including input/model preparation."""
+    budget = _budget if _budget is not None else TimeBudget(time_limit)
     _validate_options(max_iterations, time_limit, tolerance)
-    data = _prepared_data(instance)
-    start = time.perf_counter()
+    data = None
     inspected_history = set()
     path_support = set()
     previous = None
@@ -306,86 +328,88 @@ def solve_standard_heuristic(
     status_name = "ITERATION_LIMIT"
     convergence_reason = "iteration_limit"
 
-    for iteration in range(1, max_iterations + 1):
-        elapsed = time.perf_counter() - start
-        if time_limit is not None and elapsed >= time_limit:
-            status_name = "TIME_LIMIT"
-            convergence_reason = "time_limit"
-            break
-
-        paths, path_objective = _journeyer_paths(data, inspected_history)
-        for path in paths.values():
-            path_support.update(path)
-
-        remaining_time = None
-        if time_limit is not None:
-            remaining_time = max(0.0, time_limit - (time.perf_counter() - start))
-        subproblem = _solve_standard_subproblem(
-            data,
-            path_support,
-            time_limit=remaining_time,
-            output_flag=output_flag,
-            solver_seed=solver_seed,
-            threads=threads,
-            env=env,
-        )
-        auxiliary_solves += 1
-        solver_runtime += subproblem["runtime"]
-        num_variables = max(num_variables, subproblem["num_variables"])
-        num_constraints = max(num_constraints, subproblem["num_constraints"])
-        nodes_explored += subproblem["nodes_explored"]
-        simplex_iterations += subproblem["simplex_iterations"]
-
-        if subproblem["selected"] is None:
-            status_name = subproblem["status_name"]
-            convergence_reason = "auxiliary_{}".format(
-                subproblem["status_name"].lower()
+    try:
+        budget.check()
+        data = _prepared_data(instance)
+        for iteration in range(1, max_iterations + 1):
+            budget.check()
+            paths, path_objective = _journeyer_paths(
+                data, inspected_history, _budget=budget
             )
-            subproblems_optimal = False
-            break
+            budget.check()
+            for path in paths.values():
+                path_support.update(path)
 
-        selected = subproblem["selected"]
-        evaluation = _evaluate_candidate(data, selected, tolerance)
-        terminal = _candidate_record(
-            data,
-            iteration,
-            selected,
-            evaluation,
-            path_support,
-            path_objective,
-            auxiliary_objective=subproblem["objective_value"],
-            auxiliary_status=subproblem["status_name"],
-        )
-        history.append(terminal)
-        if _better_candidate(terminal, best, tolerance):
-            best = terminal
-
-        if subproblem["status_name"] != "OPTIMAL":
-            status_name = subproblem["status_name"]
-            convergence_reason = "auxiliary_{}".format(
-                subproblem["status_name"].lower()
+            subproblem = _solve_standard_subproblem(
+                data,
+                path_support,
+                time_limit=budget.remaining(),
+                output_flag=output_flag,
+                solver_seed=solver_seed,
+                threads=threads,
+                env=env,
+                _budget=budget,
             )
-            subproblems_optimal = False
-            break
+            auxiliary_solves += 1
+            solver_runtime += subproblem["runtime"]
+            num_variables = max(num_variables, subproblem["num_variables"])
+            num_constraints = max(num_constraints, subproblem["num_constraints"])
+            nodes_explored += subproblem["nodes_explored"]
+            simplex_iterations += subproblem["simplex_iterations"]
 
-        key = frozenset(selected)
-        if previous is not None and selected == previous:
-            status_name = "CONVERGED"
-            convergence_reason = "stable_allocation"
-            break
-        if key in seen:
-            status_name = "CONVERGED"
-            convergence_reason = "repeated_allocation"
-            break
+            if subproblem["selected"] is None:
+                status_name = subproblem["status_name"]
+                convergence_reason = "auxiliary_{}".format(status_name.lower())
+                subproblems_optimal = False
+                break
 
-        seen.add(key)
-        previous = set(selected)
-        inspected_history.update(selected)
+            # Finish evaluating an incumbent even when its solve used the budget.
+            selected = subproblem["selected"]
+            evaluation = _evaluate_candidate(data, selected, tolerance)
+            terminal = _candidate_record(
+                data,
+                iteration,
+                selected,
+                evaluation,
+                path_support,
+                path_objective,
+                auxiliary_objective=subproblem["objective_value"],
+                auxiliary_status=subproblem["status_name"],
+            )
+            history.append(terminal)
+            if _better_candidate(terminal, best, tolerance):
+                best = terminal
+
+            if subproblem["status_name"] != "OPTIMAL":
+                status_name = subproblem["status_name"]
+                convergence_reason = "auxiliary_{}".format(status_name.lower())
+                subproblems_optimal = False
+                break
+
+            key = frozenset(selected)
+            if previous is not None and selected == previous:
+                status_name = "CONVERGED"
+                convergence_reason = "stable_allocation"
+                break
+            if key in seen:
+                status_name = "CONVERGED"
+                convergence_reason = "repeated_allocation"
+                break
+
+            # A completed convergence condition may stand after an atomic overrun;
+            # starting another iteration (or reporting its cap) may not.
+            budget.check()
+            seen.add(key)
+            previous = set(selected)
+            inspected_history.update(selected)
+    except BudgetExpired:
+        status_name = "TIME_LIMIT"
+        convergence_reason = "time_limit"
 
     return _heuristic_result(
         data,
         "ah",
-        start,
+        budget.start,
         status_name,
         convergence_reason,
         history,
@@ -410,195 +434,193 @@ def solve_single_intruder_heuristic(
     time_limit=None,
     tolerance=1e-6,
     return_best=True,
+    _budget=None,
 ):
-    """Run the paper's minimum-cut single-intruder heuristic (A_SH)."""
+    """Run A_SH with one elapsed-time budget including input preparation."""
+    budget = _budget if _budget is not None else TimeBudget(time_limit)
     _validate_options(max_iterations, time_limit, tolerance)
     if not 0 < binary_search_tolerance < 1:
         raise ValueError("binary_search_tolerance must be between zero and one")
-    data = _prepared_data(instance)
-    if len(data["intruders"]) != 1:
-        raise ValueError("The single-intruder heuristic requires exactly one intruder")
-
-    start = time.perf_counter()
-    intruder = data["intruders"][0]
-    source = data["intruder_source"][intruder]
-    target = data["intruder_target"][intruder]
-    flow_tolerance = min(1e-9, tolerance * 0.01)
+    data = None
     minimum_cut_solves = 0
-
-    _, _, minimum_cost_edges = directed_min_cut(
-        data["nodes"],
-        data["edges"],
-        data["checkpoint_cost"],
-        source,
-        target,
-        tolerance=flow_tolerance,
-    )
-    minimum_cut_solves += 1
-    minimum_cost_cut = set(minimum_cost_edges)
-    if _allocation_cost(data, minimum_cost_cut) > data["budget"] + tolerance:
-        return _heuristic_result(
-            data,
-            "ash",
-            start,
-            "INFEASIBLE",
-            "minimum_cost_cut_exceeds_budget",
-            [],
-            None,
-            None,
-            return_best=return_best,
-            minimum_cut_solves=minimum_cut_solves,
-        )
-
+    minimum_cost_cut = None
     inspected_history = set()
     path_support = set()
     previous = None
     seen = set()
     history = []
+    records = {}
     best = None
     terminal = None
+    pending = None
     status_name = "ITERATION_LIMIT"
     convergence_reason = "iteration_limit"
 
-    for iteration in range(1, max_iterations + 1):
-        if time_limit is not None and time.perf_counter() - start >= time_limit:
-            status_name = "TIME_LIMIT"
-            convergence_reason = "time_limit"
-            break
+    def record_candidate(selected, iteration, path_objective, **extra):
+        nonlocal best, terminal
+        evaluation = _evaluate_candidate(data, selected, tolerance)
+        record = _candidate_record(
+            data, iteration, selected, evaluation, path_support,
+            path_objective, **extra,
+        )
+        records[frozenset(selected)] = record
+        terminal = record
+        if iteration > 0:
+            history.append(record)
+        if _better_candidate(record, best, tolerance):
+            best = record
+        return record
 
-        paths, path_objective = _journeyer_paths(data, inspected_history)
-        for path in paths.values():
-            path_support.update(path)
-        impact = {
-            edge: (
-                data["inspection_time"][edge] if edge in path_support else 0.0
+    try:
+        budget.check()
+        data = _prepared_data(instance)
+        if len(data["intruders"]) != 1:
+            raise ValueError("The single-intruder heuristic requires exactly one intruder")
+        intruder = data["intruders"][0]
+        source = data["intruder_source"][intruder]
+        target = data["intruder_target"][intruder]
+        flow_tolerance = min(1e-9, tolerance * 0.01)
+
+        budget.check()
+        _, _, minimum_cost_edges = directed_min_cut(
+            data["nodes"], data["edges"], data["checkpoint_cost"], source,
+            target, tolerance=flow_tolerance,
+        )
+        minimum_cut_solves += 1
+        initial_cut = set(minimum_cost_edges)
+        if _allocation_cost(data, initial_cut) > data["budget"] + tolerance:
+            # The completed minimum cut proves infeasibility, even if that
+            # indivisible operation returned slightly after the deadline.
+            return _heuristic_result(
+                data, "ash", budget.start, "INFEASIBLE",
+                "minimum_cost_cut_exceeds_budget", [], None, None,
+                return_best=return_best, minimum_cut_solves=minimum_cut_solves,
             )
-            for edge in data["edges"]
-        }
+        minimum_cost_cut = initial_cut
 
-        if iteration == 1:
-            _, _, impact_edges = directed_min_cut(
-                data["nodes"],
-                data["edges"],
-                impact,
-                source,
-                target,
-                tolerance=flow_tolerance,
+        for iteration in range(1, max_iterations + 1):
+            budget.check()
+            paths, path_objective = _journeyer_paths(
+                data, inspected_history, _budget=budget
             )
-            minimum_cut_solves += 1
-            impact_cut = set(impact_edges)
-            if _allocation_cost(data, impact_cut) <= data["budget"] + tolerance:
-                evaluation = _evaluate_candidate(data, impact_cut, tolerance)
-                terminal = _candidate_record(
-                    data,
-                    iteration,
-                    impact_cut,
-                    evaluation,
-                    path_support,
-                    path_objective,
-                    alpha=0.0,
-                    binary_search_iterations=0,
-                )
-                history.append(terminal)
-                best = terminal
-                status_name = "CONVERGED"
-                convergence_reason = "impact_cut_feasible"
-                break
-
-        lower = 0.0
-        upper = 1.0
-        feasible_cut = set(minimum_cost_cut)
-        feasible_alpha = 1.0
-        binary_iterations = 0
-        timed_out = False
-
-        while upper - lower >= binary_search_tolerance:
-            if time_limit is not None and time.perf_counter() - start >= time_limit:
-                timed_out = True
-                break
-            alpha = (lower + upper) / 2.0
-            capacities = {
-                edge: alpha * data["checkpoint_cost"][edge]
-                + (1.0 - alpha) * impact[edge]
+            budget.check()
+            for path in paths.values():
+                path_support.update(path)
+            impact = {
+                edge: data["inspection_time"][edge] if edge in path_support else 0.0
                 for edge in data["edges"]
             }
-            _, _, cut_edges = directed_min_cut(
-                data["nodes"],
-                data["edges"],
-                capacities,
-                source,
-                target,
-                tolerance=flow_tolerance,
-            )
-            minimum_cut_solves += 1
-            binary_iterations += 1
-            candidate = set(cut_edges)
+            budget.check()
 
-            if _allocation_cost(data, candidate) <= data["budget"] + tolerance:
-                upper = alpha
-                feasible_cut = candidate
-                feasible_alpha = alpha
-            else:
-                lower = alpha
+            if iteration == 1:
+                _, _, impact_edges = directed_min_cut(
+                    data["nodes"], data["edges"], impact, source, target,
+                    tolerance=flow_tolerance,
+                )
+                minimum_cut_solves += 1
+                impact_cut = set(impact_edges)
+                if _allocation_cost(data, impact_cut) <= data["budget"] + tolerance:
+                    record_candidate(
+                        impact_cut, iteration, path_objective, alpha=0.0,
+                        binary_search_iterations=0,
+                    )
+                    status_name = "CONVERGED"
+                    convergence_reason = "impact_cut_feasible"
+                    break
 
-        evaluation = _evaluate_candidate(data, feasible_cut, tolerance)
-        terminal = _candidate_record(
-            data,
-            iteration,
-            feasible_cut,
-            evaluation,
-            path_support,
-            path_objective,
-            alpha=float(feasible_alpha),
-            alpha_lower=float(lower),
-            alpha_upper=float(upper),
-            binary_search_iterations=binary_iterations,
-        )
-        history.append(terminal)
-        if _better_candidate(terminal, best, tolerance):
-            best = terminal
+            lower = 0.0
+            upper = 1.0
+            pending = {
+                "selected": set(minimum_cost_cut),
+                "iteration": iteration,
+                "path_objective": path_objective,
+                "alpha": 1.0,
+                "alpha_lower": lower,
+                "alpha_upper": upper,
+                "binary_search_iterations": 0,
+            }
+            # Binary-search trial cuts are auxiliary states. Only the current
+            # feasible cut becomes an outer candidate on completion or timeout.
+            while upper - lower >= binary_search_tolerance:
+                budget.check()
+                alpha = (lower + upper) / 2.0
+                capacities = {
+                    edge: alpha * data["checkpoint_cost"][edge]
+                    + (1.0 - alpha) * impact[edge]
+                    for edge in data["edges"]
+                }
+                budget.check()
+                _, _, cut_edges = directed_min_cut(
+                    data["nodes"], data["edges"], capacities, source, target,
+                    tolerance=flow_tolerance,
+                )
+                minimum_cut_solves += 1
+                pending["binary_search_iterations"] += 1
+                candidate = set(cut_edges)
+                if _allocation_cost(data, candidate) <= data["budget"] + tolerance:
+                    upper = alpha
+                    pending["selected"] = candidate
+                    pending["alpha"] = alpha
+                else:
+                    lower = alpha
+                pending["alpha_lower"] = lower
+                pending["alpha_upper"] = upper
 
-        if timed_out:
-            status_name = "TIME_LIMIT"
-            convergence_reason = "time_limit"
-            break
-
-        key = frozenset(feasible_cut)
-        if previous is not None and feasible_cut == previous:
-            status_name = "CONVERGED"
-            convergence_reason = "stable_allocation"
-            break
-        if key in seen:
-            status_name = "CONVERGED"
-            convergence_reason = "repeated_allocation"
-            break
-
-        seen.add(key)
-        previous = set(feasible_cut)
-        inspected_history.update(feasible_cut)
+            selected = pending["selected"]
+            record_candidate(**pending)
+            pending = None
+            key = frozenset(selected)
+            if previous is not None and selected == previous:
+                status_name = "CONVERGED"
+                convergence_reason = "stable_allocation"
+                break
+            if key in seen:
+                status_name = "CONVERGED"
+                convergence_reason = "repeated_allocation"
+                break
+            budget.check()
+            seen.add(key)
+            previous = set(selected)
+            inspected_history.update(selected)
+    except BudgetExpired:
+        status_name = "TIME_LIMIT"
+        convergence_reason = "time_limit"
+        # Evaluation finishes already obtained feasible candidates. It does not
+        # start another cut or path-support search after the deadline.
+        if pending is not None:
+            record_candidate(**pending)
+        if minimum_cost_cut is not None:
+            fallback = records.get(frozenset(minimum_cost_cut))
+            if fallback is None:
+                prior_terminal = terminal
+                fallback = record_candidate(
+                    minimum_cost_cut, 0, 0.0, initial_feasible_fallback=True,
+                )
+                if prior_terminal is not None:
+                    terminal = prior_terminal
+            if _better_candidate(fallback, best, tolerance):
+                best = fallback
 
     return _heuristic_result(
-        data,
-        "ash",
-        start,
-        status_name,
-        convergence_reason,
-        history,
-        best,
-        terminal,
-        return_best=return_best,
+        data, "ash", budget.start, status_name, convergence_reason, history,
+        best, terminal, return_best=return_best,
         minimum_cut_solves=minimum_cut_solves,
     )
 
 
 def solve_heuristic(instance, method="auto", **kwargs):
-    """Dispatch to A_H or A_SH, choosing by intruder count when requested."""
-    data = _prepared_data(instance)
+    """Dispatch to A_H or A_SH without resetting the method's time budget."""
+    budget = kwargs.pop("_budget", None)
+    if budget is None:
+        budget = TimeBudget(kwargs.get("time_limit"))
     method = method.lower()
     if method == "auto":
-        method = "ash" if len(data["intruders"]) == 1 else "ah"
+        # Resolve the method even for an expired budget; this atomic preparation
+        # is charged to the same budget passed to the selected implementation.
+        instance = _prepared_data(instance)
+        method = "ash" if len(instance["intruders"]) == 1 else "ah"
     if method == "ah":
-        return solve_standard_heuristic(data, **kwargs)
+        return solve_standard_heuristic(instance, _budget=budget, **kwargs)
     if method == "ash":
-        return solve_single_intruder_heuristic(data, **kwargs)
+        return solve_single_intruder_heuristic(instance, _budget=budget, **kwargs)
     raise ValueError("method must be auto, ah, or ash")
