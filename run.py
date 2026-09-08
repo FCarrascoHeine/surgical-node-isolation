@@ -27,6 +27,15 @@ DEFAULT_HEURISTICS = ()
 MAX_FIXED_RESULT_WIDTH = 14
 
 
+class ComparisonValidationError(AssertionError):
+    """One or more scoped cross-method consistency checks failed."""
+
+    def __init__(self, issues):
+        self.issues = tuple(issues)
+        messages = tuple(dict.fromkeys(issue["message"] for issue in self.issues))
+        super().__init__("; ".join(messages))
+
+
 def _same_value(values, tolerance=1e-6):
     if not values:
         return False
@@ -373,40 +382,78 @@ def finalize_comparison(
     strict_validation=True, tolerance=1e-6, row_callback=None,
 ):
     """Compare compact, already validated summaries; no model/instance required."""
+    # Isolated workers may have provisionally used their sole integer result as
+    # its own reference.  Recompute references from the complete group so an
+    # ambiguous disagreement cannot retain those self-references.
+    for row in rows:
+        if row["mode"] in ("integer", "heuristic"):
+            row["reference_objective"] = None
+            row["reference_gap"] = None
+
+    row_by_key = {
+        (row["formulation"], row["mode"]): row
+        for row in rows
+        if row["formulation"] is not None
+    }
+    issues = []
+
+    def record_issue(kind, message, row_keys, scope):
+        row_keys = tuple(dict.fromkeys(row_keys))
+        issues.append({
+            "kind": kind,
+            "message": message,
+            "row_keys": row_keys,
+            "scope": scope,
+        })
+        for key in row_keys:
+            row = row_by_key.get(key)
+            if row is None:
+                continue
+            row["validation_passed"] = False
+            if row_callback is not None:
+                row_callback(row)
+
+    optimal_results = []
     if solve_integer and selected_formulations:
         optimal_results = [
             results[formulation, "integer"]
             for formulation in selected_formulations
             if results[formulation, "integer"]["status_name"] == "OPTIMAL"
+            and results[formulation, "integer"]["objective_value"] is not None
         ]
-        if len(optimal_results) == len(selected_formulations):
-            objective_values = [result["objective_value"] for result in optimal_results]
-            if strict_validation and not _same_value(objective_values, tolerance):
-                raise AssertionError(
-                    "The selected integer formulations have different objective values"
-                )
-            if oracle is not None and oracle["objective_value"] is not None:
-                for result in optimal_results:
-                    if abs(result["objective_value"] - oracle["objective_value"]) > (
-                        tolerance * max(1.0, abs(oracle["objective_value"]))
-                    ):
-                        raise AssertionError(
-                            "Formulation {} differs from the enumeration oracle".format(
-                                result["formulation"]
-                            )
-                        )
 
     integer_optimum = None
+    oracle_objective = None if oracle is None else oracle["objective_value"]
     if oracle is not None:
-        integer_optimum = oracle["objective_value"]
-    elif solve_integer and selected_formulations:
-        optimal_values = [
-            results[formulation, "integer"]["objective_value"]
-            for formulation in selected_formulations
-            if results[formulation, "integer"]["status_name"] == "OPTIMAL"
-        ]
-        if optimal_values and _same_value(optimal_values, tolerance):
+        integer_optimum = oracle_objective
+        if oracle_objective is not None:
+            objective_tolerance = tolerance * max(1.0, abs(oracle_objective))
+            for result in optimal_results:
+                if (
+                    abs(result["objective_value"] - oracle_objective)
+                    > objective_tolerance
+                ):
+                    formulation = result["formulation"]
+                    record_issue(
+                        "integer_oracle_disagreement",
+                        f"Formulation {formulation} differs from the enumeration oracle",
+                        ((formulation, "integer"),),
+                        "row",
+                    )
+    elif optimal_results:
+        optimal_values = [result["objective_value"] for result in optimal_results]
+        if _same_value(optimal_values, tolerance):
             integer_optimum = optimal_values[0]
+        elif len(optimal_results) > 1:
+            record_issue(
+                "integer_formulation_disagreement",
+                "The selected integer formulations have different objective values",
+                tuple(
+                    (result["formulation"], "integer")
+                    for result in optimal_results
+                ),
+                "group",
+            )
 
     if solve_relaxation and integer_optimum is not None:
         for row in rows:
@@ -420,13 +467,16 @@ def finalize_comparison(
                 result, integer_optimum, tolerance=tolerance
             )
             row["validation_passed"] = validation["valid"]
-            if row_callback is not None:
-                row_callback(row)
-            if strict_validation and not validation["valid"]:
-                raise AssertionError(
-                    "Formulation {} returned an invalid relaxation bound".format(
-                        row["formulation"]
-                    )
+            if validation["valid"]:
+                if row_callback is not None:
+                    row_callback(row)
+            else:
+                formulation = row["formulation"]
+                record_issue(
+                    "invalid_relaxation_bound",
+                    f"Formulation {formulation} returned an invalid relaxation bound",
+                    ((formulation, "relaxation"),),
+                    "row",
                 )
 
     if integer_optimum is not None:
@@ -449,7 +499,15 @@ def finalize_comparison(
             if row_callback is not None:
                 row_callback(row)
 
-    return {"rows": rows, "results": results, "oracle": oracle}
+    if strict_validation and issues:
+        raise ComparisonValidationError(issues)
+
+    return {
+        "rows": rows,
+        "results": results,
+        "oracle": oracle,
+        "comparison_issues": issues,
+    }
 
 
 def resolve_instances(specifications):

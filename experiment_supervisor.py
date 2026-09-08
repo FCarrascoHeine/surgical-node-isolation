@@ -17,6 +17,7 @@ from memory_limits import resolve_memory_limit
 from run import (
     DEFAULT_FORMULATIONS,
     HEURISTIC_NAMES,
+    ComparisonValidationError,
     _row_from_result,
     finalize_comparison,
     run_comparison,
@@ -315,16 +316,36 @@ def run_supervised_experiments(
                         arguments.get("strict_validation", True),
                         arguments.get("tolerance", 1e-6), checkpoint,
                     )
+                except ComparisonValidationError as error:
+                    messages_by_key = {}
+                    for issue in error.issues:
+                        for key in issue["row_keys"]:
+                            messages_by_key.setdefault(key, []).append(issue["message"])
+                    for row in group_rows:
+                        key = (row["formulation"], row["mode"])
+                        messages = messages_by_key.get(key)
+                        if messages:
+                            row.update(
+                                status="VALIDATION_FAILED",
+                                validation_passed=False,
+                                error_type=type(error).__name__,
+                                error_message="; ".join(dict.fromkeys(messages)),
+                                error_phase="comparison",
+                            )
                 except AssertionError as error:
-                    # Disagreement is a failed validation, never silent success.
+                    # Retain conservative handling for an unexpected unscoped
+                    # comparison assertion.
                     for row in group_rows:
                         if row["method_type"] == "formulation" and (
                             row["has_solution"] or row["dual_bound"] is not None
                         ):
-                            row.update(status="VALIDATION_FAILED", validation_passed=False,
-                                       error_type="AssertionError", error_message=str(error),
-                                       error_phase="comparison",
-                                       reference_objective=None, reference_gap=None)
+                            row.update(
+                                status="VALIDATION_FAILED",
+                                validation_passed=False,
+                                error_type="AssertionError",
+                                error_message=str(error),
+                                error_phase="comparison",
+                            )
                 checkpoint()
     finally:
         client.close()

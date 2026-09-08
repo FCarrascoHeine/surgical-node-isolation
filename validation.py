@@ -350,15 +350,16 @@ def validate_integer_result(instance, result, tolerance=1e-6):
 
 
 def validate_relaxation_bound(result, integer_optimum, tolerance=1e-6):
-    if result.get("status_name") == "OPTIMAL":
-        lower_bound = result.get("objective_value")
-    else:
-        lower_bound = result.get("dual_bound")
+    """Check a solver-certified relaxation lower bound against an integer optimum."""
+    # For a minimization problem the incumbent objective is an upper bound on
+    # the relaxation optimum, even when the solver reports tolerance-based
+    # optimality.  Only the solver's dual bound certifies a lower bound.
+    lower_bound = result.get("dual_bound")
 
     if lower_bound is None:
         return {
             "valid": False,
-            "error": "No valid lower bound was returned",
+            "error": "No certified dual bound was returned",
             "lower_bound": None,
         }
 

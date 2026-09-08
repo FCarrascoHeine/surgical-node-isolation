@@ -80,7 +80,7 @@ are solved only once.
 | `--binary-search-tolerance VALUE` | `1e-4` | Precision used by the single-intruder heuristic's capacity-weight binary search. |
 | `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best evaluated true-objective candidate. Timeouts always return the best available candidate. Iteration history is retained either way. |
 | `--output` | Disabled | Displays Gurobi's solver log while the experiment runs. |
-| `--allow-validation-failures` | Disabled | Keeps numerical results with a failed-validation flag. By default the supervised CLI records `VALIDATION_FAILED` and continues; direct Python comparison calls retain their strict exception behavior. |
+| `--allow-validation-failures` | Disabled | Keeps numerical results and their solver statuses while setting `validation_passed=False` on implicated rows. By default the supervised CLI records `VALIDATION_FAILED` on those rows and continues; direct Python comparison calls retain their strict exception behavior. |
 
 Without heuristics, the number of result rows is:
 
@@ -187,6 +187,18 @@ During a batch, detailed per-variable solution mappings are used for validation 
 then released after each solve. The returned experiment object and CSV retain the
 compact solve summaries and result rows.
 
+Validation is scoped to the rows implicated by a failed check. Independent
+allocation checks and relaxation-bound checks affect only their own row. If two
+or more optimal integer formulations disagree and no enumeration oracle is
+available, every disagreeing integer row is implicated because the comparison
+cannot identify a culprit; unrelated relaxations and heuristics retain their own
+statuses. With an oracle, only integer rows that differ from it are implicated.
+Relaxation bounds are checked only against a trustworthy oracle or mutually
+consistent available optimal integer results. The certified `dual_bound` is used
+even when the solver's incumbent has tolerance-based `OPTIMAL` status.
+`validation_passed` is empty when an applicable check could not be completed,
+rather than treating that row as a failure.
+
 ### Memory limits and recovery
 
 The command-line runner uses one persistent worker subprocess. It reuses a single
@@ -222,8 +234,11 @@ guarantee against system-wide memory exhaustion.
   `restricted_master` scope without claiming full relaxation feasibility.
 - `OUT_OF_MEMORY`: a Python or Gurobi OOM exception was reported. The affected
   solve gets an empty solution row and the worker is replaced.
-- `ERROR` / `VALIDATION_FAILED`: the solve or validation raised an exception.
-  The failure is recorded and subsequent scheduled solves continue.
+- `ERROR`: the solve raised an exception. `VALIDATION_FAILED` means that the row
+  failed its own validation or was specifically implicated by a cross-method
+  comparison. Scoped comparison failures record
+  `error_type=ComparisonValidationError` and `error_phase=comparison`. The failure
+  is recorded and subsequent scheduled solves continue.
 - `PROCESS_FAILED`: the worker exited without reporting a result. Its exit code
   and last reported phase are saved. OOM is not assumed without evidence.
 

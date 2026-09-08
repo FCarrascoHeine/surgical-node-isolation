@@ -140,6 +140,11 @@ def success(formulation=1, mode="integer", objective=None, bound=None):
         result.update(status_name="OPTIMAL", objective_value=objective, has_solution=True,
                       solution_type=mode, dual_bound=bound, separation_complete=True)
     row = _row_from_result(result, {"name": "test"}, 1, 0, 1)
+    if objective is not None and mode == "integer":
+        row["validation_passed"] = True
+        # Match the provisional self-reference produced by an isolated worker.
+        row["reference_objective"] = objective
+        row["reference_gap"] = 0
     return {"kind": "result", "row": row, "oracle": None}
 
 
@@ -228,15 +233,66 @@ def test_csv_write_failure_does_not_become_an_instance_error(tmp_path, monkeypat
     assert client.closed
 
 
-def test_invalid_cross_method_relaxation_bound_is_flagged():
+def test_invalid_cross_method_relaxation_bound_is_flagged(tmp_path):
     client = ScriptedClient([success(1, objective=10, bound=10), success(1, "relaxation", 12, 12)])
+    filename = tmp_path / "scoped_validation.csv"
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1,), memory_policy=POLICY,
+        csv_filename=filename, _client_factory=lambda policy: client,
+    )["rows"]
+    assert rows[0]["status"] == "OPTIMAL"
+    assert rows[0]["validation_passed"] is True
+    assert rows[0]["reference_objective"] == 10
+    assert rows[0]["reference_gap"] == 0
+    assert rows[0]["error_message"] is None
+    assert rows[1]["status"] == "VALIDATION_FAILED"
+    assert rows[1]["validation_passed"] is False
+    assert rows[1]["error_type"] == "ComparisonValidationError"
+    assert "invalid relaxation bound" in rows[1]["error_message"]
+    with filename.open(newline="") as file:
+        saved = list(csv.DictReader(file))
+    assert [row["status"] for row in saved] == ["OPTIMAL", "VALIDATION_FAILED"]
+    assert saved[0]["validation_passed"] == "True"
+    assert saved[0]["reference_objective"] == "10"
+    assert saved[0]["error_message"] == ""
+    assert saved[1]["validation_passed"] == "False"
+    assert saved[1]["error_type"] == "ComparisonValidationError"
+
+
+def test_optimal_relaxation_validation_uses_certified_dual_bound():
+    client = ScriptedClient([
+        success(1, objective=100, bound=100),
+        success(1, "relaxation", 100.0002, 100),
+    ])
     rows = supervisor.run_supervised_experiments(
         [{"name": "test"}], formulations=(1,), memory_policy=POLICY,
         _client_factory=lambda policy: client,
     )["rows"]
-    assert rows[1]["status"] == "VALIDATION_FAILED"
-    assert rows[1]["validation_passed"] is False
-    assert "invalid relaxation bound" in rows[1]["error_message"]
+    assert [row["status"] for row in rows] == ["OPTIMAL", "OPTIMAL"]
+    assert all(row["validation_passed"] for row in rows)
+    assert all(row["error_message"] is None for row in rows)
+
+
+def test_each_invalid_relaxation_is_scoped_to_its_own_row():
+    client = ScriptedClient([
+        success(1, objective=10, bound=10),
+        success(1, "relaxation", 12, 12),
+        success(2, objective=10, bound=10),
+        success(2, "relaxation", 13, 13),
+    ])
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1, 2), memory_policy=POLICY,
+        _client_factory=lambda policy: client,
+    )["rows"]
+    assert [row["status"] for row in rows] == [
+        "OPTIMAL", "VALIDATION_FAILED", "OPTIMAL", "VALIDATION_FAILED",
+    ]
+    assert rows[0]["validation_passed"] and rows[2]["validation_passed"]
+    assert rows[1]["validation_passed"] is rows[3]["validation_passed"] is False
+    assert "Formulation 1" in rows[1]["error_message"]
+    assert "Formulation 2" not in rows[1]["error_message"]
+    assert "Formulation 2" in rows[3]["error_message"]
+    assert "Formulation 1" not in rows[3]["error_message"]
 
 
 def test_worker_creation_failure_is_a_reportable_failure(monkeypatch):
@@ -280,6 +336,73 @@ def test_cross_method_disagreement_is_recorded_and_next_instance_runs():
     ]
     assert rows[0]["validation_passed"] is False
     assert rows[0]["error_phase"] == "comparison"
+    assert rows[1]["validation_passed"] is False
+    assert rows[0]["error_type"] == rows[1]["error_type"] == "ComparisonValidationError"
+    assert rows[0]["reference_objective"] is rows[1]["reference_objective"] is None
+
+
+def test_integer_disagreement_does_not_relabel_unrelated_relaxations():
+    client = ScriptedClient([
+        success(1, objective=10, bound=10),
+        success(1, "relaxation", 5, 5),
+        success(2, objective=20, bound=20),
+        success(2, "relaxation", 7, 7),
+    ])
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1, 2), memory_policy=POLICY,
+        _client_factory=lambda policy: client,
+    )["rows"]
+    assert [row["status"] for row in rows] == [
+        "VALIDATION_FAILED", "OPTIMAL", "VALIDATION_FAILED", "OPTIMAL",
+    ]
+    assert rows[0]["validation_passed"] is rows[2]["validation_passed"] is False
+    assert rows[1]["validation_passed"] is rows[3]["validation_passed"] is None
+    assert rows[1]["error_message"] is rows[3]["error_message"] is None
+
+
+def test_oracle_disagreement_only_marks_the_deviating_integer_row():
+    first = success(1, objective=10, bound=10)
+    first["oracle"] = {"objective_value": 10}
+    client = ScriptedClient([first, success(2, objective=20, bound=20)])
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1, 2), mode="integer",
+        memory_policy=POLICY, _client_factory=lambda policy: client,
+    )["rows"]
+    assert [row["status"] for row in rows] == ["OPTIMAL", "VALIDATION_FAILED"]
+    assert rows[0]["validation_passed"] is True
+    assert rows[1]["validation_passed"] is False
+    assert rows[0]["reference_objective"] == rows[1]["reference_objective"] == 10
+    assert rows[0]["reference_gap"] == 0
+    assert rows[1]["reference_gap"] == 1
+
+
+def test_allowed_comparison_failure_keeps_solver_status_and_failure_flag():
+    client = ScriptedClient([
+        success(1, objective=10, bound=10),
+        success(1, "relaxation", 12, 12),
+    ])
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1,), strict_validation=False,
+        memory_policy=POLICY, _client_factory=lambda policy: client,
+    )["rows"]
+    assert [row["status"] for row in rows] == ["OPTIMAL", "OPTIMAL"]
+    assert rows[0]["validation_passed"] is True
+    assert rows[1]["validation_passed"] is False
+
+
+def test_allowed_integer_disagreement_keeps_statuses_and_marks_participants():
+    client = ScriptedClient([
+        success(1, objective=10, bound=10),
+        success(2, objective=20, bound=20),
+    ])
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1, 2), mode="integer",
+        strict_validation=False, memory_policy=POLICY,
+        _client_factory=lambda policy: client,
+    )["rows"]
+    assert [row["status"] for row in rows] == ["OPTIMAL", "OPTIMAL"]
+    assert all(row["validation_passed"] is False for row in rows)
+    assert all(row["reference_objective"] is None for row in rows)
 
 
 def test_automatic_memory_limit_reserves_python_and_os_headroom(monkeypatch):
