@@ -1,8 +1,6 @@
 """Create weighted-cost sister instances for the SNI problem.
 
-For every ``*dir.json`` file directly inside the input directory, this script
-draws an integer checkpoint cost for every edge and solves an intruder-separation
-model
+Draw integer checkpoint costs and solve an intruder-separation model
 
     min  sum_e c_e x_e
 
@@ -11,11 +9,19 @@ the disaggregated x/y formulation.  The value of a best feasible solution
 becomes the new instance budget.  If the solve reaches the time limit, the
 incumbent is used; consequently the saved budget is feasible, although it may
 not be the true minimum.
+
+Use ``--collection single-grid`` to generate the single-intruder and grid
+collections alongside their originals. Grid sizes and identical single graphs
+share reproducible directed costs; auxiliary arcs remain uncheckable.
 """
 
 import argparse
 import copy
+import hashlib
+import json
+import math
 import random
+import re
 from pathlib import Path
 
 from gurobipy import GRB, Model, quicksum
@@ -28,13 +34,16 @@ DEFAULT_COST_MAX = 50
 DEFAULT_TIME_LIMIT = 10 * 60
 DEFAULT_CUT_THRESHOLD = 100_000
 BUDGET_MODELS = ("auto", "disaggregated", "intruder-cuts")
+GRID_STEM = re.compile(r"grid_(\d+)x(\d+)_i\d+_j\d+_seed-?\d+")
 
 
 def _complex_stem(stem):
-    """Replace a terminal ``dir`` marker with ``c``."""
-    if not stem.endswith("dir"):
-        raise ValueError(f"The source instance name must end in 'dir': {stem}")
-    return f"{stem[:-3]}c"
+    """Name a legacy or grid sister without accepting generated grids again."""
+    if stem.endswith("dir"):
+        return f"{stem[:-3]}c"
+    if GRID_STEM.fullmatch(stem):
+        return f"{stem}_c"
+    raise ValueError(f"Expected a source ending in 'dir' or an original grid: {stem}")
 
 
 def complex_instance_path(source_path):
@@ -48,8 +57,29 @@ def assign_checkpoint_costs(
     rng,
     cost_min=DEFAULT_COST_MIN,
     cost_max=DEFAULT_COST_MAX,
+    *,
+    forbidden_edges=(),
+    shared_costs=None,
 ):
-    """Return a copy of *instance* with independently drawn integer edge costs."""
+    """Copy an instance and weight checkable arcs, optionally from a shared map.
+
+    Forbidden costs are left alone here and finalized as budget + 1 after the
+    solve. Their exclusion from the solve is explicit, not based on this value.
+    """
+    _validate_cost_range(cost_min, cost_max)
+    forbidden_edges = set(forbidden_edges)
+    weighted_instance = copy.deepcopy(instance)
+    for edge in weighted_instance["edges"]:
+        pair = (edge["tail"], edge["head"])
+        if pair not in forbidden_edges:
+            edge["checkpoint_cost"] = (
+                rng.randint(cost_min, cost_max)
+                if shared_costs is None else shared_costs[pair]
+            )
+    return weighted_instance
+
+
+def _validate_cost_range(cost_min, cost_max):
     if isinstance(cost_min, bool) or not isinstance(cost_min, int):
         raise ValueError("cost_min must be an integer")  # noqa: TRY004
     if isinstance(cost_max, bool) or not isinstance(cost_max, int):
@@ -59,10 +89,58 @@ def assign_checkpoint_costs(
             "cost_min and cost_max must satisfy 0 <= cost_min <= cost_max"
         )
 
-    weighted_instance = copy.deepcopy(instance)
-    for edge in weighted_instance["edges"]:
-        edge["checkpoint_cost"] = rng.randint(cost_min, cost_max)
-    return weighted_instance
+
+def _digest(value):
+    material = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def _shared_cost_group(instance, source_path):
+    """Identify comparable source graphs without using journeyer populations."""
+    if "grid" in instance:
+        rows = instance["grid"]["rows"]
+        columns = instance["grid"]["columns"]
+        match = GRID_STEM.fullmatch(source_path.stem)
+        if (
+            any(type(value) is not int or value < 2 for value in (rows, columns))
+            or match is None
+            or (int(match[1]), int(match[2])) != (rows, columns)
+        ):
+            raise ValueError(f"Invalid grid dimensions/name: {source_path.name}")
+        expected = set()
+        for row in range(rows):
+            for column in range(columns):
+                tail = row * columns + column
+                for head in (
+                    [tail + 1] if column + 1 < columns else []
+                ) + ([tail + columns] if row + 1 < rows else []):
+                    expected.update(((tail, head), (head, tail)))
+        actual = {(e["tail"], e["head"]) for e in instance["edges"]}
+        if set(instance["nodes"]) != set(range(rows * columns)) or actual != expected:
+            raise ValueError(f"Grid topology does not match its size: {source_path.name}")
+        return f"grid:{rows}x{columns}"
+    if source_path.stem.startswith("single"):
+        # The full graph parameters distinguish genuinely identical graphs from
+        # unrelated files with the same dimensions or edge count.
+        graph = {
+            "nodes": sorted(instance["nodes"]),
+            "edges": sorted(instance["edges"], key=lambda e: (e["tail"], e["head"])),
+        }
+        return f"single:{_digest(graph)}"
+    if GRID_STEM.fullmatch(source_path.stem):
+        raise ValueError(f"Missing grid metadata: {source_path.name}")
+    return None
+
+
+def _shared_checkpoint_costs(instance, group, seed, cost_min, cost_max, cache):
+    key = (group, seed, cost_min, cost_max)
+    if key not in cache:
+        rng = random.Random(int(_digest([seed, group, "checkpoint_costs"]), 16))
+        cache[key] = {
+            pair: rng.randint(cost_min, cost_max)
+            for pair in sorted((e["tail"], e["head"]) for e in instance["edges"])
+        }
+    return cache[key]
 
 
 def _directed_path_exists(nodes, edges, source, target, blocked_edges):
@@ -103,13 +181,35 @@ def _reachable_nodes(nodes, edges, source, blocked_edges):
     return reachable
 
 
-def _initial_checkpoint_set(edges, intruders, costs):
+def _initial_checkpoint_set(nodes, edges, intruders, costs, forbidden_edges):
     """Build a low-cost feasible checkpoint certificate for the MIP start."""
     sources = {intruder["source"] for intruder in intruders}
     targets = {intruder["target"] for intruder in intruders}
     outgoing_sources = {edge for edge in edges if edge[0] in sources}
     incoming_targets = {edge for edge in edges if edge[1] in targets}
 
+    if forbidden_edges:
+        # Close each terminal under paths of uncheckable arcs. The boundary
+        # then consists entirely of ordinary edges and is a valid cut.
+        ordinary = set(edges) - forbidden_edges
+        reverse_edges = [(head, tail) for tail, head in edges]
+        reverse_ordinary = {(head, tail) for tail, head in ordinary}
+        outgoing_sources, incoming_targets = set(), set()
+        for intruder in intruders:
+            reachable = _reachable_nodes(nodes, edges, intruder["source"], ordinary)
+            if intruder["target"] in reachable:
+                raise ValueError(
+                    f"Intruder {intruder['id']} has a path of only uncheckable edges"
+                )
+            outgoing_sources.update(
+                e for e in edges if e[0] in reachable and e[1] not in reachable
+            )
+            reaches_target = _reachable_nodes(
+                nodes, reverse_edges, intruder["target"], reverse_ordinary
+            )
+            incoming_targets.update(
+                e for e in edges if e[0] not in reaches_target and e[1] in reaches_target
+            )
     candidates = (outgoing_sources, incoming_targets)
     return min(candidates, key=lambda selected: sum(costs[e] for e in selected))
 
@@ -162,6 +262,7 @@ def _resolve_budget_model(instance, budget_model, cut_threshold):
 def build_minimum_checkpoint_model(
     instance,
     *,
+    forbidden_edges=(),
     budget_model="auto",
     cut_threshold=DEFAULT_CUT_THRESHOLD,
     time_limit=DEFAULT_TIME_LIMIT,
@@ -178,6 +279,12 @@ def build_minimum_checkpoint_model(
         edge: int(edge_data["checkpoint_cost"])
         for edge, edge_data in zip(edges, instance["edges"])
     }
+    forbidden_edges = set(forbidden_edges)
+    if not forbidden_edges <= set(edges):
+        raise ValueError("Uncheckable edges must belong to the instance")
+    initial_checkpoints = _initial_checkpoint_set(
+        nodes, edges, intruders, costs, forbidden_edges
+    )
     selected_model = _resolve_budget_model(instance, budget_model, cut_threshold)
 
     model = Model(f"minimum_checkpoint_budget_{selected_model}", env=env)
@@ -189,7 +296,11 @@ def build_minimum_checkpoint_model(
         model.Params.LazyConstraints = 1
 
     x = {
-        edge: model.addVar(vtype=GRB.BINARY, name="x[{},{}]".format(*edge))
+        edge: model.addVar(
+            vtype=GRB.BINARY,
+            ub=0.0 if edge in forbidden_edges else 1.0,
+            name="x[{},{}]".format(*edge),
+        )
         for edge in edges
     }
 
@@ -198,7 +309,6 @@ def build_minimum_checkpoint_model(
         GRB.MINIMIZE,
     )
 
-    initial_checkpoints = _initial_checkpoint_set(edges, intruders, costs)
     for edge, variable in x.items():
         variable.Start = float(edge in initial_checkpoints)
 
@@ -299,6 +409,7 @@ def _minimum_checkpoint_callback(model, where):
 def minimum_feasible_budget(
     instance,
     *,
+    forbidden_edges=(),
     budget_model="auto",
     cut_threshold=DEFAULT_CUT_THRESHOLD,
     time_limit=DEFAULT_TIME_LIMIT,
@@ -308,8 +419,10 @@ def minimum_feasible_budget(
     env=None,
 ):
     """Solve for a minimum budget and return budget/status information."""
+    forbidden_edges = set(forbidden_edges)
     model, x, costs = build_minimum_checkpoint_model(
         instance,
+        forbidden_edges=forbidden_edges,
         budget_model=budget_model,
         cut_threshold=cut_threshold,
         time_limit=time_limit,
@@ -345,6 +458,8 @@ def minimum_feasible_budget(
         # rounding ObjVal, avoiding any numerical-tolerance ambiguity.
         budget = sum(costs[edge] for edge in selected_edges)
         selected_edge_set = set(selected_edges)
+        if selected_edge_set & forbidden_edges:
+            raise RuntimeError("The budget certificate uses an uncheckable edge")
         nodes = instance["nodes"]
         edges = list(costs)
         for intruder in instance["intruders"]:
@@ -369,6 +484,7 @@ def minimum_feasible_budget(
             "intruder_cuts": model._intruder_cuts,
             "lazy_additions": model._lazy_additions,
             "callback_calls": model._callback_calls,
+            "solver_runtime": float(model.Runtime),
         }
     finally:
         model.dispose()
@@ -377,7 +493,10 @@ def minimum_feasible_budget(
 def create_complex_instance(
     source_path,
     *,
-    rng,
+    rng=None,
+    seed=0,
+    cost_cache=None,
+    budget_cache=None,
     cost_min=DEFAULT_COST_MIN,
     cost_max=DEFAULT_COST_MAX,
     budget_model="auto",
@@ -388,23 +507,90 @@ def create_complex_instance(
     threads=1,
     env=None,
 ):
-    """Create one in-memory weighted sister instance and its solve summary."""
-    source_path = Path(source_path)
-    instance = load_instance(source_path)
-    weighted_instance = assign_checkpoint_costs(instance, rng, cost_min, cost_max)
-    result = minimum_feasible_budget(
-        weighted_instance,
-        budget_model=budget_model,
-        cut_threshold=cut_threshold,
-        time_limit=time_limit,
-        output_flag=output_flag,
-        solver_seed=solver_seed,
-        threads=threads,
-        env=env,
-    )
+    """Create a weighted sister and solve summary, optionally sharing caches.
 
-    weighted_instance["name"] = _complex_stem(source_path.stem)
+    Grid/single costs depend on seed and graph group, not file enumeration or
+    edge order. Other legacy instances retain sequential random draws via rng.
+    """
+    source_path = Path(source_path)
+    name = _complex_stem(source_path.stem)
+    _validate_cost_range(cost_min, cost_max)
+    instance = load_instance(source_path)
+    forbidden_edges = {
+        (e["tail"], e["head"])
+        for e in instance["edges"] if e["checkpoint_cost"] > instance["budget"]
+    }
+    group = _shared_cost_group(instance, source_path)
+    if group is not None and group.startswith("grid:") and forbidden_edges:
+        raise ValueError("Source grids must not contain uncheckable edges")
+    shared_costs = None
+    if group is not None:
+        shared_costs = _shared_checkpoint_costs(
+            instance, group, seed, cost_min, cost_max,
+            {} if cost_cache is None else cost_cache,
+        )
+    weighted_instance = assign_checkpoint_costs(
+        instance, rng if rng is not None else random.Random(seed), cost_min, cost_max,
+        forbidden_edges=forbidden_edges, shared_costs=shared_costs,
+    )
+    solve_key = _digest({
+        "nodes": sorted(instance["nodes"]),
+        "edges": sorted(
+            (e["tail"], e["head"], e["checkpoint_cost"])
+            for e in weighted_instance["edges"]
+        ),
+        "intruders": sorted((i["source"], i["target"]) for i in instance["intruders"]),
+        "forbidden_edges": sorted(forbidden_edges),
+        "settings": [budget_model, cut_threshold, time_limit, solver_seed, threads],
+    })
+    reused_from = None
+    if budget_cache is not None and solve_key in budget_cache:
+        result, reused_from = budget_cache[solve_key]
+        result = copy.deepcopy(result)
+    else:
+        result = minimum_feasible_budget(
+            weighted_instance,
+            forbidden_edges=forbidden_edges,
+            budget_model=budget_model,
+            cut_threshold=cut_threshold,
+            time_limit=time_limit,
+            output_flag=output_flag,
+            solver_seed=solver_seed,
+            threads=threads,
+            env=env,
+        )
+        if budget_cache is not None:
+            budget_cache[solve_key] = (copy.deepcopy(result), source_path.name)
+    result["budget_reused_from"] = reused_from
+
+    weighted_instance["name"] = name
     weighted_instance["budget"] = result["budget"]
+    for edge in weighted_instance["edges"]:
+        if (edge["tail"], edge["head"]) in forbidden_edges:
+            edge["checkpoint_cost"] = result["budget"] + 1
+
+    if "grid" in instance:
+        parameters = weighted_instance.setdefault("generation_parameters", {})
+        symmetric_times = parameters.get("symmetric_opposite_arcs", False)
+        parameters.update({
+            "symmetric_opposite_arcs": False,
+            "symmetric_opposite_arc_times": symmetric_times,
+            "symmetric_checkpoint_costs": False,
+        })
+    weighted_instance["complex_generation"] = {
+        "source": source_path.name,
+        # A caller-supplied legacy RNG may have an unknown seed or state.
+        "cost_seed": seed if group is not None or rng is None else None,
+        "cost_range": [cost_min, cost_max],
+        "cost_group": group,
+        "uncheckable_edge_count": len(forbidden_edges),
+        "time_limit": time_limit,
+        "solver_seed": solver_seed,
+        "threads": threads,
+        "requested_budget_model": budget_model,
+        "cut_threshold": cut_threshold,
+        **{key: value for key, value in result.items() if key != "selected_edges"},
+    }
 
     # Certificates and known objective values from the unit-cost instance need
     # not remain valid under the newly computed minimum weighted budget.
@@ -421,10 +607,40 @@ def create_complex_instance(
     return weighted_instance, result
 
 
+def discover_complex_sources(instances_directory, *, pattern=None, collection=None):
+    """Select originals only; collection mode spans the three agreed folders."""
+    directory = Path(instances_directory)
+    if collection is not None:
+        if collection != "single-grid":
+            raise ValueError("collection must be 'single-grid'")
+        if pattern is not None:
+            raise ValueError("Use either collection or pattern, not both")
+        candidates = (
+            list(directory.glob("single*dir.json"))
+            + list((directory / "extra_large").glob("single*dir.json"))
+            + list((directory / "grid_collection").glob("grid_*.json"))
+        )
+    else:
+        candidates = directory.glob(pattern if pattern is not None else "*dir.json")
+    sources = sorted(
+        source for source in candidates
+        if source.is_file() and not (
+            source.stem.endswith("_c")
+            and GRID_STEM.fullmatch(source.stem[:-2])
+        )
+    )
+    if not sources:
+        raise FileNotFoundError(f"No source instances found in {directory}")
+    for source in sources:
+        complex_instance_path(source)  # Validate every destination before writing.
+    return sources
+
+
 def create_complex_instances(
     instances_directory=Path("instances"),
     *,
-    pattern="*dir.json",
+    pattern=None,
+    collection=None,
     seed=0,
     cost_min=DEFAULT_COST_MIN,
     cost_max=DEFAULT_COST_MAX,
@@ -437,18 +653,11 @@ def create_complex_instances(
     overwrite=False,
     env=None,
 ):
-    """Generate and save every matching sister instance in a directory."""
-    instances_directory = Path(instances_directory)
-    sources = sorted(instances_directory.glob(pattern))
-    if not sources:
-        raise FileNotFoundError(
-            f"No instances matching {pattern!r} found in {instances_directory}"
-        )
-    invalid_sources = [source for source in sources if not source.stem.endswith("dir")]
-    if invalid_sources:
-        raise ValueError(
-            f"The selected source name must end in 'dir': {invalid_sources[0].name}"
-        )
+    """Generate matching sisters beside their originals, sharing costs/solves."""
+    _validate_cost_range(cost_min, cost_max)
+    sources = discover_complex_sources(
+        instances_directory, pattern=pattern, collection=collection
+    )
 
     destinations = [complex_instance_path(source) for source in sources]
     existing = [destination for destination in destinations if destination.exists()]
@@ -458,12 +667,17 @@ def create_complex_instances(
         )
 
     rng = random.Random(seed)
+    cost_cache = {}
+    budget_cache = {}
     summaries = []
     for source, destination in zip(sources, destinations):
         print(f"Processing {source.name} ...", flush=True)
         weighted_instance, result = create_complex_instance(
             source,
             rng=rng,
+            seed=seed,
+            cost_cache=cost_cache,
+            budget_cache=budget_cache,
             cost_min=cost_min,
             cost_max=cost_max,
             budget_model=budget_model,
@@ -474,6 +688,7 @@ def create_complex_instances(
             threads=threads,
             env=env,
         )
+        weighted_instance["complex_generation"]["cost_seed"] = seed
         save_instance(weighted_instance, destination)
         if result["optimal"]:
             qualification = "minimum proven"
@@ -485,7 +700,9 @@ def create_complex_instances(
         print(
             f"Saved {destination.name}: budget={result['budget']} "
             f"({qualification}); model={result['budget_model']}; "
-            f"intruder cuts={result['intruder_cuts']}",
+            f"intruder cuts={result['intruder_cuts']}"
+            + (f"; reused from {result['budget_reused_from']}"
+               if result["budget_reused_from"] else ""),
             flush=True,
         )
         summaries.append({"source": source, "destination": destination, **result})
@@ -504,12 +721,17 @@ def main():
         "--instances-directory",
         type=Path,
         default=Path("instances"),
-        help="Directory containing *dir.json files (default: instances)",
+        help="Source directory or collection root (default: instances)",
     )
-    parser.add_argument(
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument(
         "--pattern",
-        default="*dir.json",
         help="Filename pattern inside the directory (default: *dir.json)",
+    )
+    selection.add_argument(
+        "--collection",
+        choices=("single-grid",),
+        help="Generate single originals in root/extra_large and grids in grid_collection",
     )
     parser.add_argument(
         "--seed",
@@ -546,8 +768,8 @@ def main():
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
 
-    if args.time_limit <= 0:
-        parser.error("--time-limit must be positive")
+    if not math.isfinite(args.time_limit) or args.time_limit <= 0:
+        parser.error("--time-limit must be finite and positive")
     if args.threads < 0:
         parser.error("--threads must be nonnegative")
     if args.cut_threshold < 0:
@@ -557,6 +779,7 @@ def main():
         summaries = create_complex_instances(
             args.instances_directory,
             pattern=args.pattern,
+            collection=args.collection,
             seed=args.seed,
             cost_min=args.cost_min,
             cost_max=args.cost_max,

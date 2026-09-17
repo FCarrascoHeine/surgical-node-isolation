@@ -59,8 +59,11 @@ def test_all_methods_and_modes_match_direct_execution_with_reused_worker(env, tm
                 assert row[field] == pytest.approx(expected[field], abs=1e-6)
         assert row["error_type"] is None
         assert row["memory_limit_gb"] == 1
+        assert row["time_limit_seconds"] == expected["time_limit_seconds"] == 30
     with filename.open(newline="") as file:
-        assert len(list(csv.DictReader(file))) == 40
+        saved = list(csv.DictReader(file))
+    assert len(saved) == 40
+    assert all(row["time_limit_seconds"] == "30.0" for row in saved)
 
 
 @pytest.mark.parametrize("formulation", [1, 2, 3, 4])

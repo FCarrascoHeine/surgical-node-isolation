@@ -203,6 +203,7 @@ def _failure_row(task, message, elapsed):
     row = _row_from_result(
         result, metadata, arguments["repetition"],
         arguments.get("solver_seed", 0), arguments.get("threads", 1),
+        time_limit=arguments.get("time_limit"),
     )
     for name in ("error_type", "error_message", "error_code", "worker_exit_code"):
         row[name] = message.get(name)

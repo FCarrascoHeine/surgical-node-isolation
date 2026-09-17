@@ -55,7 +55,7 @@ def _print_solve_start(instance, repetition, method, solve_mode):
     )
 
 
-def _row_from_result(result, instance, repetition, solver_seed, threads):
+def _row_from_result(result, instance, repetition, solver_seed, threads, *, time_limit=None):
     cuts_by_family = result.get("cuts_by_family", {})
     metadata = software_metadata()
     formulation = result.get("formulation")
@@ -97,6 +97,7 @@ def _row_from_result(result, instance, repetition, solver_seed, threads):
         "gap": result.get("gap"),
         "reference_objective": None,
         "reference_gap": None,
+        "time_limit_seconds": TimeBudget(time_limit).limit,
         "runtime": result["runtime"],
         "solver_runtime": result.get("solver_runtime", result["runtime"]),
         "num_variables": result.get("num_variables", 0),
@@ -235,6 +236,7 @@ def run_comparison(
                 repetition,
                 solver_seed,
                 threads,
+                time_limit=time_limit,
             )
             validation = None
             if row["has_solution"]:
@@ -309,6 +311,7 @@ def run_comparison(
                 repetition,
                 solver_seed,
                 threads,
+                time_limit=time_limit,
             )
             complete_row(row, result)
 
@@ -347,6 +350,7 @@ def run_comparison(
             repetition,
             solver_seed,
             threads,
+            time_limit=time_limit,
         )
         validation = None
         if result.get("variables", {}).get("x"):

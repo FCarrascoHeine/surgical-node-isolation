@@ -295,6 +295,7 @@ def test_unified_runner_supports_heuristic_only_and_not_applicable_rows():
     assert len(single["rows"]) == 1
     assert single["rows"][0]["status"] == "CONVERGED"
     assert single["rows"][0]["reference_gap"] == pytest.approx(0.0)
+    assert single["rows"][0]["time_limit_seconds"] is None
 
     multiple = copy.deepcopy(load_instance(SMALL_INSTANCE))
     multiple.pop("known_optimum")
@@ -305,8 +306,10 @@ def test_unified_runner_supports_heuristic_only_and_not_applicable_rows():
         mode="integer",
         formulations=(),
         heuristics=("ash",),
+        time_limit=600,
     )
     assert skipped["rows"][0]["status"] == "NOT_APPLICABLE"
+    assert skipped["rows"][0]["time_limit_seconds"] == 600
     assert skipped["rows"][0]["convergence_reason"] == (
         "requires_exactly_one_intruder"
     )

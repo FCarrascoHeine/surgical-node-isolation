@@ -194,6 +194,47 @@ def test_strict_runner_writes_all_zero_budget_rows_without_validation_failure(tm
     assert len(saved) == 20
     assert all(row["objective_value"] == "" for row in saved)
     assert all(row["has_solution"] == "False" for row in saved)
+    assert all(row["time_limit_seconds"] == "0.0" for row in saved)
+
+
+@pytest.mark.parametrize("limit,expected", [
+    (600, 600.0), (1.25, 1.25), (0, 0.0), (None, None), (float("inf"), None),
+])
+def test_csv_records_configured_limit_for_every_method_and_mode(
+    monkeypatch, tmp_path, limit, expected
+):
+    calls = []
+
+    def solve(instance, formulation=None, *, method=None, **kwargs):
+        calls.append(kwargs["time_limit"])
+        result = empty_model_result(formulation, kwargs.get("relax", False))
+        result["runtime"] = 0.125  # Requested limit must not be inferred from runtime.
+        if method is not None:
+            result["method"] = method
+        return result
+
+    monkeypatch.setattr(run, "solve_instance", solve)
+    monkeypatch.setattr(run, "solve_standard_heuristic",
+                        lambda instance, **kwargs: solve(instance, method="ah", **kwargs))
+    monkeypatch.setattr(run, "solve_single_intruder_heuristic",
+                        lambda instance, **kwargs: solve(instance, method="ash", **kwargs))
+    filename = tmp_path / "limits.csv"
+    rows = run.run_experiments(
+        [SMALL_INSTANCE], heuristics=("ah", "ash"),
+        time_limit=limit, csv_filename=filename,
+    )["rows"]
+    assert {(row["method"], row["mode"]) for row in rows} == {
+        (f"f{formulation}", mode)
+        for formulation in (1, 2, 3, 4) for mode in ("integer", "relaxation")
+    } | {("ah", "heuristic"), ("ash", "heuristic")}
+    assert calls == [limit] * 10
+    assert all(row["time_limit_seconds"] == expected for row in rows)
+    assert all(row["runtime"] == 0.125 for row in rows)
+    with filename.open(newline="", encoding="utf-8") as file:
+        saved = list(csv.DictReader(file))
+    assert len(saved) == 10
+    assert all(row["time_limit_seconds"] == ("" if expected is None else str(expected))
+               for row in saved)
 
 
 def test_runner_reporting_does_not_use_up_next_method_budget(monkeypatch, clock):

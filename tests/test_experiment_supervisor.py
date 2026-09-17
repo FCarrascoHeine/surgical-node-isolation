@@ -51,7 +51,10 @@ def fake_comparison(instance, *, env, phase_callback, **arguments):
     result = empty_model_result(formulation, arguments["mode"] == "relaxation")
     if heuristic:
         result["method"] = heuristic
-    row = _row_from_result(result, instance, arguments["repetition"], 0, 1)
+    row = _row_from_result(
+        result, instance, arguments["repetition"], 0, 1,
+        time_limit=arguments.get("time_limit"),
+    )
     # None of this deliberately unpicklable detail should cross the pipe.
     return {"rows": [row], "results": {"large": lambda: None}, "oracle": None}
 
@@ -76,11 +79,11 @@ def test_worker_failure_checkpoints_and_continues_every_scheduled_task(tmp_path,
     result = supervisor.run_supervised_experiments(
         [{"name": "first", "failure": failure}, {"name": "second"}],
         repetitions=2, csv_filename=filename, memory_policy=POLICY,
-        formulations=(1, 2, 3), heuristics=("ah", "ash"),
+        formulations=(1, 2, 3, 4), heuristics=("ah", "ash"), time_limit=600,
         _client_factory=fake_client,
     )
     rows = result["rows"]
-    assert len(rows) == 32
+    assert len(rows) == 40
     failures = [row for row in rows if row["status"] != "TIME_LIMIT"]
     assert len(failures) == 1
     failed = failures[0]
@@ -93,12 +96,14 @@ def test_worker_failure_checkpoints_and_continues_every_scheduled_task(tmp_path,
     if failure == "gurobi":
         assert failed["error_code"] == GRB.Error.OUT_OF_MEMORY
     assert all(row["memory_limit_gb"] == 2.5 for row in rows)
+    assert all(row["time_limit_seconds"] == 600 for row in rows)
     assert rows[-1]["instance"] == "second"
     with filename.open(newline="") as file:
         saved = list(csv.DictReader(file))
     assert len(saved) == len(rows)
     assert saved[2]["status"] == status
     assert saved[2]["num_variables"] == ""
+    assert all(row["time_limit_seconds"] == "600.0" for row in saved)
     print_results(rows)  # Unknown diagnostic counts must also print successfully.
 
 

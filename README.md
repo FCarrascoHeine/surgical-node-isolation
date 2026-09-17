@@ -142,7 +142,12 @@ Each CSV row records the instance, method, mode, repetition, solver settings,
 objective, bound, solver gap, runtimes, model size, cut or heuristic statistics,
 validation status, and Python/Gurobi versions. `reference_gap` compares a feasible
 integer or heuristic objective to a proven small-instance oracle or common optimal
-formulation result; it is distinct from Gurobi's `gap`. `runtime` measures the
+formulation result; it is distinct from Gurobi's `gap`. `time_limit_seconds` records
+the configured per-method time limit for every row, including failures and
+non-applicable methods. It is blank for unlimited runs (omitted limit or positive
+infinity); a zero-second limit is recorded as `0.0`. This column is separate from
+the measured runtimes and is included in newly written results only.
+`runtime` measures the
 method's elapsed time from before its own input preparation and model construction
 until its algorithm stops. Independent runner validation, shared batch setup,
 result formatting and CSV writing are excluded. `solver_runtime` is a separate
@@ -305,6 +310,52 @@ python instances.py --nodes 20 --edges 60 --intruders 3 --journeyers 5 \
 Generation is deterministic for a fixed seed. Generated instances contain a
 feasible checkpoint certificate and are validated before being saved.
 
+Create the weighted-cost sisters for the single-intruder and grid collections:
+
+```bash
+python create_complex_instances.py --collection single-grid
+```
+
+This selects original `single*dir.json` files in `instances` and
+`instances/extra_large`, plus original grids in `instances/grid_collection`.
+It writes all 87 sisters beside their sources: `single...dir.json` becomes
+`single...c.json`, and `grid_..._seed0.json` becomes `grid_..._seed0_c.json`.
+Generated grids are excluded from source discovery. Existing destinations are
+rejected before generation begins unless `--overwrite` is explicitly supplied.
+
+Ordinary checkpoint costs are independent integers from 10 through 50 by
+default (`--cost-min` / `--cost-max`). A fixed `--seed` (default 0) gives every
+grid of the same `(rows, columns)` exactly the same directed edge costs;
+opposite arcs are sampled independently. Identical single-intruder graphs
+also share costs across journeyer variants. These assignments are stable
+across subsets, file order, and edge order. Transit/inspection times, graph
+structure, and agent populations are preserved.
+
+Edges costing more than the source budget are treated as uncheckable during
+budget optimization and receive a final cost of `new budget + 1`. A path made
+entirely of uncheckable edges is reported as infeasible. The solver minimizes
+the total checkpoint cost needed to capture all intruders. Its default limit
+is **600 seconds per distinct budget model**, configurable with `--time-limit`.
+An incumbent at the time limit gives a feasible budget, but minimum cost is
+only claimed when proven. Identical weighted graphs and intruder populations
+reuse a solve regardless of journeyer count (36 solves for this collection).
+Each output stores its feasible checkpoint certificate and `complex_generation`
+metadata: random seed/range, group, solver settings, status, bound, runtime,
+and any reused result. Grid metadata distinguishes symmetric travel/inspection
+times from independently sampled checkpoint costs.
+
+Without `--collection`, the original directory/pattern interface remains
+available, for example:
+
+```bash
+python create_complex_instances.py --instances-directory instances/grid_collection --pattern "grid_*.json"
+python create_complex_instances.py --instances-directory instances --pattern "single*dir.json"
+```
+
+The default pattern is still `*dir.json`; ordinary legacy instances retain the
+original sequential random-cost generation. The collection command leaves
+already-existing legacy c-type instances outside its selection.
+
 ## Verify correctness
 
 ```bash
@@ -327,6 +378,7 @@ Solver-dependent tests skip with a clear message when no Gurobi license is avail
 - `graph_algorithms.py`: shared directed shortest-path and minimum-cut routines.
 - `instances.py`: instance validation, JSON I/O, preparation, and generation.
 - `generate_grid_instances.py`: deterministic rectangular-grid collection generator.
+- `create_complex_instances.py`: weighted sisters with feasible optimized budgets.
 - `validation.py`: independent allocation, result, relaxation, and cut checks.
 - `utils.py`: Gurobi environment, result normalization, metadata, and CSV output.
 - `instances/`: JSON experiment instances.
