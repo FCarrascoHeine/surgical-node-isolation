@@ -35,6 +35,7 @@ DEFAULT_TIME_LIMIT = 10 * 60
 DEFAULT_CUT_THRESHOLD = 100_000
 BUDGET_MODELS = ("auto", "disaggregated", "intruder-cuts")
 GRID_STEM = re.compile(r"grid_(\d+)x(\d+)_i\d+_j\d+_seed-?\d+")
+GENERATED_GRID_STEM = re.compile(rf"{GRID_STEM.pattern}_c(?:_b\d+)?")
 
 
 def _complex_stem(stem):
@@ -624,10 +625,7 @@ def discover_complex_sources(instances_directory, *, pattern=None, collection=No
         candidates = directory.glob(pattern if pattern is not None else "*dir.json")
     sources = sorted(
         source for source in candidates
-        if source.is_file() and not (
-            source.stem.endswith("_c")
-            and GRID_STEM.fullmatch(source.stem[:-2])
-        )
+        if source.is_file() and not GENERATED_GRID_STEM.fullmatch(source.stem)
     )
     if not sources:
         raise FileNotFoundError(f"No source instances found in {directory}")

@@ -356,6 +356,28 @@ The default pattern is still `*dir.json`; ordinary legacy instances retain the
 original sequential random-cost generation. The collection command leaves
 already-existing legacy c-type instances outside its selection.
 
+Create two larger-budget copies of every weighted grid:
+
+```bash
+python create_grid_budget_variants.py
+```
+
+This adds 90 files beside the 45 original `_c.json` grids, yielding 135 weighted
+grid instances. The `_c_b120.json` copies use `floor(1.2 * original_budget)`;
+the `_c_b150.json` copies use `floor(1.5 * original_budget)`. Both are computed
+directly from the original using integer arithmetic. With integer checkpoint
+costs, rounding down preserves exactly the allocations affordable under the
+fractional budget.
+
+Only the instance name, budget, and new `budget_scaling` metadata differ. Graphs,
+costs, agents, and feasible checkpoint certificates are preserved. The existing
+`complex_generation` metadata describes the original minimum-budget solve;
+`budget_scaling` records the weighted source file, original budget, multiplier,
+and floor rounding. No optimization is performed. Both generators exclude budget
+variants from their sources, and existing destinations are rejected before any
+files are written unless `--overwrite` is supplied. Use `--instances-directory`
+to select another grid directory.
+
 ## Verify correctness
 
 ```bash
@@ -379,6 +401,7 @@ Solver-dependent tests skip with a clear message when no Gurobi license is avail
 - `instances.py`: instance validation, JSON I/O, preparation, and generation.
 - `generate_grid_instances.py`: deterministic rectangular-grid collection generator.
 - `create_complex_instances.py`: weighted sisters with feasible optimized budgets.
+- `create_grid_budget_variants.py`: 120% and 150% budget copies of weighted grids.
 - `validation.py`: independent allocation, result, relaxation, and cut checks.
 - `utils.py`: Gurobi environment, result normalization, metadata, and CSV output.
 - `instances/`: JSON experiment instances.

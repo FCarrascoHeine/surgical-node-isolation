@@ -265,6 +265,9 @@ def test_collection_discovery_paths_and_overwrite_preflight(tmp_path, monkeypatc
     ]
     assert all(a.parent == b.parent for a, b in zip(originals, destinations))
     destinations[-1].write_text("already generated", encoding="utf-8")
+    for percentage in (120, 150):
+        variant = destinations[-1].with_name(f"{destinations[-1].stem}_b{percentage}.json")
+        variant.write_text("budget variant", encoding="utf-8")
     assert set(discover_complex_sources(tmp_path, collection="single-grid")) == set(originals)
     assert discover_complex_sources(
         tmp_path / "grid_collection", pattern="grid_*.json"
