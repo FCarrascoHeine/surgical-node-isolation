@@ -62,7 +62,12 @@ def _shortest_distance(nodes, edges, costs, source, target):
     return math.inf
 
 
-def evaluate_allocation(instance, x_values, tolerance=1e-6):
+def evaluate_allocation(
+    instance,
+    x_values,
+    tolerance=1e-6,
+    integrality_tolerance=None,
+):
     data = prepare_instance(instance)
     V = data["nodes"]
     E = data["edges"]
@@ -75,6 +80,11 @@ def evaluate_allocation(instance, x_values, tolerance=1e-6):
     s_j = data["journeyer_source"]
     t_j = data["journeyer_target"]
     errors = []
+    integrality_tolerance = (
+        tolerance
+        if integrality_tolerance is None
+        else integrality_tolerance
+    )
 
     if any(e not in x_values for e in E):
         errors.append("The solution does not contain every x variable")
@@ -90,7 +100,7 @@ def evaluate_allocation(instance, x_values, tolerance=1e-6):
         value = float(x_values[e])
         if value < -tolerance or value > 1 + tolerance:
             errors.append(f"x{e} is outside [0,1]")
-        if abs(value - round(value)) > tolerance:
+        if abs(value - round(value)) > integrality_tolerance:
             errors.append(f"x{e} is not integral")
 
     selected_edges = {
@@ -182,7 +192,13 @@ def enumerate_original_problem(instance, max_edges=18):
     }
 
 
-def _validate_common_variables(data, result, tolerance, errors):
+def _validate_common_variables(
+    data,
+    result,
+    feasibility_tolerance,
+    integrality_tolerance,
+    errors,
+):
     V = data["nodes"]
     E = data["edges"]
     I = data["intruders"]
@@ -196,16 +212,22 @@ def _validate_common_variables(data, result, tolerance, errors):
         for j in J:
             for e in E:
                 value = float(z[j, e])
-                if value < -tolerance or value > 1 + tolerance:
+                if (
+                    value < -feasibility_tolerance
+                    or value > 1 + feasibility_tolerance
+                ):
                     errors.append(f"z[{j},{e}] is outside [0,1]")
-                if abs(value - round(value)) > tolerance:
+                if abs(value - round(value)) > integrality_tolerance:
                     errors.append(f"z[{j},{e}] is not integral")
 
             for v in V:
                 inflow = sum(z[j, e] for e in E if e[1] == v)
                 outflow = sum(z[j, e] for e in E if e[0] == v)
 
-                if abs(inflow - outflow - b[j, v]) > tolerance:
+                if (
+                    abs(inflow - outflow - b[j, v])
+                    > feasibility_tolerance
+                ):
                     errors.append(
                         f"Journeyer balance is violated for ({j},{v})"
                     )
@@ -217,14 +239,46 @@ def _validate_common_variables(data, result, tolerance, errors):
         x = variables["x"]
 
         for i in I:
-            if abs(y[i, s_i[i]]) > tolerance:
+            if abs(y[i, s_i[i]]) > feasibility_tolerance:
                 errors.append("Intruder source potential is not zero")
-            if y[i, t_i[i]] < 1 - tolerance:
+            if y[i, t_i[i]] < 1 - feasibility_tolerance:
                 errors.append("Intruder target potential is smaller than one")
 
             for e in E:
-                if y[i, e[1]] - y[i, e[0]] > x[e] + tolerance:
+                if (
+                    y[i, e[1]] - y[i, e[0]]
+                    > x[e] + feasibility_tolerance
+                ):
                     errors.append("An intruder potential constraint is violated")
+
+
+def _result_tolerance(result, name, fallback, *, allow_infinite=False):
+    value = result.get(name)
+    if value is None:
+        return fallback
+    value = float(value)
+    if math.isnan(value) or value < 0:
+        return fallback
+    if math.isinf(value) and not allow_infinite:
+        return fallback
+    return value
+
+
+def _mip_objective_allowance(result):
+    objective = result["objective_value"]
+    relative = _result_tolerance(
+        result,
+        "mip_gap_tolerance",
+        0.0,
+        allow_infinite=True,
+    )
+    absolute = _result_tolerance(
+        result,
+        "mip_gap_abs_tolerance",
+        0.0,
+        allow_infinite=True,
+    )
+    return max(absolute, relative * abs(objective))
 
 
 def validate_integer_result(instance, result, tolerance=1e-6):
@@ -250,9 +304,30 @@ def validate_integer_result(instance, result, tolerance=1e-6):
 
     variables = result["variables"]
     x = variables["x"]
-    allocation = evaluate_allocation(data["instance"], x, tolerance=tolerance)
+    feasibility_tolerance = _result_tolerance(
+        result,
+        "feasibility_tolerance",
+        tolerance,
+    )
+    integrality_tolerance = _result_tolerance(
+        result,
+        "integrality_tolerance",
+        tolerance,
+    )
+    allocation = evaluate_allocation(
+        data["instance"],
+        x,
+        tolerance=feasibility_tolerance,
+        integrality_tolerance=integrality_tolerance,
+    )
     errors.extend(allocation["errors"])
-    _validate_common_variables(data, result, tolerance, errors)
+    _validate_common_variables(
+        data,
+        result,
+        feasibility_tolerance,
+        integrality_tolerance,
+        errors,
+    )
 
     formulation = result["formulation"]
     modeled_objective = None
@@ -276,9 +351,15 @@ def validate_integer_result(instance, result, tolerance=1e-6):
 
         for j in J:
             for e in E:
-                if alpha[j, e] < x[e] + z[j, e] - 1 - tolerance:
+                if (
+                    alpha[j, e]
+                    < x[e] + z[j, e] - 1 - feasibility_tolerance
+                ):
                     errors.append("Constraint (7) is violated")
-                if abs(alpha[j, e] - round(alpha[j, e])) > tolerance:
+                if (
+                    abs(alpha[j, e] - round(alpha[j, e]))
+                    > integrality_tolerance
+                ):
                     errors.append("An alpha variable is not integral")
 
     if formulation == 3:
@@ -291,11 +372,14 @@ def validate_integer_result(instance, result, tolerance=1e-6):
 
         for e in E:
             flow = sum(z[j, e] for j in J)
-            if beta[e] > flow + tolerance:
+            if beta[e] > flow + feasibility_tolerance:
                 errors.append("Constraint (17) is violated")
-            if beta[e] < flow - len(J) * (1 - x[e]) - tolerance:
+            if (
+                beta[e]
+                < flow - len(J) * (1 - x[e]) - feasibility_tolerance
+            ):
                 errors.append("Constraint (18) is violated")
-            if beta[e] > len(J) * x[e] + tolerance:
+            if beta[e] > len(J) * x[e] + feasibility_tolerance:
                 errors.append("Constraint (19) is violated")
 
     if formulation == 4:
@@ -307,13 +391,16 @@ def validate_integer_result(instance, result, tolerance=1e-6):
         )
 
         for j in J:
-            if phi[j] < -tolerance:
+            if phi[j] < -feasibility_tolerance:
                 errors.append("A phi variable is negative")
 
             for e in E:
-                if alpha[j, e] > x[e] + tolerance:
+                if alpha[j, e] > x[e] + feasibility_tolerance:
                     errors.append("Constraint (27) is violated")
-                if abs(alpha[j, e] - round(alpha[j, e])) > tolerance:
+                if (
+                    abs(alpha[j, e] - round(alpha[j, e]))
+                    > integrality_tolerance
+                ):
                     errors.append("An alpha variable is not integral")
 
     if modeled_objective is None:
@@ -327,13 +414,31 @@ def validate_integer_result(instance, result, tolerance=1e-6):
     if allocation["objective_value"] is not None:
         difference = allocation["objective_value"] - result["objective_value"]
         objective_tolerance = tolerance * max(1.0, abs(result["objective_value"]))
-        # A feasible interrupted incumbent may use suboptimal journeyer paths
-        # or have objective slack. Its allocation can have a cheaper true cost.
-        if difference > objective_tolerance or (
-            result.get("status_name") == "OPTIMAL"
-            and abs(difference) > objective_tolerance
+        if difference > objective_tolerance:
+            errors.append("The model objective underestimates the original SNI objective")
+        elif result.get("dual_bound") is not None and (
+            result["dual_bound"]
+            > allocation["objective_value"] + objective_tolerance
         ):
-            errors.append("The model objective differs from the original SNI objective")
+            errors.append(
+                "The dual bound exceeds the independently evaluated allocation"
+            )
+        elif (
+            result.get("status_name") == "OPTIMAL"
+            and -difference > objective_tolerance
+        ):
+            if result.get("dual_bound") is None:
+                errors.append(
+                    "A tolerance-optimal objective difference requires a dual bound"
+                )
+            elif (
+                -difference
+                > _mip_objective_allowance(result) + objective_tolerance
+            ):
+                errors.append(
+                    "The model objective differs from the original SNI objective "
+                    "by more than the configured MIP gap"
+                )
 
     if result.get("dual_bound") is not None and (
         result["dual_bound"] > result["objective_value"] + tolerance

@@ -36,13 +36,43 @@ class ComparisonValidationError(AssertionError):
         super().__init__("; ".join(messages))
 
 
-def _same_value(values, tolerance=1e-6):
-    if not values:
+def _canonical_objective(row):
+    if row["mode"] in ("integer", "heuristic"):
+        original = row.get("original_objective")
+        if original is not None:
+            return original
+    return row.get("objective_value")
+
+
+def _objective_matches_reference(row, reference, tolerance=1e-6):
+    objective = _canonical_objective(row)
+    if objective is None:
         return False
-    reference = values[0]
-    return all(
-        abs(value - reference) <= tolerance * max(1.0, abs(reference))
-        for value in values[1:]
+    numerical_allowance = tolerance * max(
+        1.0,
+        abs(reference),
+        abs(objective),
+    )
+    difference = objective - reference
+    if abs(difference) <= numerical_allowance:
+        return True
+    # A feasible objective below an exact or best-known reference is a real
+    # contradiction, not something an optimality gap can explain.
+    if difference < 0:
+        return False
+
+    relative_gap = row.get("mip_gap_tolerance")
+    absolute_gap = row.get("mip_gap_abs_tolerance")
+    relative_allowance = (
+        0.0
+        if relative_gap is None
+        else float(relative_gap) * abs(objective)
+    )
+    absolute_allowance = 0.0 if absolute_gap is None else float(absolute_gap)
+    return difference <= max(
+        numerical_allowance,
+        relative_allowance,
+        absolute_allowance,
     )
 
 
@@ -95,6 +125,10 @@ def _row_from_result(result, instance, repetition, solver_seed, threads, *, time
         "objective_value": result.get("objective_value"),
         "dual_bound": result.get("dual_bound"),
         "gap": result.get("gap"),
+        "mip_gap_tolerance": result.get("mip_gap_tolerance"),
+        "mip_gap_abs_tolerance": result.get("mip_gap_abs_tolerance"),
+        "feasibility_tolerance": result.get("feasibility_tolerance"),
+        "integrality_tolerance": result.get("integrality_tolerance"),
         "reference_objective": None,
         "reference_gap": None,
         "time_limit_seconds": TimeBudget(time_limit).limit,
@@ -417,13 +451,16 @@ def finalize_comparison(
             if row_callback is not None:
                 row_callback(row)
 
-    optimal_results = []
+    optimal_rows = []
     if solve_integer and selected_formulations:
-        optimal_results = [
-            results[formulation, "integer"]
-            for formulation in selected_formulations
-            if results[formulation, "integer"]["status_name"] == "OPTIMAL"
-            and results[formulation, "integer"]["objective_value"] is not None
+        selected_formulations = set(selected_formulations)
+        optimal_rows = [
+            row
+            for row in rows
+            if row["mode"] == "integer"
+            and row["formulation"] in selected_formulations
+            and row["status"] == "OPTIMAL"
+            and _canonical_objective(row) is not None
         ]
 
     integer_optimum = None
@@ -431,33 +468,35 @@ def finalize_comparison(
     if oracle is not None:
         integer_optimum = oracle_objective
         if oracle_objective is not None:
-            objective_tolerance = tolerance * max(1.0, abs(oracle_objective))
-            for result in optimal_results:
-                if (
-                    abs(result["objective_value"] - oracle_objective)
-                    > objective_tolerance
+            for row in optimal_rows:
+                if not _objective_matches_reference(
+                    row,
+                    oracle_objective,
+                    tolerance,
                 ):
-                    formulation = result["formulation"]
+                    formulation = row["formulation"]
                     record_issue(
                         "integer_oracle_disagreement",
                         f"Formulation {formulation} differs from the enumeration oracle",
                         ((formulation, "integer"),),
                         "row",
                     )
-    elif optimal_results:
-        optimal_values = [result["objective_value"] for result in optimal_results]
-        if _same_value(optimal_values, tolerance):
-            integer_optimum = optimal_values[0]
-        elif len(optimal_results) > 1:
+    elif optimal_rows:
+        integer_optimum = min(_canonical_objective(row) for row in optimal_rows)
+        if not all(
+            _objective_matches_reference(row, integer_optimum, tolerance)
+            for row in optimal_rows
+        ) and len(optimal_rows) > 1:
             record_issue(
                 "integer_formulation_disagreement",
                 "The selected integer formulations have different objective values",
                 tuple(
-                    (result["formulation"], "integer")
-                    for result in optimal_results
+                    (row["formulation"], "integer")
+                    for row in optimal_rows
                 ),
                 "group",
             )
+            integer_optimum = None
 
     if solve_relaxation and integer_optimum is not None:
         for row in rows:
@@ -490,15 +529,18 @@ def finalize_comparison(
             if row["objective_value"] is None:
                 continue
             row["reference_objective"] = integer_optimum
+            objective = _canonical_objective(row)
+            if objective is None:
+                continue
             if abs(integer_optimum) <= tolerance:
                 row["reference_gap"] = (
                     0.0
-                    if abs(row["objective_value"] - integer_optimum) <= tolerance
+                    if abs(objective - integer_optimum) <= tolerance
                     else None
                 )
             else:
                 row["reference_gap"] = (
-                    row["objective_value"] - integer_optimum
+                    objective - integer_optimum
                 ) / abs(integer_optimum)
             if row_callback is not None:
                 row_callback(row)

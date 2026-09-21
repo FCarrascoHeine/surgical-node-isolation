@@ -289,6 +289,51 @@ def test_feasible_nonoptimal_incumbent_need_not_use_shortest_paths(monkeypatch):
     assert not validate_integer_result(SMALL_INSTANCE, result)["valid"]
 
 
+def test_tolerance_optimal_incumbent_uses_configured_gurobi_gap():
+    result = _nonoptimal_feasible_result()
+    result.update(
+        status_name="OPTIMAL",
+        dual_bound=3.5,
+        mip_gap_tolerance=0.7,
+        mip_gap_abs_tolerance=1e-10,
+    )
+
+    validation = validate_integer_result(SMALL_INSTANCE, result)
+
+    assert validation["valid"], validation["errors"]
+    assert validation["original_objective"] == 4
+
+
+def test_tolerance_optimal_incumbent_still_rejects_excessive_objective_slack():
+    result = _nonoptimal_feasible_result()
+    result.update(
+        status_name="OPTIMAL",
+        dual_bound=3.5,
+        mip_gap_tolerance=0.1,
+        mip_gap_abs_tolerance=1e-10,
+    )
+
+    validation = validate_integer_result(SMALL_INSTANCE, result)
+
+    assert not validation["valid"]
+    assert any("configured MIP gap" in error for error in validation["errors"])
+
+
+def test_independently_evaluated_incumbent_cannot_beat_dual_bound():
+    result = _nonoptimal_feasible_result()
+    result.update(
+        status_name="OPTIMAL",
+        dual_bound=5.0,
+        mip_gap_tolerance=0.7,
+        mip_gap_abs_tolerance=1e-10,
+    )
+
+    validation = validate_integer_result(SMALL_INSTANCE, result)
+
+    assert not validation["valid"]
+    assert any("dual bound" in error.lower() for error in validation["errors"])
+
+
 @pytest.mark.parametrize("scope,objective", [("none", None), ("restricted_master", 3.0)])
 def test_console_shows_solution_scope(capsys, scope, objective):
     result = empty_model_result(4, True)

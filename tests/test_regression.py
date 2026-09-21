@@ -217,9 +217,16 @@ def test_unified_runner_writes_reproducible_metadata(
     assert output.exists()
     assert all(row["instance"] == "small_instance" for row in experiment["rows"])
     assert all(row["validation_passed"] for row in experiment["rows"])
-    assert {"python_version", "gurobi_version", "solver_seed", "threads"}.issubset(
-        experiment["rows"][0]
-    )
+    assert {
+        "python_version",
+        "gurobi_version",
+        "solver_seed",
+        "threads",
+        "mip_gap_tolerance",
+        "mip_gap_abs_tolerance",
+        "feasibility_tolerance",
+        "integrality_tolerance",
+    }.issubset(experiment["rows"][0])
     assert all(
         not result["variables"]
         for comparison in experiment["comparisons"]

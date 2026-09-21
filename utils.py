@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import tomllib
-from gurobipy import GRB, Env, gurobi
+from gurobipy import GRB, Env, GurobiError, gurobi
 
 STATUS_NAMES = {
     GRB.LOADED: "LOADED",
@@ -27,6 +27,13 @@ STATUS_NAMES = {
     GRB.USER_OBJ_LIMIT: "USER_OBJ_LIMIT",
     GRB.WORK_LIMIT: "WORK_LIMIT",
     GRB.MEM_LIMIT: "MEM_LIMIT",
+}
+
+SOLVER_TOLERANCE_FIELDS = {
+    "mip_gap_tolerance": "MIPGap",
+    "mip_gap_abs_tolerance": "MIPGapAbs",
+    "feasibility_tolerance": "FeasibilityTol",
+    "integrality_tolerance": "IntFeasTol",
 }
 
 
@@ -98,6 +105,21 @@ def _finite_value(value):
     return value if math.isfinite(value) else None
 
 
+def _solver_tolerances(model):
+    tolerances = {name: None for name in SOLVER_TOLERANCE_FIELDS}
+    if model is None:
+        return tolerances
+
+    try:
+        for name, parameter in SOLVER_TOLERANCE_FIELDS.items():
+            tolerances[name] = float(getattr(model.Params, parameter))
+    except (AttributeError, GurobiError):
+        # A partially constructed or failed native model may no longer expose
+        # its parameters. Failure rows should report them as unavailable.
+        return {name: None for name in SOLVER_TOLERANCE_FIELDS}
+    return tolerances
+
+
 def empty_model_result(formulation, relax, model=None, status=GRB.TIME_LIMIT):
     """A result with no incumbent, including when optimize() was never called."""
     linear = int(model.NumConstrs) if model is not None else 0
@@ -126,6 +148,7 @@ def empty_model_result(formulation, relax, model=None, status=GRB.TIME_LIMIT):
         "separation_time": 0.0,
         "separation_complete": False,
         "variables": {},
+        **_solver_tolerances(model),
     }
 
 
@@ -180,6 +203,7 @@ def collect_model_result(model, formulation, relax):
         "separation_time": 0.0,
         "separation_complete": True,
         "variables": {},
+        **_solver_tolerances(model),
     }
 
 

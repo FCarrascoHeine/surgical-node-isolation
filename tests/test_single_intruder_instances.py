@@ -8,10 +8,12 @@ from gurobipy import GurobiError
 from branch_and_cut import directed_min_cut
 from formulations import solve_instance
 from instances import load_instance
+from run import run_comparison
 from utils import load_gurobi_env
 
 INSTANCES_DIR = Path(__file__).resolve().parents[1] / "instances"
 SINGLE_INSTANCE = INSTANCES_DIR / "single50_272_10_3_1dir.json"
+TOLERANCE_OPTIMAL_INSTANCE = INSTANCES_DIR / "single100_570_200_5_1dir.json"
 # Identify the original collection by filename, independent of its folder layout.
 LEGACY_SINGLE_INSTANCE_FILENAMES = (
     "single1000_5908_1000_50_1dir.json",
@@ -207,3 +209,34 @@ def test_representative_single_intruder_instance_reproduces_published_objective(
         7779.018444281898,
         abs=1e-6,
     )
+
+
+def test_tolerance_optimal_formulation_3_result_passes_validation(solver_env):
+    comparison = run_comparison(
+        TOLERANCE_OPTIMAL_INSTANCE,
+        formulations=(3,),
+        heuristics=(),
+        mode="integer",
+        time_limit=60,
+        solver_seed=0,
+        threads=1,
+        env=solver_env,
+    )
+
+    row = comparison["rows"][0]
+    assert row["status"] == "OPTIMAL"
+    assert row["validation_passed"]
+    assert row["mip_gap_tolerance"] == pytest.approx(1e-4)
+    assert row["mip_gap_abs_tolerance"] == pytest.approx(1e-10)
+    assert row["feasibility_tolerance"] == pytest.approx(1e-6)
+    assert row["integrality_tolerance"] == pytest.approx(1e-5)
+    assert row["objective_value"] >= row["original_objective"]
+    assert row["original_objective"] == pytest.approx(
+        110380.22330372123,
+        abs=1e-6,
+    )
+    assert row["reference_objective"] == pytest.approx(
+        row["original_objective"],
+        abs=1e-6,
+    )
+    assert row["reference_gap"] == pytest.approx(0.0)

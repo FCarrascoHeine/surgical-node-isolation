@@ -139,10 +139,12 @@ Use descriptive `--csv` filenames for paper experiments. If `--csv` is omitted,
 the next run will overwrite the default `results/results.csv` file.
 
 Each CSV row records the instance, method, mode, repetition, solver settings,
-objective, bound, solver gap, runtimes, model size, cut or heuristic statistics,
-validation status, and Python/Gurobi versions. `reference_gap` compares a feasible
-integer or heuristic objective to a proven small-instance oracle or common optimal
-formulation result; it is distinct from Gurobi's `gap`. `time_limit_seconds` records
+objective, bound, solver gap and active solver tolerances, runtimes, model size,
+cut or heuristic statistics, validation status, and Python/Gurobi versions.
+`reference_gap` compares the independently evaluated objective of a feasible
+integer or heuristic allocation to a proven small-instance oracle or common
+tolerance-optimal formulation result; it is distinct from Gurobi's `gap`.
+`time_limit_seconds` records
 the configured per-method time limit for every row, including failures and
 non-applicable methods. It is blank for unlimited runs (omitted limit or positive
 infinity); a zero-second limit is recorded as `0.0`. This column is separate from
@@ -183,21 +185,28 @@ empty; `dual_bound` retains the strongest established lower bound even if a late
 master solve is interrupted. The console's `Solution` column shows this scope.
 An interrupted LP's primal objective alone is never treated as a lower bound.
 
-A feasible nonoptimal integer incumbent can use journeyer routes that are longer
-than the shortest routes for its allocation. In that case `objective_value`
-retains the model objective and `original_objective` reports the independently
-evaluated allocation cost; the latter may be smaller. They must agree at optimality.
+A feasible integer incumbent can use journeyer routes that are longer than the
+shortest routes for its allocation. This is possible even with Gurobi's `OPTIMAL`
+status, which certifies optimality only within `MIPGap` or `MIPGapAbs`. In that
+case `objective_value` retains the model objective and `original_objective`
+reports the independently evaluated allocation cost; the latter may be smaller.
+Validation accepts that difference only within the active Gurobi optimality gap
+and only when the independently evaluated objective does not contradict the
+certified dual bound. Feasibility and integrality checks continue to use their
+separate Gurobi tolerances.
 
 During a batch, detailed per-variable solution mappings are used for validation and
 then released after each solve. The returned experiment object and CSV retain the
 compact solve summaries and result rows.
 
 Validation is scoped to the rows implicated by a failed check. Independent
-allocation checks and relaxation-bound checks affect only their own row. If two
-or more optimal integer formulations disagree and no enumeration oracle is
-available, every disagreeing integer row is implicated because the comparison
-cannot identify a culprit; unrelated relaxations and heuristics retain their own
-statuses. With an oracle, only integer rows that differ from it are implicated.
+allocation checks and relaxation-bound checks affect only their own row. Integer
+formulations are compared by `original_objective`, with each formulation's active
+Gurobi optimality gap governing an allowed tolerance-optimal difference. If two
+or more results disagree beyond those gaps and no enumeration oracle is available,
+every disagreeing integer row is implicated because the comparison cannot identify
+a culprit; unrelated relaxations and heuristics retain their own statuses. With an
+oracle, only integer rows that differ from it beyond their solver gap are implicated.
 Relaxation bounds are checked only against a trustworthy oracle or mutually
 consistent available optimal integer results. The certified `dual_bound` is used
 even when the solver's incumbent has tolerance-based `OPTIMAL` status.

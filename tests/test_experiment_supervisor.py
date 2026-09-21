@@ -139,16 +139,25 @@ class ScriptedClient:
         self.closed = True
 
 
-def success(formulation=1, mode="integer", objective=None, bound=None):
+def success(
+    formulation=1,
+    mode="integer",
+    objective=None,
+    bound=None,
+    original=None,
+    mip_gap=None,
+):
     result = empty_model_result(formulation, mode == "relaxation")
     if objective is not None:
         result.update(status_name="OPTIMAL", objective_value=objective, has_solution=True,
-                      solution_type=mode, dual_bound=bound, separation_complete=True)
+                      solution_type=mode, dual_bound=bound, separation_complete=True,
+                      mip_gap_tolerance=mip_gap)
     row = _row_from_result(result, {"name": "test"}, 1, 0, 1)
     if objective is not None and mode == "integer":
         row["validation_passed"] = True
+        row["original_objective"] = objective if original is None else original
         # Match the provisional self-reference produced by an isolated worker.
-        row["reference_objective"] = objective
+        row["reference_objective"] = row["original_objective"]
         row["reference_gap"] = 0
     return {"kind": "result", "row": row, "oracle": None}
 
@@ -326,6 +335,30 @@ def test_cross_method_reference_and_relaxation_validation_survive_isolation():
     assert rows[0]["reference_objective"] == rows[2]["reference_objective"] == 10
     assert rows[0]["reference_gap"] == 0
     assert rows[1]["validation_passed"] and rows[3]["validation_passed"]
+
+
+def test_cross_method_comparison_uses_canonical_objective_and_solver_gap():
+    client = ScriptedClient([
+        success(1, objective=10, bound=10),
+        success(
+            2,
+            objective=10.0007,
+            bound=9.9998,
+            original=10.0005,
+            mip_gap=1e-4,
+        ),
+    ])
+
+    rows = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=(1, 2), mode="integer",
+        memory_policy=POLICY, _client_factory=lambda policy: client,
+    )["rows"]
+
+    assert [row["status"] for row in rows] == ["OPTIMAL", "OPTIMAL"]
+    assert all(row["validation_passed"] for row in rows)
+    assert all(row["reference_objective"] == 10 for row in rows)
+    assert rows[0]["reference_gap"] == 0
+    assert rows[1]["reference_gap"] == pytest.approx(5e-5)
 
 
 def test_cross_method_disagreement_is_recorded_and_next_instance_runs():
