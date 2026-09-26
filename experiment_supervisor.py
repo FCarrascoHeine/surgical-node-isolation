@@ -175,7 +175,10 @@ class WorkerClient:
             self.process.join(timeout=2)
         if self.process.is_alive():
             self.process.kill()
-            self.process.join(timeout=2)
+            # A hard kill is asynchronous, particularly on Windows. Reap the
+            # process before closing its handle; Process.close() rejects live
+            # processes and would otherwise mask the worker's original error.
+            self.process.join()
         self.connection.close()
         self.process.close()
         self.process = self.connection = None
