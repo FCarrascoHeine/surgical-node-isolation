@@ -1,6 +1,7 @@
 # Surgical Node Isolation formulations
 
-This repository compares four Gurobi formulations and the paper's general and
+This repository compares four base Gurobi formulations, an aggregated variant
+with selected valid inequalities (`3_VI`), and the paper's general and
 single-intruder heuristics for the safety-check allocation problem. It is organized
 as a small computational-research project with one experiment runner, reproducible
 JSON instances, and a compact correctness suite.
@@ -65,17 +66,18 @@ are solved only once.
 | --- | --- | --- |
 | `INSTANCE [INSTANCE ...]` | Required | One or more JSON files, directories, or quoted patterns such as `"instances/*.json"`. Directory searches are not recursive. |
 | `--csv PATH` | `results/results.csv` | Destination of the combined result table. Parent directories are created automatically. The file is atomically checkpointed after every completed result row, so completed formulations survive a later failure in the same instance. An existing file at this path is overwritten, not appended to. |
-| `--formulations {1,2,3,4} [...]` | `1 2 3 4` | Formulations to solve. For example, `--formulations 2 4` runs only formulations 2 and 4. |
+| `--formulations {1,2,3,3_VI,4} [...]` | `1 2 3 4` | Formulations to solve. `3_VI` adds selected lower subset inequalities to formulation 3. |
 | `--heuristics {ah,ash} [...]` | None | Heuristics to run. `ah` is the general heuristic and `ash` is the single-intruder minimum-cut heuristic. |
-| `--all-methods` | Disabled | Runs formulations 1--4 and both heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
+| `--all-methods` | Disabled | Runs formulations 1--4, `3_VI`, and both heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |
 | `--repetitions N` | `1` | Solves every selected instance/formulation/mode combination `N` times. Repetition numbers are recorded in the CSV. |
 | `--time-limit SECONDS` | No limit | Shared elapsed-time budget for each instance/method/mode/repetition, including method preparation, model construction, optimization and separation. Checked between operations; an operation may finish after the deadline. Zero skips the search; negative values and NaN are rejected. |
 | `--memory-limit-gb GB\|auto\|none` | `auto` | Gurobi soft memory allowance in decimal GB. Auto uses the smaller of 50% of total physical RAM and 60% of available physical RAM, measured once at batch startup. A positive number overrides it; `none` disables it. The effective allowance and its source are recorded in every CSV row. |
 | `--solver-seed N` | `0` | Sets Gurobi's random seed. Keep this fixed when comparing formulations; vary it deliberately when studying solver variability. |
 | `--threads N` | `1` | Sets the number of Gurobi threads. Using one thread favors repeatability; larger values may reduce runtime. Gurobi interprets `0` as its automatic setting. |
-| `--max-iterations N` | `100` | Maximum number of cut-addition rounds for the formulation 4 relaxation. It has no effect on formulations 1--3 or on the formulation 4 integer callback. |
-| `--max-cuts N` | No limit | Maximum total number of cuts added while solving the formulation 4 relaxation. It has no effect on the other solves. |
+| `--max-iterations N` | `100` | Maximum cut-addition rounds for `3_VI` (integer and LP) and the formulation 4 relaxation. |
+| `--max-cuts N` | `100` for `3_VI`; unlimited for formulation 4 | Maximum total cuts for `3_VI` (integer and LP) and the formulation 4 relaxation. Zero disables these cuts. |
+| `--max-cuts-per-round N` | `20` | Maximum number of `3_VI` cuts per root separation round. Zero disables these cuts. |
 | `--heuristic-max-iterations N` | `100` | Maximum number of outer iterations for either heuristic. |
 | `--binary-search-tolerance VALUE` | `1e-4` | Precision used by the single-intruder heuristic's capacity-weight binary search. |
 | `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best evaluated true-objective candidate. Timeouts always return the best available candidate. Iteration history is retained either way. |
@@ -287,6 +289,84 @@ environment with `SoftMemLimit` configured to apply a memory allowance there.
 See Gurobi's [memory-limit parameters](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#parameter:SoftMemLimit)
 and [WLS session guidance](https://support.gurobi.com/hc/en-us/articles/34567582787345-How-do-I-resolve-the-error-Too-many-sessions).
 
+## Aggregated formulation with valid inequalities
+
+`formulation_3_VI` strengthens formulation 3 with the lower subset family:
+
+```text
+beta[e] >= sum(z[j,e] for j in K) - |K| * (1 - x[e])
+```
+
+For each edge, separation selects `K = {j : z[j,e] + x[e] - 1 > 0}`.
+Only violated inequalities are added, ranked by decreasing violation.
+Duplicate cuts and the empty/full subsets already in the base model are skipped.
+There is no subset enumeration.
+
+Integer solves submit user cuts only at optimal root `MIPNODE` callbacks,
+with `PreCrush=1`. LP solves alternate optimization and separation,
+including a final optimization after the last cut batch. Defaults are 100 cuts,
+20 cuts per round, 100 rounds, and violation tolerance `1e-6`.
+Setting any cut/round cap to zero disables new cuts. The time limit includes
+model construction, separation, and all reoptimizations.
+
+`testing_valid_inequalities.py` compares exactly three LP relaxations:
+aggregated (3), disaggregated (2), and aggregated + VI (3_VI).
+With no arguments it uses `instances/small_instance.json`.
+`testing_valid_inequalities_.py` is a compatibility entry point to the same code.
+
+```bash
+python testing_valid_inequalities.py 'instances/100_*.json' \
+    --max-cuts 100 --max-cuts-per-round 20 --max-iterations 100 \
+    --time-limit 300 --solver-seed 0 --threads 1 \
+    --csv results/lp_100_node_20260925.csv
+```
+
+The script accepts files, directories, or quoted glob patterns, plus repetitions
+and solver settings. It uses the supervised worker and CSV checkpointing from
+`run.py`. The default output is `results/valid_inequalities.csv`;
+choose a separate file to preserve earlier experiments. Memory limits default to
+disabled; use `--memory-limit-gb` to configure one.
+
+The CSV records objectives, bounds, runtimes, model sizes, cut counts, limits,
+and separation status. Improvement is `LP(method) - LP(3)`, or
+`100 * (LP(method) - LP(3)) / abs(LP(3))` percent. These fields are
+blank when either LP is not optimal or validation failed. Percentages are
+undefined for a zero baseline.
+
+`OPTIMAL` for a capped VI LP certifies the model with the selected cuts;
+`separation_complete=True` additionally means no violated subset cut remains.
+The stopping reason distinguishes completion from cut, round, or time limits.
+Interrupted runs retain their strongest established lower bound. An older
+solution that predates the latest cuts is marked `restricted_master`.
+
+With nonnegative inspection times, the optimal LP values satisfy
+`LP(3) <= LP(3_VI) <= LP(2)`. Complete separation recovers the
+disaggregated objective, up to numerical tolerances. On the small bundled
+instance the three values are 3.00, 3.25, and 3.25, respectively.
+
+The general runner accepts `--formulations 3 2 3_VI --mode relaxation`.
+In Python, use `solve_instance(instance, "3_VI", relax=True, max_cuts=100)`.
+`build_formulation_3_VI` builds the base model; its dedicated solver adds cuts.
+
+Plot the experiment in separate c and dir panels:
+
+```bash
+python plot_valid_inequalities.py results/lp_100_node_20260925.csv \
+    --output-dir results/lp_100_node_20260925
+```
+
+The plot shows disaggregated and VI improvement over the aggregated baseline.
+PNG/PDF figures and matched objectives (`lp_comparison.csv`) are exported.
+Use `--metric absolute` for improvement in original units. Matching requires
+the same instance, repetition, seed, thread count, and time limit, with all three
+LPs optimal. Missing/interrupted results appear in `excluded.csv`.
+Hatched bars indicate incomplete VI separation.
+
+The [100-node experiment report](results/lp_100_node_20260925/README.md) contains
+36 optimal LP solves on the 12 c/dir instances. With a 100-cut cap, VI matches
+disaggregation on 10 instances. Mean improvement over aggregation is 0% for c
+and 0.1950% for dir (0.2091% for disaggregation).
+
 ## Generate instances
 
 Generate and validate the complete 45-instance rectangular-grid collection
@@ -404,6 +484,9 @@ Solver-dependent tests skip with a clear message when no Gurobi license is avail
 
 - `run.py`: single- and multi-instance experiment runner.
 - `formulations.py`: model builders for formulations 1--4 and common solve logic.
+- `formulation_3_VI.py`: root subset separation for the aggregated formulation.
+- `testing_valid_inequalities.py` / `testing_valid_inequalities_.py`: three-LP comparison and compatibility entry point.
+- `plot_valid_inequalities.py`: relative and absolute LP improvement plots by instance family.
 - `branch_and_cut.py`: separation and solve procedure for formulation 4.
 - `heuristics.py`: implementations of the general and single-intruder heuristics.
 - `graph_algorithms.py`: shared directed shortest-path and minimum-cut routines.

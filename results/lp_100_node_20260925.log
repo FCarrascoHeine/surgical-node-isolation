@@ -1,0 +1,81 @@
+Gurobi soft memory limit: disabled GB (disabled)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+Academic license 2573167 - for non-commercial use only - registered to vi___@uoh.cl
+Solving instance '100_568_200_5_1c' | method f3 | relaxation | repetition 1
+Solving instance '100_568_200_5_1c' | method f2 | relaxation | repetition 1
+Solving instance '100_568_200_5_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_200_5_1dir' | method f3 | relaxation | repetition 1
+Solving instance '100_568_200_5_1dir' | method f2 | relaxation | repetition 1
+Solving instance '100_568_200_5_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_200_5_2c' | method f3 | relaxation | repetition 1
+Solving instance '100_568_200_5_2c' | method f2 | relaxation | repetition 1
+Solving instance '100_568_200_5_2c' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_200_5_2dir' | method f3 | relaxation | repetition 1
+Solving instance '100_568_200_5_2dir' | method f2 | relaxation | repetition 1
+Solving instance '100_568_200_5_2dir' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_20_5_1c' | method f3 | relaxation | repetition 1
+Solving instance '100_568_20_5_1c' | method f2 | relaxation | repetition 1
+Solving instance '100_568_20_5_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_20_5_1dir' | method f3 | relaxation | repetition 1
+Solving instance '100_568_20_5_1dir' | method f2 | relaxation | repetition 1
+Solving instance '100_568_20_5_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_20_5_2c' | method f3 | relaxation | repetition 1
+Solving instance '100_568_20_5_2c' | method f2 | relaxation | repetition 1
+Solving instance '100_568_20_5_2c' | method f3_VI | relaxation | repetition 1
+Solving instance '100_568_20_5_2dir' | method f3 | relaxation | repetition 1
+Solving instance '100_568_20_5_2dir' | method f2 | relaxation | repetition 1
+Solving instance '100_568_20_5_2dir' | method f3_VI | relaxation | repetition 1
+Solving instance '100_574_200_5_1c' | method f3 | relaxation | repetition 1
+Solving instance '100_574_200_5_1c' | method f2 | relaxation | repetition 1
+Solving instance '100_574_200_5_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '100_574_200_5_1dir' | method f3 | relaxation | repetition 1
+Solving instance '100_574_200_5_1dir' | method f2 | relaxation | repetition 1
+Solving instance '100_574_200_5_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '100_574_20_5_1c' | method f3 | relaxation | repetition 1
+Solving instance '100_574_20_5_1c' | method f2 | relaxation | repetition 1
+Solving instance '100_574_20_5_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '100_574_20_5_1dir' | method f3 | relaxation | repetition 1
+Solving instance '100_574_20_5_1dir' | method f2 | relaxation | repetition 1
+Solving instance '100_574_20_5_1dir' | method f3_VI | relaxation | repetition 1
+Instance           Rep Method Mode       Status          Solution              Objective    Dual bound      Time   Cuts
+-----------------------------------------------------------------------------------------------------------------------
+100_568_200_5_1c     1     f3 relaxation OPTIMAL         relaxation        115953.461375 115953.461375   13.2254      0
+100_568_200_5_1c     1     f2 relaxation OPTIMAL         relaxation        115953.461375 115953.461375    7.5236      0
+100_568_200_5_1c     1  f3_VI relaxation OPTIMAL         relaxation        115953.461375 115953.461375    2.8140      0
+100_568_200_5_1dir   1     f3 relaxation OPTIMAL         relaxation        114149.576489 114149.576489    2.1125      0
+100_568_200_5_1dir   1     f2 relaxation OPTIMAL         relaxation        114575.247315 114575.247315    8.2182      0
+100_568_200_5_1dir   1  f3_VI relaxation OPTIMAL         relaxation        114484.830881 114484.830881    4.3225    100
+100_568_200_5_2c     1     f3 relaxation OPTIMAL         relaxation        121273.250503 121273.250503    2.9461      0
+100_568_200_5_2c     1     f2 relaxation OPTIMAL         relaxation        121273.250503 121273.250503    8.7882      0
+100_568_200_5_2c     1  f3_VI relaxation OPTIMAL         relaxation        121273.250503 121273.250503    3.0889      0
+100_568_200_5_2dir   1     f3 relaxation OPTIMAL         relaxation        119510.493755 119510.493755    2.9599      0
+100_568_200_5_2dir   1     f2 relaxation OPTIMAL         relaxation        120012.912583 120012.912583    7.9412      0
+100_568_200_5_2dir   1  f3_VI relaxation OPTIMAL         relaxation        120006.457060 120006.457060    4.7824    100
+100_568_20_5_1c      1     f3 relaxation OPTIMAL         relaxation          9809.866814   9809.866814    0.3367      0
+100_568_20_5_1c      1     f2 relaxation OPTIMAL         relaxation          9809.866814   9809.866814    1.1263      0
+100_568_20_5_1c      1  f3_VI relaxation OPTIMAL         relaxation          9809.866814   9809.866814    0.3622      0
+100_568_20_5_1dir    1     f3 relaxation OPTIMAL         relaxation          9725.946753   9725.946753    0.2910      0
+100_568_20_5_1dir    1     f2 relaxation OPTIMAL         relaxation          9727.513391   9727.513391    0.7025      0
+100_568_20_5_1dir    1  f3_VI relaxation OPTIMAL         relaxation          9727.513391   9727.513391    0.8398     42
+100_568_20_5_2c      1     f3 relaxation OPTIMAL         relaxation         12899.348027  12899.348027    0.4620      0
+100_568_20_5_2c      1     f2 relaxation OPTIMAL         relaxation         12899.348027  12899.348027    1.0658      0
+100_568_20_5_2c      1  f3_VI relaxation OPTIMAL         relaxation         12899.348027  12899.348027    0.4804      0
+100_568_20_5_2dir    1     f3 relaxation OPTIMAL         relaxation         12787.792840  12787.792840    0.4004      0
+100_568_20_5_2dir    1     f2 relaxation OPTIMAL         relaxation         12844.723601  12844.723601    0.7461      0
+100_568_20_5_2dir    1  f3_VI relaxation OPTIMAL         relaxation         12844.723601  12844.723601    0.6203     19
+100_574_200_5_1c     1     f3 relaxation OPTIMAL         relaxation        109804.829027 109804.829027    2.9498      0
+100_574_200_5_1c     1     f2 relaxation OPTIMAL         relaxation        109804.829027 109804.829027   10.3875      0
+100_574_200_5_1c     1  f3_VI relaxation OPTIMAL         relaxation        109804.829027 109804.829027    3.2342      0
+100_574_200_5_1dir   1     f3 relaxation OPTIMAL         relaxation        109804.829027 109804.829027    2.8019      0
+100_574_200_5_1dir   1     f2 relaxation OPTIMAL         relaxation        109804.829027 109804.829027    7.8380      0
+100_574_200_5_1dir   1  f3_VI relaxation OPTIMAL         relaxation        109804.829027 109804.829027    2.9081      0
+100_574_20_5_1c      1     f3 relaxation OPTIMAL         relaxation         12916.763306  12916.763306    0.4029      0
+100_574_20_5_1c      1     f2 relaxation OPTIMAL         relaxation         12916.763306  12916.763306    0.7817      0
+100_574_20_5_1c      1  f3_VI relaxation OPTIMAL         relaxation         12916.763306  12916.763306    0.4189      0
+100_574_20_5_1dir    1     f3 relaxation OPTIMAL         relaxation         12862.786224  12862.786224    0.4051      0
+100_574_20_5_1dir    1     f2 relaxation OPTIMAL         relaxation         12862.786224  12862.786224    0.9351      0
+100_574_20_5_1dir    1  f3_VI relaxation OPTIMAL         relaxation         12862.786224  12862.786224    0.4269      0
+Results saved in results/lp_100_node_20260925.csv

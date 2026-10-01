@@ -1,0 +1,131 @@
+Gurobi soft memory limit: 2 GB (explicit)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+Academic license 2573167 - for non-commercial use only - registered to vi___@uoh.cl
+Set parameter SoftMemLimit to value 2
+Solving instance '200_1162_500_10_1c' | method f3 | relaxation | repetition 1
+Solving instance '200_1162_500_10_1c' | method f2 | relaxation | repetition 1
+Solving instance '200_1162_500_10_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1162_500_10_1dir' | method f3 | relaxation | repetition 1
+Solving instance '200_1162_500_10_1dir' | method f2 | relaxation | repetition 1
+Solving instance '200_1162_500_10_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1162_50_10_1c' | method f3 | relaxation | repetition 1
+Solving instance '200_1162_50_10_1c' | method f2 | relaxation | repetition 1
+Solving instance '200_1162_50_10_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1162_50_10_1dir' | method f3 | relaxation | repetition 1
+Solving instance '200_1162_50_10_1dir' | method f2 | relaxation | repetition 1
+Solving instance '200_1162_50_10_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1166_500_10_1c' | method f3 | relaxation | repetition 1
+Solving instance '200_1166_500_10_1c' | method f2 | relaxation | repetition 1
+Solving instance '200_1166_500_10_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1166_500_10_1dir' | method f3 | relaxation | repetition 1
+Solving instance '200_1166_500_10_1dir' | method f2 | relaxation | repetition 1
+Solving instance '200_1166_500_10_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1166_50_10_1c' | method f3 | relaxation | repetition 1
+Solving instance '200_1166_50_10_1c' | method f2 | relaxation | repetition 1
+Solving instance '200_1166_50_10_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1166_50_10_1dir' | method f3 | relaxation | repetition 1
+Solving instance '200_1166_50_10_1dir' | method f2 | relaxation | repetition 1
+Solving instance '200_1166_50_10_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1172_500_10_1c' | method f3 | relaxation | repetition 1
+Solving instance '200_1172_500_10_1c' | method f2 | relaxation | repetition 1
+Solving instance '200_1172_500_10_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1172_500_10_1dir' | method f3 | relaxation | repetition 1
+Solving instance '200_1172_500_10_1dir' | method f2 | relaxation | repetition 1
+Solving instance '200_1172_500_10_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1172_50_10_1c' | method f3 | relaxation | repetition 1
+Solving instance '200_1172_50_10_1c' | method f2 | relaxation | repetition 1
+Solving instance '200_1172_50_10_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '200_1172_50_10_1dir' | method f3 | relaxation | repetition 1
+Solving instance '200_1172_50_10_1dir' | method f2 | relaxation | repetition 1
+Solving instance '200_1172_50_10_1dir' | method f3_VI | relaxation | repetition 1
+Solving instance '500_2955_80_20_1c' | method f3 | relaxation | repetition 1
+Solving instance '500_2955_80_20_1c' | method f2 | relaxation | repetition 1
+Solving instance '500_2955_80_20_1c' | method f3_VI | relaxation | repetition 1
+Solving instance '500_2955_80_20_1dir' | method f3 | relaxation | repetition 1
+Solving instance '500_2955_80_20_1dir' | method f2 | relaxation | repetition 1
+Solving instance '500_2955_80_20_1dir' | method f3_VI | relaxation | repetition 1
+500_2955_80_20_1dir f3_VI relaxation: ERROR (build_solve) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+500_2961_80_20_1c f3 relaxation: ERROR (license) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+500_2961_80_20_1c f2 relaxation: ERROR (license) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+500_2961_80_20_1c f3_VI relaxation: ERROR (license) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+500_2961_80_20_1dir f3 relaxation: ERROR (license) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+500_2961_80_20_1dir f2 relaxation: ERROR (license) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+500_2961_80_20_1dir f3_VI relaxation: ERROR (license) Could not resolve host: token.gurobi.com (code 6, command POST https://token.gurobi.com/api/v1/tokens)
+Instance           Rep Method Mode       Status          Solution              Objective    Dual bound      Time   Cuts
+-----------------------------------------------------------------------------------------------------------------------
+200_1162_500_10_1c   1     f3 relaxation OPTIMAL         relaxation        273763.768234 273763.768234   30.7996      0
+200_1162_500_10_1c   1     f2 relaxation OPTIMAL         relaxation        273763.768234 273763.768234   77.2169      0
+200_1162_500_10_1c   1  f3_VI relaxation OPTIMAL         relaxation        273763.768234 273763.768234   24.1486      0
+200_1162_500_10_1d   1     f3 relaxation OPTIMAL         relaxation        272704.043753 272704.043753   22.5195      0
+200_1162_500_10_1d   1     f2 relaxation OPTIMAL         relaxation        273482.204484 273482.204484   96.9622      0
+200_1162_500_10_1d   1  f3_VI relaxation OPTIMAL         relaxation        273125.630226 273125.630226   39.9293    100
+200_1162_50_10_1c    1     f3 relaxation OPTIMAL         relaxation         23765.988336  23765.988336    4.2236      0
+200_1162_50_10_1c    1     f2 relaxation OPTIMAL         relaxation         23765.988336  23765.988336    8.4490      0
+200_1162_50_10_1c    1  f3_VI relaxation OPTIMAL         relaxation         23765.988336  23765.988336    4.3048      0
+200_1162_50_10_1di   1     f3 relaxation OPTIMAL         relaxation         23660.315695  23660.315695    3.3583      0
+200_1162_50_10_1di   1     f2 relaxation OPTIMAL         relaxation         23702.612396  23702.612396   18.3887      0
+200_1162_50_10_1di   1  f3_VI relaxation OPTIMAL         relaxation         23702.612396  23702.612396    9.1776     50
+200_1166_500_10_1c   1     f3 relaxation OPTIMAL         relaxation        286371.694897 286371.694897   23.4726      0
+200_1166_500_10_1c   1     f2 relaxation OPTIMAL         relaxation        286371.694897 286371.694897   86.8558      0
+200_1166_500_10_1c   1  f3_VI relaxation OPTIMAL         relaxation        286371.694897 286371.694897   27.5493      0
+200_1166_500_10_1d   1     f3 relaxation OPTIMAL         relaxation        281276.283371 281276.283371   22.7581      0
+200_1166_500_10_1d   1     f2 relaxation OPTIMAL         relaxation        281972.682685 281972.682685  131.8543      0
+200_1166_500_10_1d   1  f3_VI relaxation OPTIMAL         relaxation        281542.428712 281542.428712   44.9610    100
+200_1166_50_10_1c    1     f3 relaxation OPTIMAL         relaxation         29425.406644  29425.406644    3.6051      0
+200_1166_50_10_1c    1     f2 relaxation OPTIMAL         relaxation         29425.406644  29425.406644   23.9723      0
+200_1166_50_10_1c    1  f3_VI relaxation OPTIMAL         relaxation         29425.406644  29425.406644    3.7499      0
+200_1166_50_10_1di   1     f3 relaxation OPTIMAL         relaxation         28952.360274  28952.360274    2.3048      0
+200_1166_50_10_1di   1     f2 relaxation OPTIMAL         relaxation         29006.153096  29006.153096   17.9278      0
+200_1166_50_10_1di   1  f3_VI relaxation OPTIMAL         relaxation         29006.153096  29006.153096   10.0963     98
+200_1172_500_10_1c   1     f3 relaxation OPTIMAL         relaxation        269221.244892 269221.244892   24.3668      0
+200_1172_500_10_1c   1     f2 relaxation OPTIMAL         relaxation        270672.709260 270672.709260  158.0642      0
+200_1172_500_10_1c   1  f3_VI relaxation OPTIMAL         relaxation        270031.913071 270031.913071   38.0583    100
+200_1172_500_10_1d   1     f3 relaxation OPTIMAL         relaxation        269221.244892 269221.244892   18.2277      0
+200_1172_500_10_1d   1     f2 relaxation TIME_LIMIT      none                          - 269544.164826   60.3955      0
+200_1172_500_10_1d   1  f3_VI relaxation OPTIMAL         relaxation        269395.626331 269395.626331   50.8478    100
+200_1172_50_10_1c    1     f3 relaxation OPTIMAL         relaxation         27794.894756  27794.894756    2.8138      0
+200_1172_50_10_1c    1     f2 relaxation OPTIMAL         relaxation         28007.287560  28007.287560   13.5856      0
+200_1172_50_10_1c    1  f3_VI relaxation OPTIMAL         relaxation         28007.287560  28007.287560    6.5846     39
+200_1172_50_10_1di   1     f3 relaxation OPTIMAL         relaxation         27794.894756  27794.894756    1.8842      0
+200_1172_50_10_1di   1     f2 relaxation OPTIMAL         relaxation         27844.996020  27844.996020   12.6305      0
+200_1172_50_10_1di   1  f3_VI relaxation OPTIMAL         relaxation         27835.601589  27835.601589   15.1446    100
+500_2955_80_20_1c    1     f3 relaxation OPTIMAL         relaxation         47725.267437  47725.267437  175.1275      0
+500_2955_80_20_1c    1     f2 relaxation TIME_LIMIT      none                          -  44994.167153  300.0392      0
+500_2955_80_20_1c    1  f3_VI relaxation TIME_LIMIT      none                          -  34323.680367   57.8291      0
+500_2955_80_20_1di   1     f3 relaxation TIME_LIMIT      none                          -             -   60.6765      0
+500_2955_80_20_1di   1     f2 relaxation TIME_LIMIT      none                          -  45499.452684   43.2972      0
+500_2955_80_20_1di   1  f3_VI relaxation ERROR           none                          -             -   55.6241      -
+500_2961_80_20_1c    1     f3 relaxation ERROR           none                          -             -    0.9177      -
+500_2961_80_20_1c    1     f2 relaxation ERROR           none                          -             -    0.1263      -
+500_2961_80_20_1c    1  f3_VI relaxation ERROR           none                          -             -    0.1371      -
+500_2961_80_20_1di   1     f3 relaxation ERROR           none                          -             -    0.1254      -
+500_2961_80_20_1di   1     f2 relaxation ERROR           none                          -             -    0.1231      -
+500_2961_80_20_1di   1  f3_VI relaxation ERROR           none                          -             -    0.1288      -
+Results saved in results/lp_larger_20260925.csv

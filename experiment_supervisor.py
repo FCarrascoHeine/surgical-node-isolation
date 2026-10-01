@@ -13,6 +13,7 @@ from pathlib import Path
 
 from gurobipy import GRB, GurobiError
 
+from formulations import normalize_formulation
 from memory_limits import resolve_memory_limit
 from run import (
     DEFAULT_FORMULATIONS,
@@ -199,7 +200,7 @@ def _result_summary(row):
 
 def _failure_row(task, message, elapsed):
     method = task["method"]
-    formulation = int(method[1:]) if method.startswith("f") else None
+    formulation = normalize_formulation(method[1:]) if method.startswith("f") else None
     arguments = task["arguments"]
     result = empty_model_result(formulation, arguments["mode"] == "relaxation")
     result.update(method=method, status_name=message["status"], runtime=elapsed)
@@ -252,12 +253,12 @@ def run_supervised_experiments(
         raise ValueError("License retry count and wait must be nonnegative")
     TimeBudget(arguments.get("time_limit"))
     mode = arguments.get("mode", "both")
-    formulations = tuple(dict.fromkeys(arguments.get("formulations", DEFAULT_FORMULATIONS)))
+    formulations = tuple(dict.fromkeys(
+        normalize_formulation(f) for f in arguments.get("formulations", DEFAULT_FORMULATIONS)
+    ))
     heuristics = tuple(dict.fromkeys(arguments.get("heuristics", ())))
     if mode not in ("integer", "relaxation", "both"):
         raise ValueError("mode must be integer, relaxation, or both")
-    if any(f not in DEFAULT_FORMULATIONS for f in formulations):
-        raise ValueError("Invalid formulation")
     if any(h not in HEURISTIC_NAMES for h in heuristics):
         raise ValueError("Invalid heuristic")
     if not formulations and not heuristics:
@@ -287,7 +288,7 @@ def run_supervised_experiments(
                     options = dict(arguments)
                     options.update(
                         repetition=repetition,
-                        formulations=(int(method[1:]),) if method.startswith("f") else (),
+                        formulations=(normalize_formulation(method[1:]),) if method.startswith("f") else (),
                         heuristics=(method,) if solve_mode == "heuristic" else (),
                         mode="integer" if solve_mode == "heuristic" else solve_mode,
                     )

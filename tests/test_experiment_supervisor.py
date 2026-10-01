@@ -218,6 +218,17 @@ def test_persistent_license_failure_is_bounded_and_next_method_runs():
     assert [row["status"] for row in result["rows"]] == ["LICENSE_ERROR", "TIME_LIMIT"]
 
 
+def test_named_formulation_survives_supervisor_failure_reporting():
+    client = ScriptedClient([license_error(), success(2)])
+    result = supervisor.run_supervised_experiments(
+        [{"name": "test"}], formulations=("formulation_3_VI", 2), mode="integer",
+        memory_policy=POLICY, license_retries=0, _client_factory=lambda policy: client,
+    )
+    assert [row["formulation"] for row in result["rows"]] == ["3_VI", 2]
+    assert result["rows"][0]["status"] == "LICENSE_ERROR"
+    assert client.tasks[0]["arguments"]["formulations"] == ("3_VI",)
+
+
 @pytest.mark.parametrize("interruption", [KeyboardInterrupt(), OSError("disk full")])
 def test_parent_failures_close_worker_and_preserve_completed_csv(tmp_path, interruption):
     filename = tmp_path / "partial.csv"

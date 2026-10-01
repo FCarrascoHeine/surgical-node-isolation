@@ -6,7 +6,8 @@ from pathlib import Path
 from gurobipy import GRB
 
 from branch_and_cut import separate_solution
-from formulations import solve_instance
+from formulations import BUILDERS, normalize_formulation, solve_instance
+from formulation_3_VI import DEFAULT_MAX_CUTS, DEFAULT_MAX_CUTS_PER_ROUND
 from heuristics import (
     HEURISTIC_NAMES,
     solve_single_intruder_heuristic,
@@ -23,6 +24,7 @@ from validation import (
 )
 
 DEFAULT_FORMULATIONS = (1, 2, 3, 4)
+AVAILABLE_FORMULATIONS = tuple(BUILDERS)
 DEFAULT_HEURISTICS = ()
 MAX_FIXED_RESULT_WIDTH = 14
 
@@ -123,6 +125,10 @@ def _row_from_result(result, instance, repetition, solver_seed, threads, *, time
             if result.get("objective_value") is not None else "none",
         ),
         "objective_value": result.get("objective_value"),
+        "aggregated_lp_objective": None,
+        "lp_improvement": None,
+        "lp_improvement_percent": None,
+        "lp_improved": None,
         "dual_bound": result.get("dual_bound"),
         "gap": result.get("gap"),
         "mip_gap_tolerance": result.get("mip_gap_tolerance"),
@@ -139,6 +145,10 @@ def _row_from_result(result, instance, repetition, solver_seed, threads, *, time
         "nodes_explored": result.get("nodes_explored", 0.0),
         "simplex_iterations": result.get("simplex_iterations", 0.0),
         "cuts": result.get("cuts", 0),
+        "max_cuts": result.get("max_cuts"),
+        "max_cuts_per_round": result.get("max_cuts_per_round"),
+        "max_cut_iterations": result.get("max_iterations"),
+        "cut_tolerance": result.get("cut_tolerance"),
         "intruder_cuts": cuts_by_family.get("intruder", 0),
         "feasibility_cuts": cuts_by_family.get("feasibility", 0),
         "optimality_cuts": cuts_by_family.get("optimality", 0),
@@ -211,16 +221,15 @@ def run_comparison(
     row_callback=None,
     retain_variables=True,
     phase_callback=None,
+    max_cuts_per_round=DEFAULT_MAX_CUTS_PER_ROUND,
 ):
     # Reject invalid budgets even if a selected method is not applicable.
     TimeBudget(time_limit)
     phase = phase_callback or (lambda _name: None)
     phase("preparation")
     data = prepare_instance(instance)
-    selected_formulations = tuple(dict.fromkeys(int(f) for f in formulations))
+    selected_formulations = tuple(dict.fromkeys(normalize_formulation(f) for f in formulations))
     selected_heuristics = tuple(dict.fromkeys(str(h).lower() for h in heuristics))
-    if any(f not in DEFAULT_FORMULATIONS for f in selected_formulations):
-        raise ValueError("formulations must contain values from 1, 2, 3, and 4")
     if any(h not in HEURISTIC_NAMES for h in selected_heuristics):
         raise ValueError("heuristics must contain ah and/or ash")
     if not selected_formulations and not selected_heuristics:
@@ -250,6 +259,13 @@ def run_comparison(
             "threads": threads,
             "env": env,
         }
+        if formulation == "3_VI":
+            common_arguments.update(
+                max_cuts=DEFAULT_MAX_CUTS if max_cuts is None else max_cuts,
+                max_cuts_per_round=max_cuts_per_round,
+                max_iterations=max_iterations,
+                tolerance=tolerance,
+            )
 
         if solve_integer:
             _print_solve_start(
@@ -427,6 +443,9 @@ def finalize_comparison(
         if row["mode"] in ("integer", "heuristic"):
             row["reference_objective"] = None
             row["reference_gap"] = None
+        if row["mode"] == "relaxation":
+            for field in ("aggregated_lp_objective", "lp_improvement", "lp_improvement_percent", "lp_improved"):
+                row[field] = None
 
     row_by_key = {
         (row["formulation"], row["mode"]): row
@@ -542,6 +561,30 @@ def finalize_comparison(
                 row["reference_gap"] = (
                     objective - integer_optimum
                 ) / abs(integer_optimum)
+            if row_callback is not None:
+                row_callback(row)
+
+    baseline = row_by_key.get((3, "relaxation"))
+    if (baseline is not None and baseline["status"] == "OPTIMAL"
+            and baseline.get("solution_type") == "relaxation"
+            and baseline.get("validation_passed") is not False
+            and baseline.get("objective_value") is not None):
+        reference = baseline["objective_value"]
+        for row in rows:
+            if (row["formulation"] not in (2, 3, "3_VI")
+                    or row["mode"] != "relaxation" or row["status"] != "OPTIMAL"
+                    or row.get("solution_type") != "relaxation"
+                    or row.get("validation_passed") is False
+                    or row.get("objective_value") is None):
+                continue
+            difference = row["objective_value"] - reference
+            allowance = tolerance * max(1.0, abs(reference), abs(row["objective_value"]))
+            row.update(
+                aggregated_lp_objective=reference,
+                lp_improvement=difference,
+                lp_improvement_percent=100 * difference / abs(reference) if reference != 0 else None,
+                lp_improved=difference > allowance,
+            )
             if row_callback is not None:
                 row_callback(row)
 
@@ -699,8 +742,8 @@ def main():
     parser.add_argument(
         "--formulations",
         nargs="*",
-        type=int,
-        choices=DEFAULT_FORMULATIONS,
+        type=normalize_formulation,
+        choices=AVAILABLE_FORMULATIONS,
         default=list(DEFAULT_FORMULATIONS),
     )
     parser.add_argument(
@@ -713,7 +756,7 @@ def main():
     parser.add_argument(
         "--all-methods",
         action="store_true",
-        help="Run all four formulations and both heuristics",
+        help="Run all formulations, including 3_VI, and both heuristics",
     )
     parser.add_argument(
         "--mode",
@@ -731,14 +774,21 @@ def main():
         "--max-iterations",
         type=int,
         default=100,
-        help="Maximum cut rounds for the formulation 4 relaxation",
+        help="Maximum cut rounds for 3_VI and the formulation 4 relaxation",
     )
     parser.add_argument(
         "--memory-limit-gb", default="auto", metavar="GB|auto|none",
         help=("Gurobi soft memory limit in decimal GB; auto reserves headroom "
               "for Python and the OS, none disables the soft limit"),
     )
-    parser.add_argument("--max-cuts", type=int, default=None)
+    parser.add_argument(
+        "--max-cuts", type=int, default=None,
+        help="Total cut cap (3_VI defaults to 100; formulation 4 LP defaults to unlimited)",
+    )
+    parser.add_argument(
+        "--max-cuts-per-round", type=int, default=DEFAULT_MAX_CUTS_PER_ROUND,
+        help="Maximum 3_VI cuts in each root separation round (default: 20)",
+    )
     parser.add_argument("--heuristic-max-iterations", type=int, default=100)
     parser.add_argument("--binary-search-tolerance", type=float, default=1e-4)
     parser.add_argument(
@@ -754,7 +804,7 @@ def main():
 
     instance_paths = resolve_instances(args.instances)
     formulations = (
-        list(DEFAULT_FORMULATIONS) if args.all_methods else args.formulations
+        list(BUILDERS) if args.all_methods else args.formulations
     )
     heuristics = list(HEURISTIC_NAMES) if args.all_methods else args.heuristics
     from experiment_supervisor import run_supervised_experiments
@@ -775,6 +825,7 @@ def main():
         output_flag=int(args.output),
         max_iterations=args.max_iterations,
         max_cuts=args.max_cuts,
+        max_cuts_per_round=args.max_cuts_per_round,
         heuristic_max_iterations=args.heuristic_max_iterations,
         binary_search_tolerance=args.binary_search_tolerance,
         heuristic_return_best=not args.return_terminal_heuristic,

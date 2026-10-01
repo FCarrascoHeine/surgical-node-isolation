@@ -17,7 +17,7 @@ from utils import load_gurobi_env
 
 SMALL_INSTANCE = Path(__file__).resolve().parents[1] / "instances" / "small_instance.json"
 RESULTS_DIR = SMALL_INSTANCE.parents[1] / "results"
-EXPECTED_SIZES = {1: (22, 17), 2: (34, 29), 3: (28, 35), 4: (20, 13)}
+EXPECTED_SIZES = {1: (22, 17), 2: (34, 29), 3: (28, 35), "3_VI": (28, 35), 4: (20, 13)}
 
 
 @pytest.fixture(scope="module")
@@ -154,7 +154,7 @@ def test_small_instance_has_independently_verified_unique_optimum():
     assert allocations == [((1, 3), (2, 3))]
 
 
-@pytest.mark.parametrize("formulation,builder", sorted(BUILDERS.items()))
+@pytest.mark.parametrize("formulation,builder", sorted(BUILDERS.items(), key=lambda item: str(item[0])))
 def test_model_structure_matches_formulation_document(solver_env, formulation, builder):
     model, variables = builder(SMALL_INSTANCE, env=solver_env)
     expected_variables, expected_constraints = EXPECTED_SIZES[formulation]
@@ -164,14 +164,14 @@ def test_model_structure_matches_formulation_document(solver_env, formulation, b
         assert model.NumQNZs > 0
         assert model.Params.NonConvex == 2
         assert set(variables) == {"x", "y", "z"}
-    elif formulation in (2, 3):
+    elif formulation in (2, 3, "3_VI"):
         assert model.NumQNZs == 0
     else:
         assert model.Params.LazyConstraints == 1
     model.dispose()
 
 
-@pytest.mark.parametrize("formulation,builder", sorted(BUILDERS.items()))
+@pytest.mark.parametrize("formulation,builder", sorted(BUILDERS.items(), key=lambda item: str(item[0])))
 def test_relaxation_makes_discrete_variables_continuous(
     solver_env, formulation, builder
 ):
@@ -194,7 +194,7 @@ def test_all_integer_formulations_reproduce_known_solution(integer_results):
 
 
 def test_relaxation_values_are_stable(relaxation_results):
-    expected = {1: 4.0, 2: 3.25, 3: 3.0, 4: 3.25}
+    expected = {1: 4.0, 2: 3.25, 3: 3.0, "3_VI": 3.25, 4: 3.25}
     for formulation, result in relaxation_results.items():
         assert result["status_name"] == "OPTIMAL"
         assert math.isclose(

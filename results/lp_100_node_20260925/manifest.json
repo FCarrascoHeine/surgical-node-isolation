@@ -1,0 +1,49 @@
+{
+  "date": "2026-09-25",
+  "formulations": [
+    3,
+    2,
+    "3_VI"
+  ],
+  "mode": "relaxation",
+  "repetitions": 1,
+  "time_limit_seconds": 300,
+  "solver_seed": 0,
+  "threads": 1,
+  "max_cuts": 100,
+  "max_cuts_per_round": 20,
+  "max_iterations": 100,
+  "cut_tolerance": 1e-06,
+  "input_sha256": {
+    "instances/100_568_200_5_1c.json": "58618d2f782c7ace4cadbb1ce196a57bd56290c818a55990ae284aef5cfd8aa3",
+    "instances/100_568_200_5_1dir.json": "ac5177eae36aadd598916c256fcdc4d49cf3b1e5cbfe32447e26fd48022dc6be",
+    "instances/100_568_200_5_2c.json": "974c4530aade151ec729c392ca74b7ae6e550ba8d6d2d07bb49037fe989929fc",
+    "instances/100_568_200_5_2dir.json": "7dba6c836446e236077f882e6ac097d73ed63f80bda6fc711144c8f795b7631a",
+    "instances/100_568_20_5_1c.json": "f320baa6b93ca9bc970d972ec08734b841d6ae5ebb79ef7c839688de051dc8bb",
+    "instances/100_568_20_5_1dir.json": "079e9a31f44aafd3fd3bcd2b6db5d148778859029b05bd0eecbf8a00f2ba0485",
+    "instances/100_568_20_5_2c.json": "43ab8f63f7a15792e5642d745130741f22141c3ecde573f8027cdc87e023a089",
+    "instances/100_568_20_5_2dir.json": "09b3ab7ff9c25afb6658f2654cb9eca87687a38cb32983c3db18918861380955",
+    "instances/100_574_200_5_1c.json": "94848dea1fb9d3dbd1b87a8b88297abe48199961f6067c559ffb5ea04e016a9f",
+    "instances/100_574_200_5_1dir.json": "da736b190105071c2b98df54022bb8e875fca119e2bb6a9070402730bb954a86",
+    "instances/100_574_20_5_1c.json": "160dbb320cd06b9f4b663696271c8711b87aedf2c0ccad5100d798450bcf7d5b",
+    "instances/100_574_20_5_1dir.json": "1ba26a0033cdfe176c1dd1508628723d81ff75199ba01277cd362b4079570c31"
+  },
+  "source_sha256": {
+    "formulation_3_VI.py": "373ff94ea2e3aa65e1e45a74d49444f6af0076bc7b731e441be5eee3b0f40b91",
+    "formulations.py": "e72197c6771ef45fc7664e3dc4bc8928d9ad46e1d4999fe7d10b422e04656ffb",
+    "testing_valid_inequalities.py": "5483c28c082bf604e9a22eebde7f72b26c55bb8f4fbeccae1a29335bb0b1db77",
+    "testing_valid_inequalities_.py": "6dc15c33b3214b2ac53a57a79bb7e004a857a1c55eb118eeed7c72fa8f7d87a7",
+    "run.py": "54c8480687b3da92395afc05f80737b9bdb140d9ecad0e022f632b9f0ef5bcff",
+    "experiment_supervisor.py": "22c4a030d89f1817844762eac56b943fabeb59b269d245ef1da9ff4ad9cee01e",
+    "time_budget.py": "3f9df12e595c17b7483c2ea4d1e4b6b4d5d11b979eb625799e908b261bc7f193",
+    "utils.py": "79359da9f6fe67809257ea1a841796d1c6e1a2cfb8b32f2553b7f13e81b691f9",
+    "validation.py": "65375301343a29c6a3b7e0a0fb3949a7e4d42a3c0c3c8418a7e48b699d132692",
+    "plot_valid_inequalities.py": "26795a0a873fedbc855becf5763c44ffec531439111bf86dbbfeb0c9e8383ef0"
+  },
+  "results_sha256": "96241bd9a3e06850fda121f01170290697692227178643f63b30aed119ea68cb",
+  "software": {
+    "python_version": "3.13.5",
+    "gurobi_version": "12.0.1",
+    "platform": "darwin"
+  }
+}

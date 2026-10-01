@@ -1,0 +1,34 @@
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+Academic license 2573167 - for non-commercial use only - registered to vi___@uoh.cl
+Set parameter SoftMemLimit to value 2
+Diagnosing 100_568_200_5_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 504.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 100_568_200_5_2c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 636.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 100_568_20_5_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 561.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 100_568_20_5_2c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 701.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 100_574_200_5_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 488.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 100_574_20_5_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 401.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 200_1162_500_10_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 1089.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 200_1162_50_10_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 1287.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 200_1166_500_10_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 1153.0, 'max_distance_status': 2, 'max_certificate_distance': -1.0800249583553523e-12, 'unique_checkpoint_vector': True}
+Diagnosing 200_1166_50_10_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 1220.0, 'max_distance_status': 2, 'max_certificate_distance': -0.0, 'unique_checkpoint_vector': True}
+Diagnosing 200_1172_500_10_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 1329.0, 'max_distance_status': 2, 'max_certificate_distance': 74.99999999999977, 'unique_checkpoint_vector': False}
+Diagnosing 200_1172_50_10_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 1314.0, 'max_distance_status': 2, 'max_certificate_distance': 41.000000000000036, 'unique_checkpoint_vector': False}
+Diagnosing 500_2955_80_20_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 2314.0, 'max_distance_status': 2, 'max_certificate_distance': 13.0, 'unique_checkpoint_vector': False}
+Diagnosing 500_2961_80_20_1c
+{'minimum_cost_status': 2, 'minimum_cost_lp': 2668.0, 'max_distance_status': 2, 'max_certificate_distance': 2.842170943040401e-14, 'unique_checkpoint_vector': True}

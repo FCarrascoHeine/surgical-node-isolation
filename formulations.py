@@ -253,6 +253,17 @@ def build_formulation_3(
         return model, {"x": x, "y": y, "z": z, "beta": beta}
 
 
+def build_formulation_3_VI(instance, **kwargs):
+    """Build the aggregated model; solve_instance adds selected root inequalities."""
+    model, variables = build_formulation_3(instance, **kwargs)
+    with dispose_on_error(model):
+        model.ModelName = "SNI_formulation_3_VI"
+        if not kwargs.get("relax", False):
+            model.Params.PreCrush = 1
+        model.update()
+        return model, variables
+
+
 def build_formulation_4(
     instance,
     relax=False,
@@ -342,16 +353,25 @@ BUILDERS = {
     1: build_formulation_1,
     2: build_formulation_2,
     3: build_formulation_3,
+    "3_VI": build_formulation_3_VI,
     4: build_formulation_4,
 }
 
 
-def build_model(instance, formulation, **kwargs):
+def normalize_formulation(formulation):
+    if str(formulation).lower() in ("3_vi", "formulation_3_vi"):
+        return "3_VI"
     try:
-        builder = BUILDERS[int(formulation)]
-    except (KeyError, ValueError) as error:
-        raise ValueError("formulation must be one of 1, 2, 3, or 4") from error
-    return builder(instance, **kwargs)
+        value = int(formulation)
+        if value in BUILDERS:
+            return value
+    except (TypeError, ValueError):
+        pass
+    raise ValueError("formulation must be one of 1, 2, 3, 3_VI, or 4")
+
+
+def build_model(instance, formulation, **kwargs):
+    return BUILDERS[normalize_formulation(formulation)](instance, **kwargs)
 
 
 def _solve_compact(instance, formulation, **kwargs):
@@ -380,11 +400,13 @@ def _solve_compact(instance, formulation, **kwargs):
 
 
 def solve_instance(instance, formulation, **kwargs):
-    formulation = int(formulation)
+    formulation = normalize_formulation(formulation)
+    if formulation == "3_VI":
+        from formulation_3_VI import solve_instance as solve_with_valid_inequalities
+
+        return solve_with_valid_inequalities(instance, **kwargs)
     if formulation == 4:
         from branch_and_cut import solve_instance as solve_branch_and_cut
 
         return solve_branch_and_cut(instance, **kwargs)
-    if formulation not in (1, 2, 3):
-        raise ValueError("formulation must be one of 1, 2, 3, or 4")
     return _solve_compact(instance, formulation, **kwargs)

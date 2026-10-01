@@ -1,0 +1,24 @@
+Set parameter Username
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2573167
+Academic license 2573167 - for non-commercial use only - registered to vi___@uoh.cl
+Set parameter SoftMemLimit to value 2
+Diagnosing 100_568_200_5_1c
+  Budget x1.2: VI improvement 0.4019145413501694%
+  Budget x1.5: VI improvement 0.22422791874725082%
+Diagnosing 100_568_200_5_2c
+  Budget x1.2: VI improvement 0.22936244061553104%
+  Budget x1.5: VI improvement 0.12939006429487082%
+Diagnosing 100_568_20_5_1c
+  Budget x1.2: VI improvement 0.01895967045614529%
+  Budget x1.5: VI improvement 0.012774892418876535%
+Diagnosing 100_568_20_5_2c
+  Budget x1.2: VI improvement 0.14012946080936658%
+  Budget x1.5: VI improvement 0.10463937777838304%
+Diagnosing 100_574_200_5_1c
+  Budget x1.2: VI improvement 0.599283444666258%
+  Budget x1.5: VI improvement 0.3084278112983694%
+Diagnosing 100_574_20_5_1c
+  Budget x1.2: VI improvement 0.4691460539505476%
+  Budget x1.5: VI improvement 0.1942265608391969%

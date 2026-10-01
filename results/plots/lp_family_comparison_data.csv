@@ -1,0 +1,2 @@
+instance,family,repetition,solver_seed,threads,time_limit_seconds,lp_3,lp_2,lp_lower,lower_absolute_improvement,lower_improvement_percent,lower_cuts,lower_separation_complete,lower_max_cuts,lp_upper,upper_absolute_improvement,upper_improvement_percent,upper_cuts,upper_separation_complete,upper_max_cuts,lp_both,both_absolute_improvement,both_improvement_percent,both_cuts,both_separation_complete,both_max_cuts
+small_instance,other,1,0,1,,3.0,3.25,3.25,0.25,8.333333333333334,3,True,100,3.0,0.0,0.0,0,True,100,3.25,0.25,8.333333333333334,3,True,100

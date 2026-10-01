@@ -362,7 +362,7 @@ def validate_integer_result(instance, result, tolerance=1e-6):
                 ):
                     errors.append("An alpha variable is not integral")
 
-    if formulation == 3:
+    if formulation in (3, "3_VI"):
         z = variables["z"]
         beta = variables["beta"]
         modeled_objective = sum(

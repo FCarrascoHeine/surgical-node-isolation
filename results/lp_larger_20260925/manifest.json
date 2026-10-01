@@ -1,0 +1,56 @@
+{
+  "date": "2026-09-25",
+  "formulations": [
+    3,
+    2,
+    "3_VI"
+  ],
+  "time_limit_seconds": 300,
+  "max_cuts": 100,
+  "max_cuts_per_round": 20,
+  "max_iterations": 100,
+  "cut_tolerance": 1e-06,
+  "solver_seed": 0,
+  "threads": 1,
+  "repetitions": 1,
+  "memory_limit_gb": 2,
+  "instance_patterns": [
+    "instances/200_*.json",
+    "instances/500_*_80_*.json"
+  ],
+  "input_sha256": {
+    "instances/100_568_200_5_1c.json": "58618d2f782c7ace4cadbb1ce196a57bd56290c818a55990ae284aef5cfd8aa3",
+    "instances/100_568_200_5_2c.json": "974c4530aade151ec729c392ca74b7ae6e550ba8d6d2d07bb49037fe989929fc",
+    "instances/100_568_20_5_1c.json": "f320baa6b93ca9bc970d972ec08734b841d6ae5ebb79ef7c839688de051dc8bb",
+    "instances/100_568_20_5_2c.json": "43ab8f63f7a15792e5642d745130741f22141c3ecde573f8027cdc87e023a089",
+    "instances/100_574_200_5_1c.json": "94848dea1fb9d3dbd1b87a8b88297abe48199961f6067c559ffb5ea04e016a9f",
+    "instances/100_574_20_5_1c.json": "160dbb320cd06b9f4b663696271c8711b87aedf2c0ccad5100d798450bcf7d5b",
+    "instances/200_1162_500_10_1c.json": "76a79f493bc317a6225ebbcfa229a72b0f956dd5eb57beeb657c0501e8810d35",
+    "instances/200_1162_500_10_1dir.json": "2e51ea8d4bf347a2cbe30aa801d6cf700fc6b0c53906ba7dd33ff17fe0adf676",
+    "instances/200_1162_50_10_1c.json": "ce459d4a67f0173538abdf3b7224824f1b8d8faf62051028bffcc35499cea588",
+    "instances/200_1162_50_10_1dir.json": "df87646f8736bad434c3cbaef1323f1e8c4fe34b0382778bee25a217cc138bbe",
+    "instances/200_1166_500_10_1c.json": "2a688daf7496c536309d2518729d87f3225243907b765b1ef517b0efdeb969f2",
+    "instances/200_1166_500_10_1dir.json": "acd69a23522a2d3bb608cd783b625bde7ef347ded03a05ab4eaeb373e5b3e57c",
+    "instances/200_1166_50_10_1c.json": "159814defc7cdc3b4750ba3588c197d36ccac22a62cfce22da94f66c9cf3b025",
+    "instances/200_1166_50_10_1dir.json": "905eb3322d752138eaf756818452b0638983c2872f47089ec706cdd55afaf675",
+    "instances/200_1172_500_10_1c.json": "7332b680f7085c5cfefb5fae8a98405accd0c715d3327022c3affdcf4cc65fc3",
+    "instances/200_1172_500_10_1dir.json": "a9ec0d28fc39158841fa90f521b4201dd29d06bbeb6096e35eb03a5d8442c290",
+    "instances/200_1172_50_10_1c.json": "baa9b937474eb1e0ceeae282a405f45b9fdbe7bb0341d09b41c34f21476b2772",
+    "instances/200_1172_50_10_1dir.json": "1017051c735d64e4ad7b1be45f14db353b797632471856fafae1378eecd41061",
+    "instances/500_2955_80_20_1c.json": "962bfeec58b784a71d1d3bec38ee193266f9a4b76d6e24ac8cf91a652ac8ddf4",
+    "instances/500_2955_80_20_1dir.json": "d0b7fad8162f0ed14201f79acc17b4f586effca6ca155c84a4931ff692a4f8f3",
+    "instances/500_2961_80_20_1c.json": "39d80926315156b9dd7a18f5e55e37ad513d896b2ff3bbe73b467199bc0da3d1",
+    "instances/500_2961_80_20_1dir.json": "83ac7810fd3770028adba22ffce3b9a3bc70c855fc9d3300231097bc737da384"
+  },
+  "source_sha256": {
+    "formulation_3_VI.py": "373ff94ea2e3aa65e1e45a74d49444f6af0076bc7b731e441be5eee3b0f40b91",
+    "formulations.py": "e72197c6771ef45fc7664e3dc4bc8928d9ad46e1d4999fe7d10b422e04656ffb",
+    "testing_valid_inequalities.py": "5483c28c082bf604e9a22eebde7f72b26c55bb8f4fbeccae1a29335bb0b1db77",
+    "plot_valid_inequalities.py": "26795a0a873fedbc855becf5763c44ffec531439111bf86dbbfeb0c9e8383ef0",
+    "run.py": "54c8480687b3da92395afc05f80737b9bdb140d9ecad0e022f632b9f0ef5bcff",
+    "experiment_supervisor.py": "22c4a030d89f1817844762eac56b943fabeb59b269d245ef1da9ff4ad9cee01e",
+    "validation.py": "65375301343a29c6a3b7e0a0fb3949a7e4d42a3c0c3c8418a7e48b699d132692",
+    "utils.py": "79359da9f6fe67809257ea1a841796d1c6e1a2cfb8b32f2553b7f13e81b691f9",
+    "time_budget.py": "3f9df12e595c17b7483c2ea4d1e4b6b4d5d11b979eb625799e908b261bc7f193"
+  }
+}
