@@ -334,6 +334,70 @@ def test_worker_creation_failure_is_a_reportable_failure(monkeypatch):
     client.close()
 
 
+def test_worker_error_waits_for_slow_post_kill_shutdown():
+    class SlowStoppingProcess:
+        def __init__(self):
+            self.alive = True
+            self.terminated = False
+            self.killed = False
+            self.closed = False
+            self.join_timeouts = []
+
+        def join(self, timeout=None):
+            self.join_timeouts.append(timeout)
+            # Process termination is asynchronous. Model a process that remains
+            # alive through bounded waits but is eventually reaped after kill.
+            if self.killed and timeout is None:
+                self.alive = False
+
+        def is_alive(self):
+            return self.alive
+
+        def terminate(self):
+            self.terminated = True
+
+        def kill(self):
+            self.killed = True
+
+        def close(self):
+            if self.alive:
+                raise ValueError("Cannot close a process while it is still running")
+            self.closed = True
+
+    class ErrorConnection:
+        def __init__(self):
+            self.closed = False
+
+        def send(self, _message):
+            pass
+
+        def poll(self, _timeout=None):
+            return True
+
+        def recv(self):
+            return {
+                "kind": "error", "phase": "build_solve", "status": "OUT_OF_MEMORY",
+                "error_message": "original worker failure",
+            }
+
+        def close(self):
+            self.closed = True
+
+    process = SlowStoppingProcess()
+    connection = ErrorConnection()
+    client = supervisor.WorkerClient(POLICY)
+    client.process = process
+    client.connection = connection
+
+    message = client.solve({"task": "large model"})
+
+    assert message["error_message"] == "original worker failure"
+    assert process.terminated and process.killed and process.closed
+    assert process.join_timeouts == [2, 2, None]
+    assert connection.closed
+    assert client.process is client.connection is None
+
+
 def test_cross_method_reference_and_relaxation_validation_survive_isolation():
     client = ScriptedClient([
         success(1, objective=10, bound=10), success(1, "relaxation", 5, 5),
