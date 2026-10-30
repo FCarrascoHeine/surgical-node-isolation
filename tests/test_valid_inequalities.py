@@ -88,14 +88,30 @@ def _callback_fixture(monkeypatch, **limits):
     values["z", 0, edges[1]] = 1.0
     settings = dict(max_cuts=10, max_cuts_per_round=10, max_iterations=10, tolerance=1e-6)
     settings.update(limits)
-    separator = vi.RootSeparator(variables, TimeBudget(), **settings)
-    model = SimpleNamespace(node_count=0, status=GRB.OPTIMAL, cuts=[], terminated=False)
+    budget = TimeBudget()
+    pool = vi.CutPool(variables, budget, **settings)
+    model = SimpleNamespace(node_count=0, status=GRB.OPTIMAL, cuts=[], terminated=False,
+                            Status=GRB.OPTIMAL, SolCount=0)
     model.cbGet = lambda code: model.node_count if code == GRB.Callback.MIPNODE_NODCNT else model.status
-    model.cbGetNodeRel = lambda requested: [values[v] for v in requested]
+    model.cbGetNodeRel = lambda requested: {key: values[v] for key, v in requested.items()}
     model.cbCut = model.cuts.append
-    model.terminate = lambda: setattr(model, "terminated", True)
+    def terminate():
+        model.terminated = True
+        model.Status = GRB.INTERRUPTED
+    model.terminate = terminate
     monkeypatch.setattr(vi, "_constraint", lambda variables, cut: cut)
-    return separator, model
+    monkeypatch.setattr(vi, "collect_model_result", lambda model, *args: {
+        "status": model.Status, "status_name": vi.STATUS_NAMES[model.Status],
+    })
+
+    def solve(events=(GRB.Callback.MIPNODE,)):
+        def optimize(callback):
+            for event in events:
+                callback(model, event)
+        model.optimize = optimize
+        return vi._solve_integer(model, variables, pool, budget)
+
+    return solve, pool, model
 
 
 @pytest.mark.parametrize("event,node,status", [
@@ -105,40 +121,61 @@ def _callback_fixture(monkeypatch, **limits):
     (GRB.Callback.MIPNODE, 0, GRB.INFEASIBLE),
 ])
 def test_callback_skips_every_event_except_optimal_root_nodes(monkeypatch, event, node, status):
-    separator, model = _callback_fixture(monkeypatch)
+    solve, pool, model = _callback_fixture(monkeypatch)
     model.node_count, model.status = node, status
     model.cbGetNodeRel = lambda requested: pytest.fail("read a non-root relaxation")
-    separator.callback(model, event)
+    result = solve([event])
     assert not model.cuts
-    assert not separator.keys
+    assert not pool.keys
+    assert result["convergence_reason"] == "no_root_separation"
 
 
 def test_callback_prioritizes_violation_and_obeys_total_cap(monkeypatch):
-    separator, model = _callback_fixture(monkeypatch, max_cuts=1)
-    for _ in range(3):
-        separator.callback(model, GRB.Callback.MIPNODE)
+    solve, pool, model = _callback_fixture(monkeypatch, max_cuts=1)
+    result = solve([GRB.Callback.MIPNODE] * 3)
     assert len(model.cuts) == 1
     assert model.cuts[0]["edge"] == (1, 2)
-    assert separator.reason == "cut_limit"
+    assert result["convergence_reason"] == "cut_limit"
 
 
 def test_callback_round_limit_and_duplicate_suppression(monkeypatch):
-    separator, model = _callback_fixture(monkeypatch, max_cuts_per_round=1, max_iterations=2)
-    for _ in range(4):
-        separator.callback(model, GRB.Callback.MIPNODE)
+    solve, pool, model = _callback_fixture(monkeypatch, max_cuts_per_round=1, max_iterations=2)
+    result = solve([GRB.Callback.MIPNODE] * 4)
     assert [cut["edge"] for cut in model.cuts] == [(1, 2), (0, 1)]
-    assert separator.cut_history == [1, 1]
-    assert separator.reason == "iteration_limit"
+    assert pool.cut_history == [1, 1]
+    assert result["convergence_reason"] == "iteration_limit"
 
 
-def test_callback_errors_are_retained_for_propagation(monkeypatch):
-    separator, model = _callback_fixture(monkeypatch)
+def test_callback_errors_are_propagated_after_termination(monkeypatch):
+    solve, pool, model = _callback_fixture(monkeypatch)
     def fail(_requested):
         raise RuntimeError("failed callback")
     model.cbGetNodeRel = fail
-    separator.callback(model, GRB.Callback.MIPNODE)
-    assert isinstance(separator.error, RuntimeError)
+    with pytest.raises(RuntimeError, match="failed callback"):
+        solve()
     assert model.terminated
+
+
+def test_callback_budget_expiration_reports_time_limit(monkeypatch):
+    solve, pool, model = _callback_fixture(monkeypatch)
+    def expire(*args, **kwargs):
+        raise time_budget.BudgetExpired
+    monkeypatch.setattr(vi, "separate_valid_inequalities", expire)
+    result = solve()
+    assert model.terminated
+    assert not model.cuts
+    assert result["status"] == GRB.TIME_LIMIT
+    assert result["status_name"] == "TIME_LIMIT"
+    assert result["convergence_reason"] == "time_limit"
+
+
+def test_repeated_violations_are_not_reported_as_convergence(monkeypatch):
+    solve, pool, model = _callback_fixture(monkeypatch)
+    result = solve([GRB.Callback.MIPNODE] * 2)
+    assert len(model.cuts) == 2
+    assert pool.cut_history == [2]
+    assert not pool.complete
+    assert result["convergence_reason"] == "repeated_violated_cuts"
 
 
 @pytest.mark.parametrize("options", [
@@ -200,6 +237,17 @@ def test_integer_solution_remains_valid(solver_env):
     assert validate_integer_result(SMALL_INSTANCE, result)["valid"]
 
 
+def test_lp_detects_convergence_after_the_last_allowed_batch(solver_env):
+    result = vi.solve_instance(SMALL_INSTANCE, relax=True, env=solver_env,
+                               max_cuts=3, max_cuts_per_round=3, max_iterations=1)
+    assert result["objective_value"] == pytest.approx(3.25)
+    assert result["cut_history"] == [3]
+    assert result["master_solves"] == 2
+    assert result["solution_type"] == "relaxation"
+    assert result["separation_complete"]
+    assert result["convergence_reason"] == "no_violated_cuts"
+
+
 @pytest.mark.parametrize("seed", [0, 1, 2])
 def test_complete_separation_matches_disaggregation_on_generated_instances(solver_env, seed):
     instance = generate_instance(num_nodes=5, num_edges=10, num_intruders=2,
@@ -222,12 +270,13 @@ def test_real_root_callback_adds_cuts(solver_env):
         model.Params.Heuristics = 0
         model.Params.Cuts = 0
         assert model.Params.PreCrush == 1
-        separator = vi.RootSeparator(variables, TimeBudget(), 10, 2, 10, 1e-6)
-        model.optimize(separator.callback)
-        assert separator.error is None
+        budget = TimeBudget()
+        pool = vi.CutPool(variables, budget, 10, 2, 10, 1e-6)
+        result = vi._solve_integer(model, variables, pool, budget)
         assert model.Status == GRB.OPTIMAL
         assert model.ObjVal == pytest.approx(4.0)
-        assert 0 < len(separator.keys) <= 10
+        assert result["objective_value"] == pytest.approx(4.0)
+        assert 0 < len(pool.keys) <= 10
     finally:
         model.dispose()
 

@@ -347,6 +347,11 @@ instance the three values are 3.00, 3.25, and 3.25, respectively.
 The general runner accepts `--formulations 3 2 3_VI --mode relaxation`.
 In Python, use `solve_instance(instance, "3_VI", relax=True, max_cuts=100)`.
 `build_formulation_3_VI` builds the base model; its dedicated solver adds cuts.
+In `formulation_3_VI.py`, `separate_valid_inequalities` finds the most violated
+subset on each edge, and `CutPool` selects new cuts under the configured limits.
+`_solve_relaxation` runs the solve/separate/add loop; `_solve_integer` submits
+cuts through a root-only callback. LP result collection separately preserves
+the last solution and strongest bound when a later solve is interrupted.
 
 Plot the experiment in separate c and dir panels:
 

@@ -1,4 +1,4 @@
-"""Selected subset inequalities for the aggregated formulation, at the root only."""
+"""Subset cuts for formulation 3: an LP cutting-plane loop or a root MIP callback."""
 
 import math
 import time
@@ -32,6 +32,8 @@ def separate_valid_inequalities(
 ):
     """Select K = {j: z[j,e] + x[e] - 1 > 0}, then rank violated cuts.
 
+    The disaggregated lower bounds give beta[e] >= sum_j max(0, x[e]+z[j,e]-1).
+    Selecting every positive term produces the most violated subset inequality.
     Empty and full subsets already occur in the aggregated model.
     Instance order breaks ties deterministically, without enumerating subsets.
     """
@@ -61,12 +63,11 @@ def _cut_key(cut):
     return cut["edge"], cut["journeyers"]
 
 
-class RootSeparator:
-    """Shared cut selection and counters for the LP loop and root MIP callback."""
+class CutPool:
+    """Select new cuts, enforce limits, and keep their history for either solver."""
 
     def __init__(self, variables, budget, max_cuts, max_cuts_per_round,
                  max_iterations, tolerance):
-        self.variables = variables
         self.edges = tuple(variables["x"])
         self.journeyers = tuple(dict.fromkeys(j for j, _ in variables["z"]))
         self.budget = budget
@@ -78,8 +79,6 @@ class RootSeparator:
         self.cut_history = []
         self.separation_time = 0.0
         self.complete = False
-        self.reason = None
-        self.error = None
 
     def limit_reason(self):
         if len(self.keys) >= self.max_cuts or self.max_cuts_per_round == 0:
@@ -89,6 +88,7 @@ class RootSeparator:
         return None
 
     def select(self, values):
+        """Return (cuts, stop_reason); an empty list need not mean convergence."""
         self.complete = False
         start = time.perf_counter()
         try:
@@ -100,51 +100,20 @@ class RootSeparator:
             self.separation_time += time.perf_counter() - start
         if not cuts:
             self.complete = True
-            self.reason = "no_violated_cuts"
-            return []
-        self.reason = self.limit_reason()
-        if self.reason is not None:
-            return []
+            return [], "no_violated_cuts"
+        # Check convergence before limits: the final allowed batch may suffice.
+        reason = self.limit_reason()
+        if reason is not None:
+            return [], reason
         new_cuts = [cut for cut in cuts if _cut_key(cut) not in self.keys]
         if not new_cuts:
-            self.reason = "repeated_violated_cuts"
-        return new_cuts[:min(self.max_cuts_per_round, self.max_cuts - len(self.keys))]
+            return [], "repeated_violated_cuts"
+        batch_size = min(self.max_cuts_per_round, self.max_cuts - len(self.keys))
+        return new_cuts[:batch_size], None
 
     def record(self, cuts):
         self.keys.update(_cut_key(cut) for cut in cuts)
         self.cut_history.append(len(cuts))
-
-    def callback(self, model, where):
-        # Node count stays zero throughout the root cut passes. Never separate
-        # MIPSOL or non-root MIPNODE events; these are optional user cuts.
-        if where != GRB.Callback.MIPNODE or self.error is not None:
-            return
-        try:
-            if model.cbGet(GRB.Callback.MIPNODE_NODCNT) != 0:
-                return
-            if model.cbGet(GRB.Callback.MIPNODE_STATUS) != GRB.OPTIMAL:
-                return
-            if self.limit_reason() is not None:
-                self.reason = self.limit_reason()
-                return
-            self.budget.check()
-            values = {
-                name: dict(zip(mapping, model.cbGetNodeRel(list(mapping.values()))))
-                for name, mapping in self.variables.items() if name in ("x", "z", "beta")
-            }
-            cuts = self.select(values)
-            self.budget.check()
-            for cut in cuts:
-                model.cbCut(_constraint(self.variables, cut))
-            if cuts:
-                self.record(cuts)
-        except BudgetExpired:
-            self.reason = "time_limit"
-            model.terminate()
-        except Exception as error:
-            # Gurobi otherwise logs and swallows Python callback exceptions.
-            self.error = error
-            model.terminate()
 
     def statistics(self):
         return {
@@ -153,63 +122,111 @@ class RootSeparator:
             "cut_history": list(self.cut_history),
             "separation_time": self.separation_time,
             "separation_complete": self.complete,
-            "convergence_reason": self.reason,
-            "max_cuts": self.max_cuts,
-            "max_cuts_per_round": self.max_cuts_per_round,
-            "max_iterations": self.max_iterations,
         }
 
 
-def _solve_relaxation(model, variables, separator, budget):
+def _solve_integer(model, variables, pool, budget):
+    """Submit user cuts only at optimal root relaxations during the MIP solve."""
+    reason = None
+    callback_error = None
+
+    def callback(model, where):
+        nonlocal reason, callback_error
+        # Node count stays zero throughout the root cut passes. Never separate
+        # MIPSOL or non-root MIPNODE events; these are optional user cuts.
+        if where != GRB.Callback.MIPNODE or callback_error is not None:
+            return
+        try:
+            if model.cbGet(GRB.Callback.MIPNODE_NODCNT) != 0:
+                return
+            if model.cbGet(GRB.Callback.MIPNODE_STATUS) != GRB.OPTIMAL:
+                return
+            reason = pool.limit_reason()
+            if reason is not None:
+                return
+            budget.check()
+            values = {
+                name: model.cbGetNodeRel(variables[name])
+                for name in ("x", "z", "beta")
+            }
+            cuts, reason = pool.select(values)
+            budget.check()
+            for cut in cuts:
+                model.cbCut(_constraint(variables, cut))
+            if cuts:
+                pool.record(cuts)
+        except BudgetExpired:
+            reason = "time_limit"
+            model.terminate()
+        except Exception as error:
+            # Gurobi otherwise logs and swallows Python callback exceptions.
+            callback_error = error
+            model.terminate()
+
+    budget.apply_to(model)
+    model.optimize(callback)
+    if callback_error is not None:
+        raise callback_error
+    result = collect_model_result(model, "3_VI", False)
+    if model.SolCount:
+        result["variables"] = variable_values(variables)
+    if reason == "time_limit" and model.Status == GRB.INTERRUPTED:
+        result.update(status=GRB.TIME_LIMIT, status_name="TIME_LIMIT")
+    result["convergence_reason"] = reason or "no_root_separation"
+    return result
+
+
+def _collect_lp_solve(model, variables, previous):
+    """Accumulate work and retain the last solution and strongest known bound."""
+    result = collect_model_result(model, "3_VI", True)
+    result["master_solves"] = previous["master_solves"] + 1
+    result["solver_runtime"] = previous["solver_runtime"] + model.Runtime
+    result["simplex_iterations"] = previous["simplex_iterations"] + model.IterCount
+    result["objective_history"] = previous["objective_history"]
+    if model.Status == GRB.OPTIMAL:
+        result["objective_history"].append(result["objective_value"])
+    if previous["dual_bound"] is not None:
+        bound = result["dual_bound"]
+        result["dual_bound"] = (previous["dual_bound"] if bound is None
+                                else max(previous["dual_bound"], bound))
+    if result["has_solution"]:
+        result["variables"] = variable_values(variables)
+    elif previous["has_solution"]:
+        for name in ("objective_value", "variables", "has_solution", "solution_type"):
+            result[name] = previous[name]
+    return result
+
+
+def _solve_relaxation(model, variables, pool, budget):
+    """Solve, separate, and add cuts; always solve again after adding a batch."""
     result = empty_model_result("3_VI", True, model)
-    snapshot = None
-    best_bound = None
-    pending_cuts = False
-    solver_runtime = 0.0
-    master_solves = 0
-    simplex_iterations = 0.0
-    objective_history = []
+    result["objective_history"] = []
     try:
         while True:
             budget.apply_to(model)
             model.optimize()
-            master_solves += 1
-            solver_runtime += model.Runtime
-            simplex_iterations += model.IterCount
-            result = collect_model_result(model, "3_VI", True)
-            bound = result["dual_bound"]
-            if bound is not None:
-                best_bound = bound if best_bound is None else max(best_bound, bound)
-            if result["has_solution"]:
-                snapshot = (result["objective_value"], variable_values(variables))
-                pending_cuts = False
+            result = _collect_lp_solve(model, variables, result)
             if model.Status != GRB.OPTIMAL:
-                separator.reason = STATUS_NAMES.get(model.Status, "solver_stopped").lower()
+                reason = STATUS_NAMES.get(model.Status, "solver_stopped").lower()
                 break
-            objective_history.append(result["objective_value"])
-            cuts = separator.select(snapshot[1])
+            cuts, reason = pool.select(result["variables"])
             if not cuts:
                 break
             budget.check()
-            for position, cut in enumerate(cuts, start=len(separator.keys)):
+            for position, cut in enumerate(cuts, start=len(pool.keys)):
                 model.addConstr(_constraint(variables, cut), name=f"subset_VI[{position}]")
-            separator.record(cuts)
-            pending_cuts = True
+            pool.record(cuts)
+            # This saved solution predates the new cuts until a solve replaces it.
+            result["solution_type"] = "restricted_master"
             model.update()
     except BudgetExpired:
         result.update(status=GRB.TIME_LIMIT, status_name="TIME_LIMIT")
-        separator.reason = "time_limit"
-    if snapshot is not None:
-        result.update(
-            objective_value=snapshot[0], variables=snapshot[1], has_solution=True,
-            solution_type="restricted_master" if pending_cuts else "relaxation",
-        )
+        reason = "time_limit"
     result.update(
-        dual_bound=best_bound, solver_runtime=solver_runtime, master_solves=master_solves,
-        simplex_iterations=simplex_iterations, objective_history=objective_history,
+        convergence_reason=reason,
         num_constraints=model.NumConstrs, num_linear_constraints=model.NumConstrs,
     )
-    if result["status"] != GRB.OPTIMAL or pending_cuts:
+    if result["status"] != GRB.OPTIMAL or result["solution_type"] == "restricted_master":
         result["gap"] = None
     return result
 
@@ -230,45 +247,31 @@ def solve_instance(
     validate_cut_limits(max_cuts, max_cuts_per_round, max_iterations, tolerance)
     budget = TimeBudget(time_limit)
     model = None
-    separator = None
+    pool = None
     try:
-        try:
-            budget.check()
-            model, variables = build_formulation_3_VI(
-                instance, relax=relax, time_limit=budget.remaining(),
-                output_flag=output_flag, solver_seed=solver_seed, threads=threads, env=env,
-            )
-            separator = RootSeparator(
-                variables, budget, max_cuts, max_cuts_per_round, max_iterations, tolerance,
-            )
-            if relax:
-                result = _solve_relaxation(model, variables, separator, budget)
-            else:
-                budget.apply_to(model)
-                model.optimize(separator.callback)
-                if separator.error is not None:
-                    raise separator.error
-                result = collect_model_result(model, "3_VI", False)
-                if model.SolCount:
-                    result["variables"] = variable_values(variables)
-                if separator.reason == "time_limit" and model.Status == GRB.INTERRUPTED:
-                    result.update(status=GRB.TIME_LIMIT, status_name="TIME_LIMIT")
-                if separator.reason is None:
-                    separator.reason = "no_root_separation"
-        except BudgetExpired:
-            result = empty_model_result("3_VI", relax, model)
-            if separator is not None:
-                separator.reason = "time_limit"
-        result.update(
-            max_cuts=max_cuts, max_cuts_per_round=max_cuts_per_round,
-            max_iterations=max_iterations, cut_tolerance=tolerance,
+        budget.check()
+        model, variables = build_formulation_3_VI(
+            instance, relax=relax, time_limit=budget.remaining(),
+            output_flag=output_flag, solver_seed=solver_seed, threads=threads, env=env,
         )
-        if separator is not None:
-            result.update(separator.statistics())
+        pool = CutPool(
+            variables, budget, max_cuts, max_cuts_per_round, max_iterations, tolerance,
+        )
+        if relax:
+            result = _solve_relaxation(model, variables, pool, budget)
         else:
-            result["convergence_reason"] = "time_limit"
-        result["runtime"] = budget.elapsed()
-        return result
+            result = _solve_integer(model, variables, pool, budget)
+    except BudgetExpired:
+        result = empty_model_result("3_VI", relax, model)
+        result["convergence_reason"] = "time_limit"
     finally:
+        elapsed = budget.elapsed()
         if model is not None:
             model.dispose()
+    result.update(
+        max_cuts=max_cuts, max_cuts_per_round=max_cuts_per_round,
+        max_iterations=max_iterations, cut_tolerance=tolerance, runtime=elapsed,
+    )
+    if pool is not None:
+        result.update(pool.statistics())
+    return result

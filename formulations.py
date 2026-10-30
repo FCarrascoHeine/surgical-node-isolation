@@ -253,12 +253,13 @@ def build_formulation_3(
         return model, {"x": x, "y": y, "z": z, "beta": beta}
 
 
-def build_formulation_3_VI(instance, **kwargs):
-    """Build the aggregated model; solve_instance adds selected root inequalities."""
-    model, variables = build_formulation_3(instance, **kwargs)
+def build_formulation_3_VI(instance, *, relax=False, **kwargs):
+    """Build formulation 3; the VI solver adds cuts during LP rounds or at the MIP root."""
+    model, variables = build_formulation_3(instance, relax=relax, **kwargs)
     with dispose_on_error(model):
         model.ModelName = "SNI_formulation_3_VI"
-        if not kwargs.get("relax", False):
+        if not relax:
+            # Allow callback cuts in original variables to survive presolve.
             model.Params.PreCrush = 1
         model.update()
         return model, variables
