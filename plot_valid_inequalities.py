@@ -31,8 +31,8 @@ def read_comparisons(filename):
     comparisons, skipped = [], []
     for key, models in groups.items():
         name, repetition, seed, threads, time_limit = key
-        identity = dict(instance=name, family=instance_family(name), repetition=repetition,
-                        solver_seed=seed, threads=threads, time_limit_seconds=time_limit)
+        identity = {"instance": name, "family": instance_family(name), "repetition": repetition,
+                        "solver_seed": seed, "threads": threads, "time_limit_seconds": time_limit}
         values = {}
         for formulation in ("3", "2", "3_VI"):
             row = models.get(formulation, {})

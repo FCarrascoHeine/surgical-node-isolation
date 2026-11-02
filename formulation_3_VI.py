@@ -8,7 +8,12 @@ from gurobipy import GRB, quicksum
 
 from formulations import build_formulation_3_VI
 from time_budget import BudgetExpired, TimeBudget
-from utils import STATUS_NAMES, collect_model_result, empty_model_result, variable_values
+from utils import (
+    STATUS_NAMES,
+    collect_model_result,
+    empty_model_result,
+    variable_values,
+)
 
 DEFAULT_MAX_CUTS = 100
 DEFAULT_MAX_CUTS_PER_ROUND = 20
@@ -158,7 +163,7 @@ def _solve_integer(model, variables, pool, budget):
         except BudgetExpired:
             reason = "time_limit"
             model.terminate()
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001
             # Gurobi otherwise logs and swallows Python callback exceptions.
             callback_error = error
             model.terminate()
