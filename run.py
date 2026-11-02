@@ -6,8 +6,8 @@ from pathlib import Path
 from gurobipy import GRB
 
 from branch_and_cut import separate_solution
-from formulations import BUILDERS, normalize_formulation, solve_instance
 from formulation_3_VI import DEFAULT_MAX_CUTS, DEFAULT_MAX_CUTS_PER_ROUND
+from formulations import BUILDERS, normalize_formulation, solve_instance
 from heuristics import (
     HEURISTIC_NAMES,
     solve_single_intruder_heuristic,
