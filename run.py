@@ -23,7 +23,7 @@ from validation import (
     validate_relaxation_bound,
 )
 
-DEFAULT_FORMULATIONS = (1, 2, 3, 4)
+DEFAULT_FORMULATIONS = (1, 2, 3)
 AVAILABLE_FORMULATIONS = tuple(BUILDERS)
 DEFAULT_HEURISTICS = ()
 MAX_FIXED_RESULT_WIDTH = 14
