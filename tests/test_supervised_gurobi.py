@@ -8,7 +8,7 @@ import pytest
 
 import experiment_supervisor as supervisor
 from branch_and_cut import solve_journeyer_dual
-from formulations import build_model, solve_instance
+from formulations import BUILDERS, build_model, solve_instance
 from heuristics import _solve_standard_subproblem
 from instances import load_instance, prepare_instance
 from run import run_comparison
@@ -34,16 +34,23 @@ def test_all_methods_and_modes_match_direct_execution_with_reused_worker(env, tm
         edge["transit_time"] *= 2
         edge["inspection_time"] *= 2
     instances = [instance, scaled]
+    formulations = tuple(BUILDERS)
     direct = {
-        item["name"]: run_comparison(item, heuristics=("ah", "ash"), env=env, time_limit=30)
+        item["name"]: run_comparison(
+            item, formulations=formulations, heuristics=("ah", "ash"), env=env,
+            time_limit=30,
+        )
         for item in instances
     }
     filename = tmp_path / "supervised.csv"
     supervised = supervisor.run_supervised_experiments(
-        instances, repetitions=2, heuristics=("ah", "ash"), time_limit=30,
-        memory_limit_gb=1, csv_filename=filename,
+        instances, repetitions=2, formulations=formulations,
+        heuristics=("ah", "ash"), time_limit=30, memory_limit_gb=1,
+        csv_filename=filename,
     )
-    assert len(supervised["rows"]) == 40
+    rows_per_repetition = 2 * len(formulations) + 2
+    expected_rows = len(instances) * 2 * rows_per_repetition
+    assert len(supervised["rows"]) == expected_rows
     for row in supervised["rows"]:
         expected = next(r for r in direct[row["instance"]]["rows"]
                         if (r["method"], r["mode"]) == (row["method"], row["mode"]))
@@ -62,11 +69,11 @@ def test_all_methods_and_modes_match_direct_execution_with_reused_worker(env, tm
         assert row["time_limit_seconds"] == expected["time_limit_seconds"] == 30
     with filename.open(newline="") as file:
         saved = list(csv.DictReader(file))
-    assert len(saved) == 40
+    assert len(saved) == expected_rows
     assert all(row["time_limit_seconds"] == "30.0" for row in saved)
 
 
-@pytest.mark.parametrize("formulation", [1, 2, 3, 4])
+@pytest.mark.parametrize("formulation", [1, 2, 3, "3_VI", 4])
 def test_models_inherit_environment_memory_limit(env, formulation):
     env.setParam("SoftMemLimit", 1)
     try:
@@ -85,6 +92,9 @@ def test_real_soft_memory_stop_and_next_model_still_solve(env):
         result = solve_instance("instances/small_instance.json", 2, env=env)
         assert result["status_name"] == "MEM_LIMIT"
         assert not result["has_solution"]
+        vi_result = solve_instance("instances/small_instance.json", "3_VI", env=env)
+        assert vi_result["status_name"] == "MEM_LIMIT"
+        assert not vi_result["has_solution"]
         subproblem = _solve_standard_subproblem(
             prepare_instance("instances/small_instance.json"), set(), env=env,
             time_limit=None, output_flag=0, solver_seed=0, threads=1,
@@ -100,6 +110,9 @@ def test_real_soft_memory_stop_and_next_model_still_solve(env):
     result = solve_instance("instances/small_instance.json", 2, env=env)
     assert result["status_name"] == "OPTIMAL"
     assert result["objective_value"] == pytest.approx(4)
+    vi_result = solve_instance("instances/small_instance.json", "3_VI", env=env)
+    assert vi_result["status_name"] == "OPTIMAL"
+    assert vi_result["objective_value"] == pytest.approx(4)
 
 
 def test_supervised_memory_limit_then_graph_heuristic_continues(env, tmp_path):

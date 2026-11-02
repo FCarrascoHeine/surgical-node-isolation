@@ -66,7 +66,7 @@ are solved only once.
 | --- | --- | --- |
 | `INSTANCE [INSTANCE ...]` | Required | One or more JSON files, directories, or quoted patterns such as `"instances/*.json"`. Directory searches are not recursive. |
 | `--csv PATH` | `results/results.csv` | Destination of the combined result table. Parent directories are created automatically. The file is atomically checkpointed after every completed result row, so completed formulations survive a later failure in the same instance. An existing file at this path is overwritten, not appended to. |
-| `--formulations {1,2,3,3_VI,4} [...]` | `1 2 3 4` | Formulations to solve. `3_VI` adds selected lower subset inequalities to formulation 3. |
+| `--formulations {1,2,3,3_VI,4} [...]` | `1 2 3` | Formulations to solve. `3_VI` adds selected lower subset inequalities to formulation 3. |
 | `--heuristics {ah,ash} [...]` | None | Heuristics to run. `ah` is the general heuristic and `ash` is the single-intruder minimum-cut heuristic. |
 | `--all-methods` | Disabled | Runs formulations 1--4, `3_VI`, and both heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |

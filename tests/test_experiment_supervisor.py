@@ -8,6 +8,7 @@ from gurobipy import GRB, GurobiError
 
 import experiment_supervisor as supervisor
 import memory_limits
+from formulations import BUILDERS
 from run import _row_from_result, print_results
 from utils import empty_model_result
 
@@ -79,11 +80,12 @@ def test_worker_failure_checkpoints_and_continues_every_scheduled_task(tmp_path,
     result = supervisor.run_supervised_experiments(
         [{"name": "first", "failure": failure}, {"name": "second"}],
         repetitions=2, csv_filename=filename, memory_policy=POLICY,
-        formulations=(1, 2, 3, 4), heuristics=("ah", "ash"), time_limit=600,
+        formulations=tuple(BUILDERS), heuristics=("ah", "ash"), time_limit=600,
         _client_factory=fake_client,
     )
     rows = result["rows"]
-    assert len(rows) == 40
+    expected_rows = 2 * 2 * (2 * len(BUILDERS) + 2)
+    assert len(rows) == expected_rows
     failures = [row for row in rows if row["status"] != "TIME_LIMIT"]
     assert len(failures) == 1
     failed = failures[0]

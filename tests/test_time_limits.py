@@ -182,7 +182,8 @@ def test_strict_runner_writes_all_zero_budget_rows_without_validation_failure(tm
         [SMALL_INSTANCE], repetitions=2, csv_filename=output,
         time_limit=0, heuristics=("ah", "ash"),
     )
-    assert len(experiment["rows"]) == 20
+    expected_rows = 2 * (2 * len(run.DEFAULT_FORMULATIONS) + 2)
+    assert len(experiment["rows"]) == expected_rows
     for row in experiment["rows"]:
         assert row["status"] == "TIME_LIMIT"
         assert not row["has_solution"]
@@ -191,7 +192,7 @@ def test_strict_runner_writes_all_zero_budget_rows_without_validation_failure(tm
         assert row["validation_passed"] is None
     with output.open(newline="", encoding="utf-8") as file:
         saved = list(csv.DictReader(file))
-    assert len(saved) == 20
+    assert len(saved) == expected_rows
     assert all(row["objective_value"] == "" for row in saved)
     assert all(row["has_solution"] == "False" for row in saved)
     assert all(row["time_limit_seconds"] == "0.0" for row in saved)
@@ -220,19 +221,21 @@ def test_csv_records_configured_limit_for_every_method_and_mode(
                         lambda instance, **kwargs: solve(instance, method="ash", **kwargs))
     filename = tmp_path / "limits.csv"
     rows = run.run_experiments(
-        [SMALL_INSTANCE], heuristics=("ah", "ash"),
+        [SMALL_INSTANCE], formulations=run.AVAILABLE_FORMULATIONS,
+        heuristics=("ah", "ash"),
         time_limit=limit, csv_filename=filename,
     )["rows"]
-    assert {(row["method"], row["mode"]) for row in rows} == {
+    expected_methods = {
         (f"f{formulation}", mode)
-        for formulation in (1, 2, 3, 4) for mode in ("integer", "relaxation")
+        for formulation in run.AVAILABLE_FORMULATIONS for mode in ("integer", "relaxation")
     } | {("ah", "heuristic"), ("ash", "heuristic")}
-    assert calls == [limit] * 10
+    assert {(row["method"], row["mode"]) for row in rows} == expected_methods
+    assert calls == [limit] * len(expected_methods)
     assert all(row["time_limit_seconds"] == expected for row in rows)
     assert all(row["runtime"] == 0.125 for row in rows)
     with filename.open(newline="", encoding="utf-8") as file:
         saved = list(csv.DictReader(file))
-    assert len(saved) == 10
+    assert len(saved) == len(expected_methods)
     assert all(row["time_limit_seconds"] == ("" if expected is None else str(expected))
                for row in saved)
 

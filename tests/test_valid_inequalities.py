@@ -3,14 +3,18 @@
 import csv
 import itertools
 import random
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 from gurobipy import GRB, GurobiError
 
+import experiment_supervisor
 import formulation_3_VI as vi
 import formulations
+import memory_limits
+import run as run_module
 import testing_valid_inequalities as comparison
 import time_budget
 from instances import generate_instance, prepare_instance
@@ -146,12 +150,17 @@ def test_callback_round_limit_and_duplicate_suppression(monkeypatch):
     assert result["convergence_reason"] == "iteration_limit"
 
 
-def test_callback_errors_are_propagated_after_termination(monkeypatch):
+@pytest.mark.parametrize("error", [
+    RuntimeError("failed callback"),
+    MemoryError("failed callback"),
+    GurobiError(GRB.Error.OUT_OF_MEMORY, "failed callback"),
+])
+def test_callback_errors_are_propagated_after_termination(monkeypatch, error):
     solve, pool, model = _callback_fixture(monkeypatch)
     def fail(_requested):
-        raise RuntimeError("failed callback")
+        raise error
     model.cbGetNodeRel = fail
-    with pytest.raises(RuntimeError, match="failed callback"):
+    with pytest.raises(type(error), match="failed callback"):
         solve()
     assert model.terminated
 
@@ -237,6 +246,21 @@ def test_integer_solution_remains_valid(solver_env):
     assert validate_integer_result(SMALL_INSTANCE, result)["valid"]
 
 
+@pytest.mark.parametrize("seed", [3, 4, 5])
+def test_integer_optimum_matches_all_formulations_on_generated_instances(solver_env, seed):
+    instance = generate_instance(num_nodes=5, num_edges=10, num_intruders=2,
+                                 num_journeyers=4, seed=seed)
+    results = {
+        formulation: formulations.solve_instance(instance, formulation, env=solver_env)
+        for formulation in (1, 2, 3, "3_VI", 4)
+    }
+    reference = results[1]["objective_value"]
+    for result in results.values():
+        assert result["status_name"] == "OPTIMAL"
+        assert result["objective_value"] == pytest.approx(reference, abs=1e-6)
+        assert validate_integer_result(instance, result)["valid"]
+
+
 def test_lp_detects_convergence_after_the_last_allowed_batch(solver_env):
     result = vi.solve_instance(SMALL_INSTANCE, relax=True, env=solver_env,
                                max_cuts=3, max_cuts_per_round=3, max_iterations=1)
@@ -311,6 +335,33 @@ def test_comparison_cli_schedules_three_lps(monkeypatch, tmp_path):
                      "--csv", str(tmp_path / "comparison.csv")])
     assert calls[0][1]["formulations"] == (3, 2, "3_VI")
     assert calls[0][1]["mode"] == "relaxation"
+    assert calls[0][1]["max_cuts"] == 7
+    assert calls[0][1]["max_cuts_per_round"] == 2
+
+
+def test_general_cli_schedules_vi_in_both_modes(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_run(paths, **kwargs):
+        calls.append((paths, kwargs))
+        return {"rows": []}
+
+    monkeypatch.setattr(experiment_supervisor, "run_supervised_experiments", fake_run)
+    monkeypatch.setattr(memory_limits, "resolve_memory_limit", lambda value: {
+        "memory_limit_gb": None, "memory_limit_source": "disabled",
+    })
+    monkeypatch.setattr(run_module, "print_results", lambda rows: None)
+    output = tmp_path / "both.csv"
+    monkeypatch.setattr(sys, "argv", [
+        "run.py", str(SMALL_INSTANCE), "--formulations", "3_VI", "--mode", "both",
+        "--max-cuts", "7", "--max-cuts-per-round", "2", "--memory-limit-gb", "none",
+        "--csv", str(output),
+    ])
+    run_module.main()
+    assert calls[0][0] == [SMALL_INSTANCE.resolve()]
+    assert calls[0][1]["formulations"] == ["3_VI"]
+    assert calls[0][1]["heuristics"] == []
+    assert calls[0][1]["mode"] == "both"
     assert calls[0][1]["max_cuts"] == 7
     assert calls[0][1]["max_cuts_per_round"] == 2
 

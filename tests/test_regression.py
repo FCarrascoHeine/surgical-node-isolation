@@ -202,6 +202,10 @@ def test_relaxation_values_are_stable(relaxation_results):
         )
 
 
+def test_default_formulations_are_one_through_three():
+    assert run_module.DEFAULT_FORMULATIONS == (1, 2, 3)
+
+
 def test_unified_runner_writes_reproducible_metadata(
     solver_env, workspace_tmp_dir
 ):
@@ -213,7 +217,7 @@ def test_unified_runner_writes_reproducible_metadata(
         mode="both",
         env=solver_env,
     )
-    assert len(experiment["rows"]) == 8
+    assert len(experiment["rows"]) == 2 * len(run_module.DEFAULT_FORMULATIONS)
     assert output.exists()
     assert all(row["instance"] == "small_instance" for row in experiment["rows"])
     assert all(row["validation_passed"] for row in experiment["rows"])
