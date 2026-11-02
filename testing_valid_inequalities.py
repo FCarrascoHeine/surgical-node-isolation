@@ -5,7 +5,9 @@ from pathlib import Path
 
 from experiment_supervisor import run_supervised_experiments
 from formulation_3_VI import (
-    DEFAULT_MAX_CUTS, DEFAULT_MAX_CUTS_PER_ROUND, DEFAULT_MAX_ITERATIONS,
+    DEFAULT_MAX_CUTS,
+    DEFAULT_MAX_CUTS_PER_ROUND,
+    DEFAULT_MAX_ITERATIONS,
     validate_cut_limits,
 )
 from memory_limits import resolve_memory_limit

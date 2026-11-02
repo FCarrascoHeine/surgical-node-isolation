@@ -3,10 +3,10 @@ import math
 import platform
 import sys
 import tempfile
+import tomllib
 from contextlib import contextmanager
 from pathlib import Path
 
-import tomllib
 from gurobipy import GRB, Env, GurobiError, gurobi
 
 STATUS_NAMES = {
