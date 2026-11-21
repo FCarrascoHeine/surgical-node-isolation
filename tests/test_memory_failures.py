@@ -135,8 +135,20 @@ def test_relaxation_memory_stop_keeps_bound_but_not_full_feasibility_claim(monke
     assert model.disposed
 
 
+@pytest.mark.parametrize(
+    ("solve_name", "subproblem_name"),
+    [
+        ("solve_standard_heuristic", "_solve_standard_subproblem"),
+        (
+            "solve_relaxed_standard_heuristic",
+            "_solve_relaxed_standard_subproblem",
+        ),
+    ],
+)
 @pytest.mark.parametrize("last_candidate", [None, {(0, 1), (0, 2)}])
-def test_ah_memory_limit_returns_best_even_when_terminal_requested(monkeypatch, last_candidate):
+def test_standard_family_memory_limit_returns_best_even_when_terminal_requested(
+    monkeypatch, last_candidate, solve_name, subproblem_name
+):
     outcomes = iter([({(1, 3), (2, 3)}, "OPTIMAL"), (last_candidate, "MEM_LIMIT")])
 
     def subproblem(*args, **kwargs):
@@ -147,9 +159,9 @@ def test_ah_memory_limit_returns_best_even_when_terminal_requested(monkeypatch, 
             "nodes_explored": 0.0, "simplex_iterations": 0.0,
         }
 
-    monkeypatch.setattr(heuristics, "_solve_standard_subproblem", subproblem)
+    monkeypatch.setattr(heuristics, subproblem_name, subproblem)
     instance = load_instance("instances/small_instance.json")
-    result = heuristics.solve_standard_heuristic(instance, return_best=False)
+    result = getattr(heuristics, solve_name)(instance, return_best=False)
     assert result["status_name"] == "MEM_LIMIT"
     assert result["objective_value"] == 4
     assert result["returned_best_candidate"]
@@ -157,13 +169,25 @@ def test_ah_memory_limit_returns_best_even_when_terminal_requested(monkeypatch, 
     assert evaluate_allocation(instance, result["variables"]["x"])["valid"]
 
 
-def test_ah_memory_limit_without_candidate_is_not_infeasibility(monkeypatch):
-    monkeypatch.setattr(heuristics, "_solve_standard_subproblem", lambda *args, **kwargs: {
+@pytest.mark.parametrize(
+    ("solve_name", "subproblem_name"),
+    [
+        ("solve_standard_heuristic", "_solve_standard_subproblem"),
+        (
+            "solve_relaxed_standard_heuristic",
+            "_solve_relaxed_standard_subproblem",
+        ),
+    ],
+)
+def test_standard_family_memory_limit_without_candidate_is_not_infeasibility(
+    monkeypatch, solve_name, subproblem_name
+):
+    monkeypatch.setattr(heuristics, subproblem_name, lambda *args, **kwargs: {
         "status_name": "MEM_LIMIT", "selected": None, "objective_value": None,
         "runtime": 0.0, "num_variables": 0, "num_constraints": 0,
         "nodes_explored": 0.0, "simplex_iterations": 0.0,
     })
-    result = heuristics.solve_standard_heuristic("instances/small_instance.json")
+    result = getattr(heuristics, solve_name)("instances/small_instance.json")
     assert result["status_name"] == "MEM_LIMIT"
     assert not result["has_solution"]
     assert not result["subproblems_optimal"]

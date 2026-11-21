@@ -9,6 +9,7 @@ import heuristics as heuristics_module
 from graph_algorithms import directed_min_cut
 from heuristics import (
     solve_heuristic,
+    solve_relaxed_standard_heuristic,
     solve_single_intruder_heuristic,
     solve_standard_heuristic,
 )
@@ -164,34 +165,50 @@ def test_single_intruder_heuristic_reports_infeasible_weighted_budget():
     assert result["minimum_cut_solves"] == 1
 
 
-def test_standard_heuristic_reproduces_hand_checked_optimum(solver_env):
+@pytest.mark.parametrize(
+    ("solve", "method"),
+    [
+        (solve_standard_heuristic, "ah"),
+        (solve_relaxed_standard_heuristic, "ahr"),
+    ],
+)
+def test_standard_family_reproduces_hand_checked_optimum(
+    solver_env, solve, method
+):
     instance = load_instance(SMALL_INSTANCE)
-    result = solve_standard_heuristic(instance, env=solver_env)
+    result = solve(instance, env=solver_env)
 
     _assert_valid_result(instance, result)
+    assert result["method"] == method
     assert result["selected_edges"] == ((1, 3), (2, 3))
     assert result["objective_value"] == pytest.approx(4.0, abs=1e-9)
     assert result["convergence_reason"] == "stable_allocation"
     assert result["subproblems_optimal"]
 
 
-def test_standard_heuristic_handles_multiple_intruders(solver_env):
+@pytest.mark.parametrize(
+    "solve", [solve_standard_heuristic, solve_relaxed_standard_heuristic]
+)
+def test_standard_family_handles_multiple_intruders(solver_env, solve):
     instance = copy.deepcopy(load_instance(SMALL_INSTANCE))
     instance.pop("known_optimum")
     instance.pop("known_optimal_checkpoints")
     instance["intruders"].append({"id": 1, "source": 1, "target": 3})
 
-    result = solve_standard_heuristic(instance, env=solver_env)
+    result = solve(instance, env=solver_env)
 
     _assert_valid_result(instance, result)
     assert result["selected_edges"] == ((1, 3), (2, 3))
     assert result["auxiliary_solves"] == result["heuristic_iterations"]
 
 
-def test_standard_subproblems_use_weighted_budget_and_path_support(solver_env):
+@pytest.mark.parametrize(
+    "solve", [solve_standard_heuristic, solve_relaxed_standard_heuristic]
+)
+def test_standard_family_uses_weighted_budget_and_path_support(solver_env, solve):
     instance = _weighted_small_instance()
     data = prepare_instance(instance)
-    result = solve_standard_heuristic(instance, env=solver_env)
+    result = solve(instance, env=solver_env)
 
     _assert_valid_result(instance, result)
     assert result["selected_edges"] == ((0, 1), (0, 2))
@@ -263,16 +280,25 @@ def test_auto_dispatch_selects_paper_single_intruder_method():
     assert result["method"] == "ash"
 
 
-def test_unified_runner_compares_formulation_and_both_heuristics(solver_env):
+def test_explicit_dispatch_selects_relaxed_standard_method(solver_env):
+    result = solve_heuristic(SMALL_INSTANCE, method="ahr", env=solver_env)
+
+    _assert_valid_result(load_instance(SMALL_INSTANCE), result)
+    assert result["method"] == "ahr"
+
+
+def test_unified_runner_compares_formulation_and_all_heuristics(solver_env):
     comparison = run_comparison(
         SMALL_INSTANCE,
         mode="integer",
         formulations=(2,),
-        heuristics=("ah", "ash"),
+        heuristics=("ah", "ahr", "ash"),
         env=solver_env,
     )
 
-    assert [row["method"] for row in comparison["rows"]] == ["f2", "ah", "ash"]
+    assert [row["method"] for row in comparison["rows"]] == [
+        "f2", "ah", "ahr", "ash"
+    ]
     assert {row["mode"] for row in comparison["rows"]} == {
         "integer",
         "heuristic",
@@ -282,6 +308,7 @@ def test_unified_runner_compares_formulation_and_both_heuristics(solver_env):
     assert all(row["reference_objective"] == pytest.approx(4.0) for row in comparison["rows"])
     assert all(row["reference_gap"] == pytest.approx(0.0) for row in comparison["rows"])
     assert ("ah", "heuristic") in comparison["results"]
+    assert ("ahr", "heuristic") in comparison["results"]
     assert ("ash", "heuristic") in comparison["results"]
 
 

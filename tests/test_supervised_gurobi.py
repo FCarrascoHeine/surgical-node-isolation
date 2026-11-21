@@ -37,7 +37,8 @@ def test_all_methods_and_modes_match_direct_execution_with_reused_worker(env, tm
     formulations = tuple(BUILDERS)
     direct = {
         item["name"]: run_comparison(
-            item, formulations=formulations, heuristics=("ah", "ash"), env=env,
+            item, formulations=formulations, heuristics=("ah", "ahr", "ash"),
+            env=env,
             time_limit=30,
         )
         for item in instances
@@ -45,10 +46,10 @@ def test_all_methods_and_modes_match_direct_execution_with_reused_worker(env, tm
     filename = tmp_path / "supervised.csv"
     supervised = supervisor.run_supervised_experiments(
         instances, repetitions=2, formulations=formulations,
-        heuristics=("ah", "ash"), time_limit=30, memory_limit_gb=1,
+        heuristics=("ah", "ahr", "ash"), time_limit=30, memory_limit_gb=1,
         csv_filename=filename,
     )
-    rows_per_repetition = 2 * len(formulations) + 2
+    rows_per_repetition = 2 * len(formulations) + 3
     expected_rows = len(instances) * 2 * rows_per_repetition
     assert len(supervised["rows"]) == expected_rows
     for row in supervised["rows"]:
@@ -119,9 +120,12 @@ def test_supervised_memory_limit_then_graph_heuristic_continues(env, tmp_path):
     # A deliberately tiny allowance safely provokes Gurobi's real MEM_LIMIT;
     # it does not exhaust machine memory. ASH is outside this solver limit.
     rows = supervisor.run_supervised_experiments(
-        ["instances/small_instance.json"], formulations=(2,), heuristics=("ah", "ash"),
+        ["instances/small_instance.json"], formulations=(2,),
+        heuristics=("ah", "ahr", "ash"),
         mode="integer", memory_limit_gb=1e-9, csv_filename=tmp_path / "limited.csv",
     )["rows"]
-    assert [row["status"] for row in rows] == ["MEM_LIMIT", "MEM_LIMIT", "CONVERGED"]
+    assert [row["status"] for row in rows] == [
+        "MEM_LIMIT", "MEM_LIMIT", "MEM_LIMIT", "CONVERGED"
+    ]
     assert rows[-1]["validation_passed"]
     assert rows[-1]["objective_value"] == pytest.approx(4)

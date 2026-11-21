@@ -180,9 +180,9 @@ def test_strict_runner_writes_all_zero_budget_rows_without_validation_failure(tm
     output = tmp_path / "timeouts.csv"
     experiment = run.run_experiments(
         [SMALL_INSTANCE], repetitions=2, csv_filename=output,
-        time_limit=0, heuristics=("ah", "ash"),
+        time_limit=0, heuristics=("ah", "ahr", "ash"),
     )
-    expected_rows = 2 * (2 * len(run.DEFAULT_FORMULATIONS) + 2)
+    expected_rows = 2 * (2 * len(run.DEFAULT_FORMULATIONS) + 3)
     assert len(experiment["rows"]) == expected_rows
     for row in experiment["rows"]:
         assert row["status"] == "TIME_LIMIT"
@@ -217,18 +217,20 @@ def test_csv_records_configured_limit_for_every_method_and_mode(
     monkeypatch.setattr(run, "solve_instance", solve)
     monkeypatch.setattr(run, "solve_standard_heuristic",
                         lambda instance, **kwargs: solve(instance, method="ah", **kwargs))
+    monkeypatch.setattr(run, "solve_relaxed_standard_heuristic",
+                        lambda instance, **kwargs: solve(instance, method="ahr", **kwargs))
     monkeypatch.setattr(run, "solve_single_intruder_heuristic",
                         lambda instance, **kwargs: solve(instance, method="ash", **kwargs))
     filename = tmp_path / "limits.csv"
     rows = run.run_experiments(
         [SMALL_INSTANCE], formulations=run.AVAILABLE_FORMULATIONS,
-        heuristics=("ah", "ash"),
+        heuristics=("ah", "ahr", "ash"),
         time_limit=limit, csv_filename=filename,
     )["rows"]
     expected_methods = {
         (f"f{formulation}", mode)
         for formulation in run.AVAILABLE_FORMULATIONS for mode in ("integer", "relaxation")
-    } | {("ah", "heuristic"), ("ash", "heuristic")}
+    } | {("ah", "heuristic"), ("ahr", "heuristic"), ("ash", "heuristic")}
     assert {(row["method"], row["mode"]) for row in rows} == expected_methods
     assert calls == [limit] * len(expected_methods)
     assert all(row["time_limit_seconds"] == expected for row in rows)

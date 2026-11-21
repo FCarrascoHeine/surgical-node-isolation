@@ -1,8 +1,8 @@
 # Surgical Node Isolation formulations
 
 This repository compares four base Gurobi formulations, an aggregated variant
-with selected valid inequalities (`3_VI`), and the paper's general and
-single-intruder heuristics for the safety-check allocation problem. It is organized
+with selected valid inequalities (`3_VI`), the paper's general and single-intruder
+heuristics, and a continuous-potential variant of the general heuristic. It is organized
 as a small computational-research project with one experiment runner, reproducible
 JSON instances, and a compact correctness suite.
 
@@ -39,7 +39,7 @@ Run selected formulations or modes:
 python run.py "instances/*.json" --formulations 2 3 4 --mode integer
 ```
 
-Compare every exact formulation and both heuristics in one experiment:
+Compare every exact formulation and all three heuristics in one experiment:
 
 ```bash
 python run.py instances/small_instance.json --all-methods
@@ -67,8 +67,8 @@ are solved only once.
 | `INSTANCE [INSTANCE ...]` | Required | One or more JSON files, directories, or quoted patterns such as `"instances/*.json"`. Directory searches are not recursive. |
 | `--csv PATH` | `results/results.csv` | Destination of the combined result table. Parent directories are created automatically. The file is atomically checkpointed after every completed result row, so completed formulations survive a later failure in the same instance. An existing file at this path is overwritten, not appended to. |
 | `--formulations {1,2,3,3_VI,4} [...]` | `1 2 3` | Formulations to solve. `3_VI` adds selected lower subset inequalities to formulation 3. |
-| `--heuristics {ah,ash} [...]` | None | Heuristics to run. `ah` is the general heuristic and `ash` is the single-intruder minimum-cut heuristic. |
-| `--all-methods` | Disabled | Runs formulations 1--4, `3_VI`, and both heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
+| `--heuristics {ah,ahr,ash} [...]` | None | Heuristics to run. `ah` is the paper's binary-cut general heuristic, `ahr` uses bounded continuous potentials in the same general heuristic, and `ash` is the single-intruder minimum-cut heuristic. |
+| `--all-methods` | Disabled | Runs formulations 1--4, `3_VI`, and all three heuristics. `ash` is recorded as `NOT_APPLICABLE` on instances that do not contain exactly one intruder. |
 | `--mode {integer,relaxation,both}` | `both` | Runs the integer models, the continuous relaxations, or both. |
 | `--repetitions N` | `1` | Solves every selected instance/formulation/mode combination `N` times. Repetition numbers are recorded in the CSV. |
 | `--time-limit SECONDS` | No limit | Shared elapsed-time budget for each instance/method/mode/repetition, including method preparation, model construction, optimization and separation. Checked between operations; an operation may finish after the deadline. Zero skips the search; negative values and NaN are rejected. |
@@ -78,7 +78,7 @@ are solved only once.
 | `--max-iterations N` | `100` | Maximum cut-addition rounds for `3_VI` (integer and LP) and the formulation 4 relaxation. |
 | `--max-cuts N` | `100` for `3_VI`; unlimited for formulation 4 | Maximum total cuts for `3_VI` (integer and LP) and the formulation 4 relaxation. Zero disables these cuts. |
 | `--max-cuts-per-round N` | `20` | Maximum number of `3_VI` cuts per root separation round. Zero disables these cuts. |
-| `--heuristic-max-iterations N` | `100` | Maximum number of outer iterations for either heuristic. |
+| `--heuristic-max-iterations N` | `100` | Maximum number of outer iterations for each heuristic. |
 | `--binary-search-tolerance VALUE` | `1e-4` | Precision used by the single-intruder heuristic's capacity-weight binary search. |
 | `--return-terminal-heuristic` | Disabled | Returns the terminal heuristic candidate instead of the best evaluated true-objective candidate. Timeouts always return the best available candidate. Iteration history is retained either way. |
 | `--output` | Disabled | Displays Gurobi's solver log while the experiment runs. |
@@ -95,6 +95,13 @@ formulations, both modes, and five repetitions produce `3 * 4 * 2 * 5 = 120`
 rows in one CSV file.
 
 Each selected heuristic contributes one additional row per instance and repetition.
+
+`ah` and `ahr` use exactly the same outer procedure. Their only difference is the
+auxiliary subproblem. `ah` uses binary cut-side variables. `ahr` keeps the checkpoint
+variables binary but replaces those auxiliary variables with continuous potentials
+`0 <= p[i,v] <= 1`, subject to `p[i,s_i] = 0`, `p[i,t_i] >= 1`, and
+`p[i,v] - p[i,u] <= x[u,v]`. Thus, `relaxed` refers only to the auxiliary potentials;
+`ahr` is still an integer heuristic and returns a binary checkpoint allocation.
 
 ### Experiment examples
 
@@ -117,10 +124,22 @@ solve:
 python run.py instances --formulations 2 4 --mode integer --time-limit 3600 --csv results/integer_f2_f4.csv
 ```
 
-Compare formulation 2 and both heuristics without running relaxations:
+Compare formulation 2 and all heuristics without running relaxations:
 
 ```bash
-python run.py instances --formulations 2 --heuristics ah ash --mode integer --csv results/f2_heuristics.csv
+python run.py instances --formulations 2 --heuristics ah ahr ash --mode integer --csv results/f2_heuristics.csv
+```
+
+Run only the continuous-potential general heuristic:
+
+```bash
+python run.py instances/small_instance.json --formulations --heuristics ahr --mode integer --csv results/ahr.csv
+```
+
+Compare the two general-heuristic subproblem formulations directly:
+
+```bash
+python run.py instances --formulations --heuristics ah ahr --mode integer --repetitions 3 --csv results/ah_vs_ahr.csv
 ```
 
 Study only the formulation 4 relaxation and stop after at most 50 cut rounds or
@@ -155,7 +174,7 @@ the measured runtimes and is included in newly written results only.
 method's elapsed time from before its own input preparation and model construction
 until its algorithm stops. Independent runner validation, shared batch setup,
 result formatting and CSV writing are excluded. `solver_runtime` is a separate
-diagnostic: Gurobi time for the compact solve, AH's auxiliary solves, or formulation
+diagnostic: Gurobi time for the compact solve, AH/AHR auxiliary solves, or formulation
 4's master solves. For integer formulation 4 this already includes callback time;
 do not add `separation_time` to it. ASH uses no Gurobi solves.
 
@@ -233,7 +252,7 @@ python run.py instances --formulations 2 --mode integer --time-limit 300
 python run.py instances --all-methods --memory-limit-gb 8 --csv results/memory8.csv
 ```
 
-`SoftMemLimit` is inherited by every Gurobi model in the worker, including AH's
+`SoftMemLimit` is inherited by every Gurobi model in the worker, including AH/AHR
 auxiliary models and formulation 4's separation duals. It counts Gurobi allocations
 across models in that environment and can overshoot between safe checkpoints.
 The allowance does **not** cap total process memory: Python dictionaries, graph
@@ -244,7 +263,7 @@ if detection fails. The automatic formula is a conservative heuristic, not a
 guarantee against system-wide memory exhaustion.
 
 - `MEM_LIMIT`: Gurobi or a separation subproblem stopped gracefully. Available
-  justified solutions/bounds are retained. AH returns its best validated candidate
+  justified solutions/bounds are retained. AH and AHR return their best validated candidate
   even with `--return-terminal-heuristic`. An interrupted F4 callback never accepts
   an unchecked incumbent, and an unfinished F4 relaxation retains its
   `restricted_master` scope without claiming full relaxation feasibility.
@@ -493,7 +512,7 @@ Solver-dependent tests skip with a clear message when no Gurobi license is avail
 - `testing_valid_inequalities.py` / `testing_valid_inequalities_.py`: three-LP comparison and compatibility entry point.
 - `plot_valid_inequalities.py`: relative and absolute LP improvement plots by instance family.
 - `branch_and_cut.py`: separation and solve procedure for formulation 4.
-- `heuristics.py`: implementations of the general and single-intruder heuristics.
+- `heuristics.py`: implementations of the binary-cut and continuous-potential general heuristics and the single-intruder heuristic.
 - `graph_algorithms.py`: shared directed shortest-path and minimum-cut routines.
 - `instances.py`: instance validation, JSON I/O, preparation, and generation.
 - `generate_grid_instances.py`: deterministic rectangular-grid collection generator.

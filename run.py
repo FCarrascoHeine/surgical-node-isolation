@@ -10,6 +10,7 @@ from formulation_3_VI import DEFAULT_MAX_CUTS, DEFAULT_MAX_CUTS_PER_ROUND
 from formulations import BUILDERS, normalize_formulation, solve_instance
 from heuristics import (
     HEURISTIC_NAMES,
+    solve_relaxed_standard_heuristic,
     solve_single_intruder_heuristic,
     solve_standard_heuristic,
 )
@@ -231,7 +232,7 @@ def run_comparison(
     selected_formulations = tuple(dict.fromkeys(normalize_formulation(f) for f in formulations))
     selected_heuristics = tuple(dict.fromkeys(str(h).lower() for h in heuristics))
     if any(h not in HEURISTIC_NAMES for h in selected_heuristics):
-        raise ValueError("heuristics must contain ah and/or ash")
+        raise ValueError("heuristics must contain only ah, ahr, and/or ash")
     if not selected_formulations and not selected_heuristics:
         raise ValueError("At least one formulation or heuristic must be selected")
     if mode not in ("integer", "relaxation", "both"):
@@ -372,6 +373,18 @@ def run_comparison(
             result = _not_applicable_heuristic_result(heuristic)
         elif heuristic == "ah":
             result = solve_standard_heuristic(
+                data["instance"],
+                max_iterations=heuristic_max_iterations,
+                time_limit=time_limit,
+                tolerance=tolerance,
+                output_flag=output_flag,
+                solver_seed=solver_seed,
+                threads=threads,
+                env=env,
+                return_best=heuristic_return_best,
+            )
+        elif heuristic == "ahr":
+            result = solve_relaxed_standard_heuristic(
                 data["instance"],
                 max_iterations=heuristic_max_iterations,
                 time_limit=time_limit,
@@ -751,12 +764,13 @@ def main():
         nargs="+",
         choices=HEURISTIC_NAMES,
         default=list(DEFAULT_HEURISTICS),
-        help="Run the general heuristic (ah), single-intruder heuristic (ash), or both",
+        help=("Run the binary-cut general heuristic (ah), continuous-potential "
+              "general heuristic (ahr), and/or single-intruder heuristic (ash)"),
     )
     parser.add_argument(
         "--all-methods",
         action="store_true",
-        help="Run all formulations, including 3_VI, and both heuristics",
+        help="Run all formulations, including 3_VI, and all heuristics",
     )
     parser.add_argument(
         "--mode",

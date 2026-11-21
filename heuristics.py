@@ -9,7 +9,7 @@ from time_budget import BudgetExpired, TimeBudget
 from utils import STATUS_NAMES, configure_model
 from validation import evaluate_allocation
 
-HEURISTIC_NAMES = ("ah", "ash")
+HEURISTIC_NAMES = ("ah", "ahr", "ash")
 
 
 def _prepared_data(instance):
@@ -187,10 +187,11 @@ def _heuristic_result(
     return result
 
 
-def _solve_standard_subproblem(
+def _solve_standard_family_subproblem(
     data,
     path_support,
     *,
+    relaxed_potentials,
     time_limit,
     output_flag,
     solver_seed,
@@ -200,7 +201,12 @@ def _solve_standard_subproblem(
 ):
     budget = _budget if _budget is not None else TimeBudget(time_limit)
     budget.check()
-    model = Model("SNI_standard_heuristic_subproblem", env=env)
+    model_name = (
+        "SNI_relaxed_standard_heuristic_subproblem"
+        if relaxed_potentials
+        else "SNI_standard_heuristic_subproblem"
+    )
+    model = Model(model_name, env=env)
     try:
         configure_model(
             model,
@@ -216,14 +222,22 @@ def _solve_standard_subproblem(
                 vtype=GRB.BINARY,
                 name="x[{},{}]".format(*edge),
             )
-        source_side = {}
+        node_values = {}
         for intruder in data["intruders"]:
             for node in data["nodes"]:
                 budget.check()
-                source_side[intruder, node] = model.addVar(
-                    vtype=GRB.BINARY,
-                    name=f"y[{intruder},{node}]",
-                )
+                if relaxed_potentials:
+                    node_values[intruder, node] = model.addVar(
+                        vtype=GRB.CONTINUOUS,
+                        lb=0.0,
+                        ub=1.0,
+                        name=f"p[{intruder},{node}]",
+                    )
+                else:
+                    node_values[intruder, node] = model.addVar(
+                        vtype=GRB.BINARY,
+                        name=f"y[{intruder},{node}]",
+                    )
         budget.check()
         model.setObjective(
             quicksum(
@@ -250,20 +264,38 @@ def _solve_standard_subproblem(
             budget.check()
             source = data["intruder_source"][intruder]
             target = data["intruder_target"][intruder]
-            model.addConstr(
-                source_side[intruder, source]
-                - source_side[intruder, target]
-                == 1,
-                name=f"terminals[{intruder}]",
-            )
-            for tail, head in data["edges"]:
-                budget.check()
+            if relaxed_potentials:
                 model.addConstr(
-                    selected[tail, head]
-                    >= source_side[intruder, tail]
-                    - source_side[intruder, head],
-                    name=f"cut[{intruder},{tail},{head}]",
+                    node_values[intruder, source] == 0.0,
+                    name=f"source[{intruder}]",
                 )
+                model.addConstr(
+                    node_values[intruder, target] >= 1.0,
+                    name=f"target[{intruder}]",
+                )
+                for tail, head in data["edges"]:
+                    budget.check()
+                    model.addConstr(
+                        node_values[intruder, head]
+                        - node_values[intruder, tail]
+                        <= selected[tail, head],
+                        name=f"potential[{intruder},{tail},{head}]",
+                    )
+            else:
+                model.addConstr(
+                    node_values[intruder, source]
+                    - node_values[intruder, target]
+                    == 1,
+                    name=f"terminals[{intruder}]",
+                )
+                for tail, head in data["edges"]:
+                    budget.check()
+                    model.addConstr(
+                        selected[tail, head]
+                        >= node_values[intruder, tail]
+                        - node_values[intruder, head],
+                        name=f"cut[{intruder},{tail},{head}]",
+                    )
 
         model.Params.FeasibilityTol = 1e-8
         budget.check()
@@ -293,9 +325,29 @@ def _solve_standard_subproblem(
         model.dispose()
 
 
-def solve_standard_heuristic(
+def _solve_standard_subproblem(data, path_support, **kwargs):
+    return _solve_standard_family_subproblem(
+        data,
+        path_support,
+        relaxed_potentials=False,
+        **kwargs,
+    )
+
+
+def _solve_relaxed_standard_subproblem(data, path_support, **kwargs):
+    return _solve_standard_family_subproblem(
+        data,
+        path_support,
+        relaxed_potentials=True,
+        **kwargs,
+    )
+
+
+def _solve_standard_family_heuristic(
     instance,
     *,
+    method,
+    subproblem_solver,
     max_iterations=100,
     time_limit=None,
     tolerance=1e-6,
@@ -306,7 +358,7 @@ def solve_standard_heuristic(
     return_best=True,
     _budget=None,
 ):
-    """Run A_H with one elapsed-time budget including input/model preparation."""
+    """Run an A_H variant with one budget including input/model preparation."""
     budget = _budget if _budget is not None else TimeBudget(time_limit)
     _validate_options(max_iterations, time_limit, tolerance)
     data = None
@@ -339,7 +391,7 @@ def solve_standard_heuristic(
             for path in paths.values():
                 path_support.update(path)
 
-            subproblem = _solve_standard_subproblem(
+            subproblem = subproblem_solver(
                 data,
                 path_support,
                 time_limit=budget.remaining(),
@@ -407,7 +459,7 @@ def solve_standard_heuristic(
 
     return _heuristic_result(
         data,
-        "ah",
+        method,
         budget.start,
         status_name,
         convergence_reason,
@@ -422,6 +474,66 @@ def solve_standard_heuristic(
         nodes_explored=nodes_explored,
         simplex_iterations=simplex_iterations,
         subproblems_optimal=subproblems_optimal,
+    )
+
+
+def solve_standard_heuristic(
+    instance,
+    *,
+    max_iterations=100,
+    time_limit=None,
+    tolerance=1e-6,
+    output_flag=0,
+    solver_seed=0,
+    threads=1,
+    env=None,
+    return_best=True,
+    _budget=None,
+):
+    """Run A_H with binary cut-side variables in each subproblem."""
+    return _solve_standard_family_heuristic(
+        instance,
+        method="ah",
+        subproblem_solver=_solve_standard_subproblem,
+        max_iterations=max_iterations,
+        time_limit=time_limit,
+        tolerance=tolerance,
+        output_flag=output_flag,
+        solver_seed=solver_seed,
+        threads=threads,
+        env=env,
+        return_best=return_best,
+        _budget=_budget,
+    )
+
+
+def solve_relaxed_standard_heuristic(
+    instance,
+    *,
+    max_iterations=100,
+    time_limit=None,
+    tolerance=1e-6,
+    output_flag=0,
+    solver_seed=0,
+    threads=1,
+    env=None,
+    return_best=True,
+    _budget=None,
+):
+    """Run A_HR with bounded continuous potentials in each subproblem."""
+    return _solve_standard_family_heuristic(
+        instance,
+        method="ahr",
+        subproblem_solver=_solve_relaxed_standard_subproblem,
+        max_iterations=max_iterations,
+        time_limit=time_limit,
+        tolerance=tolerance,
+        output_flag=output_flag,
+        solver_seed=solver_seed,
+        threads=threads,
+        env=env,
+        return_best=return_best,
+        _budget=_budget,
     )
 
 
@@ -608,7 +720,7 @@ def solve_single_intruder_heuristic(
 
 
 def solve_heuristic(instance, method="auto", **kwargs):
-    """Dispatch to A_H or A_SH without resetting the method's time budget."""
+    """Dispatch to A_H, A_HR, or A_SH without resetting the time budget."""
     budget = kwargs.pop("_budget", None)
     if budget is None:
         budget = TimeBudget(kwargs.get("time_limit"))
@@ -620,6 +732,10 @@ def solve_heuristic(instance, method="auto", **kwargs):
         method = "ash" if len(instance["intruders"]) == 1 else "ah"
     if method == "ah":
         return solve_standard_heuristic(instance, _budget=budget, **kwargs)
+    if method == "ahr":
+        return solve_relaxed_standard_heuristic(
+            instance, _budget=budget, **kwargs
+        )
     if method == "ash":
         return solve_single_intruder_heuristic(instance, _budget=budget, **kwargs)
-    raise ValueError("method must be auto, ah, or ash")
+    raise ValueError("method must be auto, ah, ahr, or ash")

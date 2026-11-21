@@ -7,6 +7,7 @@ import heuristics as heuristics_module
 import time_budget
 from heuristics import (
     solve_heuristic,
+    solve_relaxed_standard_heuristic,
     solve_single_intruder_heuristic,
     solve_standard_heuristic,
 )
@@ -27,7 +28,14 @@ def clock(monkeypatch):
     return value
 
 
-@pytest.mark.parametrize("solve", [solve_standard_heuristic, solve_single_intruder_heuristic])
+@pytest.mark.parametrize(
+    "solve",
+    [
+        solve_standard_heuristic,
+        solve_relaxed_standard_heuristic,
+        solve_single_intruder_heuristic,
+    ],
+)
 def test_zero_budget_stops_before_preparation(monkeypatch, clock, instance, solve):
     def unexpected(*args, **kwargs):
         pytest.fail("Preparation should not start with an exhausted budget")
@@ -44,7 +52,7 @@ def test_zero_budget_stops_before_preparation(monkeypatch, clock, instance, solv
     assert result["auxiliary_solves"] == 0
 
 
-@pytest.mark.parametrize("method", ["ah", "ash", "auto"])
+@pytest.mark.parametrize("method", ["ah", "ahr", "ash", "auto"])
 def test_input_preparation_uses_dispatch_budget(monkeypatch, clock, instance, method):
     prepared = prepare_instance(instance)
 
@@ -61,7 +69,19 @@ def test_input_preparation_uses_dispatch_budget(monkeypatch, clock, instance, me
     assert result["auxiliary_solves"] == result["minimum_cut_solves"] == 0
 
 
-def test_ah_path_overrun_does_not_start_subproblem(monkeypatch, clock, instance):
+@pytest.mark.parametrize(
+    ("solve", "subproblem_name"),
+    [
+        (solve_standard_heuristic, "_solve_standard_subproblem"),
+        (
+            solve_relaxed_standard_heuristic,
+            "_solve_relaxed_standard_subproblem",
+        ),
+    ],
+)
+def test_standard_family_path_overrun_does_not_start_subproblem(
+    monkeypatch, clock, instance, solve, subproblem_name
+):
     real_paths = heuristics_module._journeyer_paths
 
     def slow_paths(*args, **kwargs):
@@ -73,8 +93,8 @@ def test_ah_path_overrun_does_not_start_subproblem(monkeypatch, clock, instance)
         pytest.fail("An auxiliary model must not start after path finding expires")
 
     monkeypatch.setattr(heuristics_module, "_journeyer_paths", slow_paths)
-    monkeypatch.setattr(heuristics_module, "_solve_standard_subproblem", unexpected)
-    result = solve_standard_heuristic(instance, time_limit=1)
+    monkeypatch.setattr(heuristics_module, subproblem_name, unexpected)
+    result = solve(instance, time_limit=1)
 
     assert result["status_name"] == "TIME_LIMIT"
     assert result["runtime"] == 2.0
@@ -136,12 +156,13 @@ def _fake_model(monkeypatch, clock, *, variable_seconds=0.0, update_seconds=0.0)
     model = SimpleNamespace(
         Params=SimpleNamespace(), NumVars=0, NumConstrs=0, Status=GRB.LOADED,
         Runtime=0.0, NodeCount=0.0, IterCount=0.0, SolCount=0,
-        allowances=[], disposed=False,
+        allowances=[], disposed=False, variables=[],
     )
 
     def add_var(**kwargs):
         clock.now += variable_seconds
         model.NumVars += 1
+        model.variables.append(kwargs)
         return 0.0
 
     def add_constraint(*args, **kwargs):
@@ -164,9 +185,18 @@ def _fake_model(monkeypatch, clock, *, variable_seconds=0.0, update_seconds=0.0)
     return model
 
 
-def test_ah_applies_remaining_allowance_after_model_update(monkeypatch, clock, instance):
+@pytest.mark.parametrize(
+    "subproblem",
+    [
+        heuristics_module._solve_standard_subproblem,
+        heuristics_module._solve_relaxed_standard_subproblem,
+    ],
+)
+def test_standard_subproblem_applies_remaining_allowance_after_model_update(
+    monkeypatch, clock, instance, subproblem
+):
     model = _fake_model(monkeypatch, clock, update_seconds=2.0)
-    result = heuristics_module._solve_standard_subproblem(
+    result = subproblem(
         prepare_instance(instance), set(), time_limit=5, output_flag=0,
         solver_seed=0, threads=1, env=None,
     )
@@ -176,10 +206,19 @@ def test_ah_applies_remaining_allowance_after_model_update(monkeypatch, clock, i
     assert result["status_name"] == "TIME_LIMIT"
 
 
-def test_ah_stops_building_and_disposes_model_when_budget_expires(monkeypatch, clock, instance):
+@pytest.mark.parametrize(
+    "subproblem",
+    [
+        heuristics_module._solve_standard_subproblem,
+        heuristics_module._solve_relaxed_standard_subproblem,
+    ],
+)
+def test_standard_subproblem_stops_building_and_disposes_on_expired_budget(
+    monkeypatch, clock, instance, subproblem
+):
     model = _fake_model(monkeypatch, clock, variable_seconds=2.0)
     with pytest.raises(BudgetExpired):
-        heuristics_module._solve_standard_subproblem(
+        subproblem(
             prepare_instance(instance), set(), time_limit=1, output_flag=0,
             solver_seed=0, threads=1, env=None,
         )
@@ -189,16 +228,50 @@ def test_ah_stops_building_and_disposes_model_when_budget_expires(monkeypatch, c
     assert model.disposed
 
 
-def test_ah_does_not_optimize_when_model_update_exhausts_budget(monkeypatch, clock, instance):
+@pytest.mark.parametrize(
+    "subproblem",
+    [
+        heuristics_module._solve_standard_subproblem,
+        heuristics_module._solve_relaxed_standard_subproblem,
+    ],
+)
+def test_standard_subproblem_does_not_optimize_after_update_exhausts_budget(
+    monkeypatch, clock, instance, subproblem
+):
     model = _fake_model(monkeypatch, clock, update_seconds=2.0)
     with pytest.raises(BudgetExpired):
-        heuristics_module._solve_standard_subproblem(
+        subproblem(
             prepare_instance(instance), set(), time_limit=1, output_flag=0,
             solver_seed=0, threads=1, env=None,
         )
 
     assert model.allowances == []
     assert model.disposed
+
+
+def test_ahr_subproblem_uses_bounded_continuous_potentials(
+    monkeypatch, clock, instance
+):
+    model = _fake_model(monkeypatch, clock)
+    data = prepare_instance(instance)
+
+    heuristics_module._solve_relaxed_standard_subproblem(
+        data, set(), time_limit=5, output_flag=0,
+        solver_seed=0, threads=1, env=None,
+    )
+
+    edge_count = len(data["edges"])
+    x_variables = model.variables[:edge_count]
+    p_variables = model.variables[edge_count:]
+    assert x_variables
+    assert all(variable["vtype"] == GRB.BINARY for variable in x_variables)
+    assert len(p_variables) == len(data["intruders"]) * len(data["nodes"])
+    assert all(variable["vtype"] == GRB.CONTINUOUS for variable in p_variables)
+    assert all(variable["lb"] == 0.0 for variable in p_variables)
+    assert all(variable["ub"] == 1.0 for variable in p_variables)
+    assert model.NumConstrs == 1 + len(data["intruders"]) * (
+        2 + len(data["edges"])
+    )
 
 
 def test_auto_zero_budget_still_reports_selected_method(clock, instance):
